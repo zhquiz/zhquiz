@@ -3,16 +3,17 @@
     v-card-title
       | Sentences
       v-spacer
-      v-text-field(v-model="q" prepend-icon="mdi-magnify" single-line)
+      v-text-field(v-model="q" prepend-icon="mdi-magnify" single-line append-icon="mdi-shuffle-variant" @click:append="shuffle")
     v-data-table(:headers="headers" :items="items" :options.sync="options" :server-items-length="count"
     :loading="loading")
 </template>
 
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
+import { shuffle } from "@/util";
 
 @Component
-export default class App extends Vue {
+export default class Sentence extends Vue {
   private q: string = "";
   private headers = [
     {
@@ -37,8 +38,20 @@ export default class App extends Vue {
   private getDataFromApi() {
     this.loading = true;
     return new Promise((resolve, reject) => {
-      console.log(this.options);
-      const { sortBy, descending, page, itemsPerPage } = this.options;
+      const qMap: Record<string, string> = {};
+      this.q.split(" ").forEach(seg => {
+        const [k, v] = seg.split(":");
+        qMap[k] = v;
+      });
+
+      const { sortBy, sortDesc, page, itemsPerPage } = this.options;
+
+      const sort0 = sortBy[0] || qMap["-sortBy"] || qMap.sortBy;
+      let descending = sortDesc[0];
+
+      if (descending === undefined && qMap["-sortBy"]) {
+        descending = true;
+      }
 
       let items = [
         {
@@ -124,21 +137,25 @@ export default class App extends Vue {
       ];
       const total = items.length;
 
-      if (this.options.sortBy) {
-        items = items.sort((a, b) => {
-          const sortA = (a as any)[sortBy];
-          const sortB = (b as any)[sortBy];
+      if (sort0) {
+        if (sort0 === "random") {
+          shuffle(items);
+        } else {
+          items = items.sort((a, b) => {
+            const sortA = (a as any)[sort0];
+            const sortB = (b as any)[sort0];
 
-          if (descending) {
-            if (sortA < sortB) return 1;
-            if (sortA > sortB) return -1;
-            return 0;
-          } else {
-            if (sortA < sortB) return -1;
-            if (sortA > sortB) return 1;
-            return 0;
-          }
-        });
+            if (descending) {
+              if (sortA < sortB) return 1;
+              if (sortA > sortB) return -1;
+              return 0;
+            } else {
+              if (sortA < sortB) return -1;
+              if (sortA > sortB) return 1;
+              return 0;
+            }
+          });
+        }
       }
 
       if (itemsPerPage > 0) {
@@ -152,6 +169,16 @@ export default class App extends Vue {
         resolve();
       }, 1000);
     });
+  }
+
+  private shuffle() {
+    const entities = this.q.split(" ").filter((x) => x);
+    const kw = "sortBy:random";
+
+    if (!entities.includes(kw)) {
+      entities.push(kw);
+      this.q = entities.join(" ");
+    }
   }
 }
 </script>
