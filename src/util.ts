@@ -29,3 +29,38 @@ export function normalizeArray(x: any): any {
 
   return x;
 }
+
+export async function fetchJSON(url: string, data?: any, method: string = "POST") {
+  const r = await fetch(url, {
+    method,
+    body: data ? JSON.stringify(data) : undefined,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8'
+    }
+  });
+
+  try {
+    return await r.json();
+  } catch(e) {
+    return r;
+  }
+}
+
+export function openInMdbg(s: string) {
+  open(`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${s}*`, "_blank");
+}
+
+export function speak(s: string) {
+  const allVoices = speechSynthesis.getVoices();
+  let vs = allVoices.filter((v) => /zh[-_]cn/i.test(v.lang));
+  if (vs.length === 0) {
+    vs = allVoices.filter((v) => /zh/i.test(v.lang));
+  }
+
+  if (vs.length > 0) {
+    const u = new SpeechSynthesisUtterance(s);
+    u.lang = vs[0].lang;
+    u.rate = 0.8;
+    speechSynthesis.speak(u);
+  }
+}

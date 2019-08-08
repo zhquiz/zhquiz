@@ -15,17 +15,23 @@
                 span(v-if="typeof seg === 'string'") {{seg}}
                 span(v-else="")
                   ruby
+                    | {{seg.word}}
                     rt {{seg.pinyin}}
-                    span.zh-contextmenu.vocab {{seg.word}}
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import { Vue, Component, Watch } from "vue-property-decorator";
+import { fetchJSON } from '../util';
 
 @Component
 export default class Home extends Vue {
   private taValue: string = "";
   private parsedSegments: any[] = [];
+
+  @Watch("taValue")
+  private async onTextareaChanged(v: string) {
+    this.parsedSegments = await fetchJSON("/api/util/jieba", {entry: v});
+  }
 }
 </script>
 
