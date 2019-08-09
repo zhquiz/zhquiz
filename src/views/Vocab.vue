@@ -25,7 +25,7 @@
                   v-list-item(@click="randomize")
                     v-list-item-title Randomize
       v-flex.mt-3(md7 xs12)
-        v-layout(column)
+        v-layout.pa-3(column)
           v-flex(v-if="e.traditional")
             .large {{e.traditional}}
           v-flex(v-if="e.pinyin")

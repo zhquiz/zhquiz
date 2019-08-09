@@ -25,7 +25,7 @@
                   v-list-item(@click="loadH()")
                     v-list-item-title Randomize
       v-flex.mt-3(md7 xs12)
-        v-layout(column)
+        v-layout.pa-3(column)
           v-flex(v-if="e.sub")
             h2 Subcompositions
           v-flex
