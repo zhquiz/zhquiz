@@ -2,18 +2,17 @@
   v-container
     v-layout(column="")
       v-flex.mt-3(xs12)
-        i Right click for more options and to speak.
-      v-flex.mt-3(xs12)
         v-layout(row="")
           v-flex(md5 xs12 pa-3)
-            v-textarea.clipboard-textarea(outlined v-model="taValue")
+            v-textarea.clipboard-textarea(outlined v-model="taValue"
+            placeholder="Type or paste the text to be parsed into vocabularies here.")
           v-flex(md7 xs12 pa-3)
             div(v-if="parsedSegments.length === 0")
               i The result of the parsing of the text will be shown here.
             div(v-else="")
               span(v-for="seg in parsedSegments")
-                span(v-if="typeof seg === 'string'") {{seg}}
-                span(v-else="")
+                .vocab-segment(v-if="typeof seg === 'string'") {{seg}}
+                .vocab-segment(v-else="")
                   ruby
                     | {{seg.word}}
                     rt {{seg.pinyin}}
@@ -38,5 +37,14 @@ export default class Home extends Vue {
 <style lang="scss">
 .clipboard-textarea {
   background-color: white;
+}
+
+.vocab-segment {
+  display: inline-block;
+  font-size: 20px;
+
+  &:hover {
+    color: blue;
+  }
 }
 </style>

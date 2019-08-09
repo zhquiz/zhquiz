@@ -22,7 +22,7 @@ export function clone<T>(a: T): T {
   return JSON.parse(JSON.stringify(a));
 }
 
-export function normalizeArray(x: any): any {
+export function normalizeArray<T>(x: T | T[]): T {
   if (Array.isArray(x)) {
     return x[0];
   }
