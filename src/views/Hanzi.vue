@@ -22,25 +22,25 @@
                     v-list-item-title Open in MDBG
                   v-list-item(v-if="h" @click="speak(h)")
                     v-list-item-title Speak
-                  v-list-item(@click="loadH()")
+                  v-list-item(@click="randomize()")
                     v-list-item-title Randomize
       v-flex.mt-3(md7 xs12)
         v-layout.pa-3(column)
           v-flex(v-if="e.sub")
             h2 Subcompositions
-          v-flex
+          v-flex.radical-list
             .d-inline-block.mr-3(v-for="c in (e.sub || '')" :key="c")
-              .large(@click="loadH(c)") {{c}}
+              .large(@click="q = c") {{c}}
           v-flex(v-if="e.sup")
             h2 Supercompositions
-          v-flex
+          v-flex.radical-list
             .d-inline-block.mr-3(v-for="c in (e.sup || '')" :key="c")
-              .large(@click="loadH(c)") {{c}}
+              .large(@click="q = c") {{c}}
           v-flex(v-if="e.var")
             h2 Variants
-          v-flex
+          v-flex.radical-list
             .d-inline-block.mr-3(v-for="c in (e.var || '')" :key="c")
-              .large(@click="loadH(c)") {{c}}
+              .large(@click="q = c") {{c}}
           v-flex(v-if="vList.length > 0")
             h2 Vocabularies
           v-flex(v-for="v in vList", :key="`${v.simplified}/${v.traditional}/${v.pinyin}`")
@@ -49,7 +49,7 @@
 
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
-import { fetchJSON, openInMdbg, speak } from '../util';
+import { fetchJSON, openInMdbg, speak, normalizeArray } from '../util';
 import { IVocabEntry } from './Vocab.vue';
 
 interface IHanziEntry {
@@ -85,23 +85,74 @@ export default class Hanzi extends Vue {
   set e(e0: IHanziEntry) {
     this.eList = [e0];
     this.eIndex = 0;
+
+    if (e0) {
+      this.onHChanged();
+    }
   }
 
   public mounted() {
-    this.loadH();
+    this.randomize();
+    window.addEventListener("keydown", this.hotkeysHandler);
   }
 
-  private async loadH(h?: string) {
-    let r: any;
-    if (h) {
-      r = (await fetchJSON("/api/hanzi/", {q: h, limit: 1})).data[0];
-    } else {
-      r = await fetchJSON("/api/hanzi/random", {q: this.q});
-    }
-    const v = await fetchJSON("/api/vocab/", {q: r.entry});
+  public beforeDestroy() {
+    window.removeEventListener("keydown", this.hotkeysHandler);
+  }
 
-    this.e = r;
-    this.vList = v.data;
+  private hotkeysHandler(evt: KeyboardEvent) {
+    const {target, code} = evt;
+
+    if (target && (target as any).tagName.toLocaleUpperCase() === "INPUT") {
+      return;
+    }
+
+    switch(code) {
+      case "KeyR": this.randomize(); break;
+      case "KeyS": speak(this.h); break;
+      case "KeyX": openInMdbg(this.h); break;
+      case "ArrowLeft": this.click("prev"); break;
+      case "ArrowRight": this.click("next"); break;
+      case "Backquote": this.speakN(0); break;
+      default:
+        const m = /Digit(\d)/.exec(code);
+        if (m) {
+          this.speakN(parseInt(m[1]));
+        }
+    }
+  }
+
+  private click(name: string) {
+    const el = normalizeArray<any>(this.$refs[name]);
+    if (el && !el.disabled && el.click) {
+      el.click();
+    }
+  }
+
+  private speakN(n: number) {
+    const v = this.vList[n];
+    if (v) {
+      speak(v.simplified);
+    }
+  }
+
+  private async randomize() {
+    this.eList = (await fetchJSON("/api/hanzi/", {q: this.q, limit: 1})).data;
+  }
+
+  @Watch("q")
+  private async onQChanged() {
+    this.eList = (await fetchJSON("/api/hanzi/", {q: this.q, limit: -1})).data;
+  }
+
+  @Watch("h")
+  private async onHChanged() {
+    if (this.h) {
+      const v = await fetchJSON("/api/vocab/", {q: this.h});
+      this.vList = v.data;
+    } else {
+      this.vList = [];
+    }
   }
 }
 </script>
@@ -114,6 +165,21 @@ export default class Hanzi extends Vue {
 
   input {
     max-height: 200px;
+    font-family: HanaMin;
+  }
+}
+
+.radical-list {
+  max-height: 200px;
+  overflow-y: scroll;
+}
+
+.large {
+  font-size: 50px;
+  font-family: HanaMin;
+
+  &:hover {
+    color: blue;
   }
 }
 </style>

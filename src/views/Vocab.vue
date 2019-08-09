@@ -9,9 +9,9 @@
             v-text-field.vocab-textfield(height="100" v-model="v")
           v-flex(xs12)
             v-btn-toggle.prev-next(rounded :value="-1")
-              v-btn(width="120" @click="eIndex--" :disabled="eIndex <= 0")
+              v-btn(width="120" @click="eIndex--" :disabled="eIndex <= 0" ref="prev")
                 span Previous
-              v-btn(width="100" @click="eIndex++" :disabled="eIndex >= eList.length - 1")
+              v-btn(width="100" @click="eIndex++" :disabled="eIndex >= eList.length - 1" ref="next")
                 span Next
               v-menu(v-model="isMenuOpen" offset-y left)
                 template(v-slot:activator="{on}")
@@ -38,13 +38,13 @@
             span {{e.english}}
           v-flex(v-if="sList.length > 0")
             h2 Sentences
-          v-flex(v-for="s in sList", :key="s")
+          v-flex(v-for="s in sList", :key="s.chinese")
             span {{`${s.chinese} ${s.english}`}}
 </template>
 
 <script lang="ts">
 import { Vue, Component, Watch } from "vue-property-decorator";
-import { fetchJSON, openInMdbg, speak } from '../util';
+import { fetchJSON, openInMdbg, speak, normalizeArray } from '../util';
 import { ISentenceEntry } from './Sentence.vue';
 
 export interface IVocabEntry {
@@ -80,18 +80,74 @@ export default class Vocab extends Vue {
   set e(e0: IVocabEntry) {
     this.eList = [e0];
     this.eIndex = 0;
+
+    if (e0) {
+      this.onVChanged();
+    }
   }
 
   public mounted() {
     this.randomize();
+    window.addEventListener("keydown", this.hotkeysHandler);
+  }
+
+  public beforeDestroy() {
+    window.removeEventListener("keydown", this.hotkeysHandler);
+  }
+
+  private hotkeysHandler(evt: KeyboardEvent) {
+    const {target, code} = evt;
+
+    if (target && (target as any).tagName.toLocaleUpperCase() === "INPUT") {
+      return;
+    }
+
+    switch(code) {
+      case "KeyR": this.randomize(); break;
+      case "KeyS": speak(this.v); break;
+      case "KeyX": openInMdbg(this.v); break;
+      case "ArrowLeft": this.click("prev"); break;
+      case "ArrowRight": this.click("next"); break;
+      case "Backquote": this.speakN(0); break;
+      default:
+        const m = /Digit(\d)/.exec(code);
+        if (m) {
+          this.speakN(parseInt(m[1]));
+        }
+    }
+  }
+
+  private click(name: string) {
+    const el = normalizeArray<any>(this.$refs[name]);
+    if (el && !el.disabled && el.click) {
+      el.click();
+    }
+  }
+
+  private speakN(n: number) {
+    const v = this.sList[n];
+    if (v) {
+      speak(v.chinese);
+    }
   }
 
   private async randomize() {
-    const r = await fetchJSON("/api/vocab/random", {q: this.q});
-    const s = await fetchJSON("/api/sentence/", {q: r.simplified});
+    this.eList = (await fetchJSON("/api/vocab/", {q: this.q, limit: 1})).data;
+  }
 
-    this.e = r;
-    this.sList = s.data;
+  @Watch("q")
+  private async onQChanged() {
+    this.eList = (await fetchJSON("/api/vocab/", {q: this.q, limit: -1})).data;
+  }
+
+  @Watch("v")
+  private async onVChanged() {
+    if (this.v) {
+      const s = await fetchJSON("/api/sentence/", {q: this.v});
+      this.sList = s.data;
+    } else {
+      this.sList = [];
+    }
   }
 }
 </script>
