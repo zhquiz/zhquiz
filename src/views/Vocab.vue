@@ -141,6 +141,7 @@ export default class Vocab extends Vue {
     if (!this.isLoading) {
       this.isLoading = true;
       this.eList = (await fetchJSON("/api/vocab/", {q: this.q, limit: -1})).data;
+      this.eIndex = 0;
       this.isLoading = false;
     } else {
       const q = this.q;
