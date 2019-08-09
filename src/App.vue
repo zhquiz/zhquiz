@@ -91,25 +91,22 @@
                 v-list-item-content
                   v-list-item-subtitle Open in external website
         v-card-title Search filters
-          v-list-item
-            v-list-item-content
-              v-list-item-title
-                .search-heading Hanzi 
-                | entry, pinyin, english, sub, sup, var,&nbsp;
-                a(href="https://hanzilevelproject.blogspot.com" target="_blank") level
-                | , count, percentile
-              v-list-item-title
-                .search-heading Vocab 
-                | simplified, traditional, pinyin, english, frequency, tag (e.g. HSK1)
-              v-list-item-title
-                .search-heading Sentence 
-                | chinese, english, percentile,&nbsp;
-                a(href="https://hanzilevelproject.blogspot.com" target="_blank") level
-          v-list-item
-            v-list-item-content
-              v-list-item-title 
-                .search-heading Allowed operators 
-                | : (colon), &lt;, &gt;, " (double quote), YAML, JSON, sortBy:random
+          v-layout.ma-3(row style="font-size: 16px")
+            v-flex.mt-3.search-heading(md3 xs12) Hanzi
+            v-flex.mt-3(md9 xs12)
+              | entry, pinyin, english, sub, sup, var,&nbsp;
+              a(href="https://hanzilevelproject.blogspot.com" target="_blank") level
+              | , count, percentile
+            v-flex.search-heading(md3 xs12) Vocab
+            v-flex(md9 xs12)
+              | simplified, traditional, pinyin, english, frequency, tag (e.g. HSK1)
+            v-flex.search-heading(md3 xs12) Sentence
+            v-flex(md9 xs12)
+              | chinese, english, percentile,&nbsp;
+              a(href="https://hanzilevelproject.blogspot.com" target="_blank") level
+            v-flex.mt-3.search-heading(md3 xs12) Allowed operators
+            v-flex.mt-3(md9 xs12)
+              | : (colon), &lt;, &gt;, " (double quote), YAML, JSON, sortBy:random
 </template>
 
 <script lang="ts">
@@ -153,8 +150,6 @@ export default class App extends Vue {
 
 <style lang="scss">
 .search-heading {
-  display: inline-block;
-  width: 10em;
   font-weight: bold;
 }
 
