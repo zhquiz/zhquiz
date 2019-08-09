@@ -66,6 +66,7 @@ export default class Hanzi extends Vue {
   private eList: IHanziEntry[] = [];
   private eIndex: number = 0;
   private vList: IVocabEntry[] = [];
+  private isLoading = false;
 
   private openInMdbg = openInMdbg;
   private speak = speak;
@@ -142,7 +143,16 @@ export default class Hanzi extends Vue {
 
   @Watch("q")
   private async onQChanged() {
-    this.eList = (await fetchJSON("/api/hanzi/", {q: this.q, limit: -1})).data;
+    if (!this.isLoading) {
+      this.isLoading = true;
+      this.eList = (await fetchJSON("/api/hanzi/", {q: this.q, limit: -1})).data;
+      this.isLoading = false;
+    } else {
+      const q = this.q;
+      setTimeout(() => {
+        this.q = q;
+      }, 1000);
+    }
   }
 
   @Watch("h")

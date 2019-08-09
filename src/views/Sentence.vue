@@ -70,8 +70,6 @@ export default class Sentence extends Vue {
       speak(s.chinese);
     }
   }
-
-  @Watch("q")
   @Watch("page")
   @Watch("options", { deep: true })
   private async getDataFromApi() {
@@ -90,6 +88,19 @@ export default class Sentence extends Vue {
     this.loading = false;
     this.items = r.data;
     this.count = r.count;
+  }
+
+  @Watch("q")
+  private watchQ() {
+    if (!this.loading) {
+      this.loading = true;
+      this.getDataFromApi();
+    } else {
+      const q = this.q;
+      setTimeout(() => {
+        this.q = q;
+      }, 1000);
+    }
   }
 
   private shuffle() {
