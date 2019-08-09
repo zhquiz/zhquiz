@@ -61,6 +61,7 @@ export default class Vocab extends Vue {
   private eList: IVocabEntry[] = [];
   private eIndex: number = 0;
   private sList: ISentenceEntry[] = [];
+  private isLoading = false;
 
   private openInMdbg = openInMdbg;
   private speak = speak;
@@ -137,7 +138,16 @@ export default class Vocab extends Vue {
 
   @Watch("q")
   private async onQChanged() {
-    this.eList = (await fetchJSON("/api/vocab/", {q: this.q, limit: -1})).data;
+    if (!this.isLoading) {
+      this.isLoading = true;
+      this.eList = (await fetchJSON("/api/vocab/", {q: this.q, limit: -1})).data;
+      this.isLoading = false;
+    } else {
+      const q = this.q;
+      setTimeout(() => {
+        this.q = q;
+      }, 1000);
+    }
   }
 
   @Watch("v")
@@ -162,5 +172,9 @@ export default class Vocab extends Vue {
     max-height: 100px;
     text-align: center;
   }
+}
+
+.large {
+  font-size: 50px;
 }
 </style>

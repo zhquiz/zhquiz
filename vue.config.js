@@ -1,5 +1,5 @@
-const webpack = require('webpack')
 module.exports = {
+    outputDir: process.env.OUTPUT_DIR,
     devServer: {
         proxy: {
             "/api": {
