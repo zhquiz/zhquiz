@@ -14,8 +14,8 @@ const router = new VueRouter({
   mode: 'history',
   routes: routes.map(r => ({
     ...r,
-    component: import(/* webpackChunkName: "[request]" */ `../views/${r.name}.vue`)
-  })) as RouteConfig[]
+    component: () => import(/* webpackChunkName: "[request]" */ `../views/${r.name}.vue`)
+  }))
 })
 
 export default router
