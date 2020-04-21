@@ -1,20 +1,22 @@
 <template lang="pug">
-article.flex.flex-col.w-full.items-center.justify-center
-  textarea.shadow.text-base.m-3.p-3(class="w-4/5" style="height: 150px;"
+article#Home
+  b-input.has-shadow(type="textarea" style="width: 80%; height: 150px;"
     v-model="value" placeholder="Type or paste text here to get pinyin")
-  .text-base(class="w-4/5" style="min-height: 150px;") {{pinyin}}
-  .flex.flex-row.w-full
-    .flex.flex-col.items-center.justify-center.flex-grow
-      .h-24.flex.flex-col.items-center.justify-end
-        .text-6xl.font-hanzi.p-3 {{hanzi}}
-      div Hanzi of the day
-    .flex.flex-col.items-center.justify-center.flex-grow
-      .h-24.flex.flex-col.items-center.justify-end
-        .text-6xl.font-hanzi.p-3 {{vocab}}
-      div Vocab of the day
-  .h-24.flex.flex-col.items-center.justify-end
-    .text-3xl.font-hanzi {{sentence}}
-  div Sentence of the day
+  div(style="width: 80%; min-height: 150px;") {{pinyin}}
+  .columns(style="width: 100%;")
+    .column.is-6
+      .item-display
+        .font-hanzi.clickable(style="font-size: 50px;"
+          role="button" @click="$router.push({ path: '/hanzi', query: { q: hanzi } })"
+        ) {{hanzi}}
+      center Hanzi of the day
+    .column.is-6
+      .item-display
+        .font-hanzi(style="font-size: 50px;") {{vocab}}
+      center Vocab of the day
+  .item-display
+    .font-hanzi(style="font-size: 30px;") {{sentence}}
+  center Sentence of the day
 </template>
 
 <script lang="ts">
@@ -56,3 +58,20 @@ export default class Home extends Vue {
   }
 }
 </script>
+
+<style lang="scss">
+#Home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .item-display {
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 1em;
+  }
+}
+</style>

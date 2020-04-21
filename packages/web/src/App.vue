@@ -1,17 +1,14 @@
 <template lang="pug">
 main
-  el-menu(mode="horizontal")
-    el-menu-item(index="1")
-      router-link(to="/")
+  b-navbar.has-shadow.is-warning(style="margin-bottom: 1em;")
+    template(slot="brand")
+      b-navbar-item(tag="router-link" to="/")
         strong Zh
-        span view
-    el-menu-item(index="2")
-      router-link(to="/hanzi") Hanzi
-    el-menu-item(index="3")
-      router-link(to="/vocab") Vocab
-    el-menu-item(index="4")
-      router-link(to="/sentence") Sentence
-    el-menu-item(index="5")
-      a(href="https://github.com/patarapolw/zhview" target="_blank" rel="noopener") About
+        span View
+    template(slot="start")
+      b-navbar-item(tag="router-link" to="/hanzi" :active="$route.path === '/hanzi'") Hanzi
+      b-navbar-item(tag="router-link" to="/vocab" :active="$route.path === '/vocab'") Vocab
+      b-navbar-item(tag="router-link" to="/sentence" :active="$route.path === '/sentence'") Sentence
+      b-navbar-item(href="https://github.com/patarapolw/zhview" target="_blank" rel="noopener") About
   router-view
 </template>
