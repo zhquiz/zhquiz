@@ -1,5 +1,5 @@
 module.exports = {
-  publicPath: '/zhview',
+  // publicPath: '/zhview',
   pluginOptions: {
     prerenderSpa: {
       registry: undefined,
