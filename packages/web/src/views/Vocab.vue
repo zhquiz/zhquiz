@@ -16,12 +16,14 @@
             fontawesome(icon="caret-down")
           b-dropdown-item(aria-role="listitem") Search in MDBG
     .column.is-6
-      .card(style="margin-bottom: 1em;")
-        .card-header
+      b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="typeof current === 'object'")
+        .card-header(slot="trigger" slot-scope="props" role="button")
           h2.card-header-title Reading
+          a.card-header-icon
+            fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
         .card-content(style="position: relative; height: 100px;")
           span {{current.pinyin}}
-          b-loading(:active="q && !current.pinyin" :is-full-page="false")
+          b-loading(:active="!current.pinyin" :is-full-page="false")
       b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="!!current.traditional")
         .card-header(slot="trigger" slot-scope="props" role="button")
           h2.card-header-title Traditional
@@ -29,12 +31,14 @@
             fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
         .card-content
           .font-hanzi.clickable(style="font-size: 60px; height: 80px;") {{current.traditional}}
-      .card(style="margin-bottom: 1em;")
-        .card-header
+      b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="typeof current === 'object'")
+        .card-header(slot="trigger" slot-scope="props" role="button")
           h2.card-header-title English
+          a.card-header-icon
+            fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
         .card-content(style="position: relative; height: 100px;")
           span {{current.english}}
-          b-loading(:active="q && !current.english" :is-full-page="false")
+          b-loading(:active="typeof current === 'object' && !current.english" :is-full-page="false")
       b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="sentences.length > 0")
         .card-header(slot="trigger" slot-scope="props" role="button")
           h2.card-header-title Sentences
@@ -48,6 +52,8 @@
 
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
+import XRegExp from 'xregexp'
+
 import { api } from '../utils'
 
 @Component
@@ -59,7 +65,7 @@ export default class Vocab extends Vue {
   sentences: any[] = []
 
   get current () {
-    return this.entries[this.i] || {} as any
+    return this.entries[this.i] || '' as any
   }
 
   get simplified () {
@@ -78,16 +84,14 @@ export default class Vocab extends Vue {
   async onQChange () {
     if (this.q) {
       this.isQLoading = true
-    }
-
-    const qs = this.q ? (await api.post('/api/lib/jieba', { entry: this.q })).data.result as string[] : []
-    this.$set(this, 'entries', qs.filter((h, i) => qs.indexOf(h) === i))
-    this.i = 0
-    this.isQLoading = false
-
-    if (this.q) {
+      let qs = (await api.post('/api/lib/jieba', { entry: this.q })).data.result as string[]
+      qs = qs.filter(h => XRegExp('\\p{Han}+').test(h))
+      this.$set(this, 'entries', qs.filter((h, i) => qs.indexOf(h) === i))
       this.loadContent()
     }
+
+    this.i = 0
+    this.isQLoading = false
   }
 
   loadContent () {
@@ -100,11 +104,13 @@ export default class Vocab extends Vue {
     if (typeof this.current === 'string') {
       const vs = (await api.post('/api/vocab/match', { entry: this.current })).data.result as any[]
 
-      this.entries = [
-        ...this.entries.slice(0, this.i),
-        ...vs,
-        ...this.entries.slice(this.i + 1)
-      ]
+      if (vs.length > 0) {
+        this.entries = [
+          ...this.entries.slice(0, this.i),
+          ...vs,
+          ...this.entries.slice(this.i + 1)
+        ]
+      }
     }
   }
 
