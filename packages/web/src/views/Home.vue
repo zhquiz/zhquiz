@@ -1,23 +1,27 @@
 <template lang="pug">
 article#Home
-  b-input.has-shadow(type="textarea" style="width: 80%; height: 150px;"
-    v-model="value" placeholder="Type or paste text here to get pinyin")
-  div(style="width: 80%; min-height: 150px;") {{pinyin}}
-  .columns(style="width: 100%;")
+  .columns(style="width: 100%; margin-top: 1em;")
     .column.is-6
       .item-display
         .font-hanzi.clickable(style="font-size: 50px;"
-          role="button" @click="$router.push({ path: '/hanzi', query: { q: hanzi } })"
+          @contextmenu="(evt) => $refs.hanziContextmenu.show(evt)"
         ) {{hanzi}}
+        p-contextmenu(ref="hanziContextmenu" :model="hanziContextmenuItems")
         b-loading(:active="!hanzi" :is-full-page="false")
       center Hanzi of the day
     .column.is-6
       .item-display
-        .font-hanzi(style="font-size: 50px;") {{vocab}}
+        .font-hanzi.clickable(style="font-size: 50px;"
+          @contextmenu="(evt) => $refs.vocabContextmenu.show(evt)"
+        ) {{vocab}}
+        p-contextmenu(ref="vocabContextmenu" :model="vocabContextmenuItems")
         b-loading(:active="!vocab" :is-full-page="false")
       center Vocab of the day
   .item-display
-    .font-hanzi(style="font-size: 30px;") {{sentence}}
+    .font-hanzi.clickable(style="font-size: 30px;"
+      @contextmenu="(evt) => $refs.sentenceContextmenu.show(evt)"
+    ) {{sentence}}
+    p-contextmenu(ref="sentenceContextmenu" :model="sentenceContextmenuItems")
     b-loading(:active="!sentence" :is-full-page="false")
   center Sentence of the day
 </template>
@@ -25,27 +29,102 @@ article#Home
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 
-import { api } from '../utils'
+import { api, speak } from '../utils'
 
 @Component
 export default class Home extends Vue {
-  value = ''
-  pinyin = ''
   hanzi = ''
   vocab = ''
   sentence = ''
 
   level = 23
 
+  get hanziContextmenuItems () {
+    return [
+      {
+        label: 'Speak',
+        command: () => speak(this.hanzi)
+      },
+      {
+        label: 'Search',
+        url: this.$router.resolve({
+          path: '/hanzi',
+          query: {
+            q: this.hanzi
+          }
+        }).href
+      },
+      {
+        label: 'Open in MDBG',
+        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${this.hanzi}*`,
+        target: '_blank'
+      }
+    ]
+  }
+
+  get vocabContextmenuItems () {
+    return [
+      {
+        label: 'Speak',
+        command: () => speak(this.vocab)
+      },
+      {
+        label: 'Search as vocab',
+        url: this.$router.resolve({
+          path: '/vocab',
+          query: {
+            q: this.vocab
+          }
+        }).href
+      },
+      {
+        label: 'Search as hanzi',
+        url: this.$router.resolve({
+          path: '/hanzi',
+          query: {
+            q: this.vocab
+          }
+        }).href
+      },
+      {
+        label: 'Open in MDBG',
+        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${this.vocab}*`,
+        target: '_blank'
+      }
+    ]
+  }
+
+  get sentenceContextmenuItems () {
+    return [
+      {
+        label: 'Speak',
+        command: () => speak(this.sentence)
+      },
+      {
+        label: 'Search as vocab',
+        url: this.$router.resolve({
+          path: '/vocab',
+          query: {
+            q: this.sentence
+          }
+        }).href
+      },
+      {
+        label: 'Search as hanzi',
+        url: this.$router.resolve({
+          path: '/hanzi',
+          query: {
+            q: this.sentence
+          }
+        }).href
+      }
+    ]
+  }
+
   mounted () {
     this.loadHanzi()
     this.loadVocab()
     this.loadSentence()
-  }
-
-  @Watch('value')
-  async onTextChange () {
-    this.pinyin = (await api.post('/api/lib/pinyin', { entry: this.value })).data.result
   }
 
   async loadHanzi () {
@@ -75,7 +154,6 @@ export default class Home extends Vue {
     align-items: center;
     justify-content: flex-end;
     padding: 1em;
-    position: relative;
   }
 }
 </style>

@@ -6,7 +6,7 @@
   .columns
     .column.is-6.entry-display
       .font-hanzi(style="font-size: 120px; height: 200px; position: relative;")
-        span {{simplified}}
+        span.clickable {{simplified}}
         b-loading(:active="isQLoading" :is-full-page="false")
       .buttons.has-addons
         button.button(@click="i--" :disabled="i < 1") Previous
