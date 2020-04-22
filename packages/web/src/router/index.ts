@@ -6,8 +6,7 @@ Vue.use(VueRouter)
 const routes: RouteConfig[] = [
   { path: '/', name: 'Home' },
   { path: '/hanzi', name: 'Hanzi' },
-  { path: '/vocab', name: 'Vocab' },
-  { path: '/sentence', name: 'Sentence' }
+  { path: '/vocab', name: 'Vocab' }
 ]
 
 const router = new VueRouter({

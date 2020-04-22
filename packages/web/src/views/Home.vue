@@ -9,13 +9,16 @@ article#Home
         .font-hanzi.clickable(style="font-size: 50px;"
           role="button" @click="$router.push({ path: '/hanzi', query: { q: hanzi } })"
         ) {{hanzi}}
+        b-loading(:active="!hanzi" :is-full-page="false")
       center Hanzi of the day
     .column.is-6
       .item-display
         .font-hanzi(style="font-size: 50px;") {{vocab}}
+        b-loading(:active="!vocab" :is-full-page="false")
       center Vocab of the day
   .item-display
     .font-hanzi(style="font-size: 30px;") {{sentence}}
+    b-loading(:active="!sentence" :is-full-page="false")
   center Sentence of the day
 </template>
 
@@ -72,6 +75,7 @@ export default class Home extends Vue {
     align-items: center;
     justify-content: flex-end;
     padding: 1em;
+    position: relative;
   }
 }
 </style>
