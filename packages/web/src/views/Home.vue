@@ -6,7 +6,6 @@ article#Home
         .font-hanzi.clickable(style="font-size: 50px;"
           @contextmenu="(evt) => $refs.hanziContextmenu.show(evt)"
         ) {{hanzi}}
-        p-contextmenu(ref="hanziContextmenu" :model="hanziContextmenuItems")
         b-loading(:active="!hanzi" :is-full-page="false")
       center Hanzi of the day
     .column.is-6
@@ -14,16 +13,17 @@ article#Home
         .font-hanzi.clickable(style="font-size: 50px;"
           @contextmenu="(evt) => $refs.vocabContextmenu.show(evt)"
         ) {{vocab}}
-        p-contextmenu(ref="vocabContextmenu" :model="vocabContextmenuItems")
         b-loading(:active="!vocab" :is-full-page="false")
       center Vocab of the day
   .item-display
     .font-hanzi.clickable(style="font-size: 30px;"
       @contextmenu="(evt) => $refs.sentenceContextmenu.show(evt)"
     ) {{sentence}}
-    p-contextmenu(ref="sentenceContextmenu" :model="sentenceContextmenuItems")
     b-loading(:active="!sentence" :is-full-page="false")
   center Sentence of the day
+  p-contextmenu(ref="hanziContextmenu" :model="hanziContextmenuItems")
+  p-contextmenu(ref="vocabContextmenu" :model="vocabContextmenuItems")
+  p-contextmenu(ref="sentenceContextmenu" :model="sentenceContextmenuItems")
 </template>
 
 <script lang="ts">
@@ -154,6 +154,7 @@ export default class Home extends Vue {
     align-items: center;
     justify-content: flex-end;
     padding: 1em;
+    position: relative;
   }
 }
 </style>
