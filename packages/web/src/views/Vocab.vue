@@ -6,7 +6,9 @@
   .columns
     .column.is-6.entry-display
       .font-hanzi(style="font-size: 120px; min-height: 200px; position: relative;")
-        span.clickable {{simplified}}
+        span.clickable(
+          @contextmenu="(evt) => { selectedVocab = simplified; $refs.vocabContextmenu.show(evt) }"
+        ) {{simplified}}
         b-loading(:active="isQLoading" :is-full-page="false")
       .buttons.has-addons
         button.button(@click="i--" :disabled="i < 1") Previous
@@ -29,7 +31,9 @@
           a.card-header-icon
             fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
         .card-content
-          .font-hanzi.clickable(style="font-size: 60px; height: 80px;") {{current.traditional}}
+          .font-hanzi.clickable(style="font-size: 60px; height: 80px;"
+            @contextmenu="(evt) => { selectedVocab = current.traditional; $refs.vocabContextmenu.show(evt) }"
+          ) {{current.traditional}}
       b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="typeof current === 'object'")
         .card-header(slot="trigger" slot-scope="props" role="button")
           h2.card-header-title English
@@ -44,15 +48,19 @@
             fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
         .card-content
           div(v-for="s, i in sentences" :key="i")
-            span.clickable.sentence-part {{s.chinese}}&nbsp;
+            span.clickable.sentence-part(
+              @contextmenu="(evt) => { selectedSentence = s.chinese; $refs.sentenceContextmenu.show(evt) }"
+            ) {{s.chinese}}&nbsp;
             span.sentence-part {{s.english}}
+  p-contextmenu(ref="vocabContextmenu" :model="vocabContextmenuItems")
+  p-contextmenu(ref="sentenceContextmenu" :model="sentenceContextmenuItems")
 </template>
 
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import XRegExp from 'xregexp'
 
-import { api } from '../utils'
+import { api, speak } from '../utils'
 
 @Component
 export default class Vocab extends Vue {
@@ -61,6 +69,9 @@ export default class Vocab extends Vue {
   isQLoading = false
 
   sentences: any[] = []
+
+  selectedVocab = ''
+  selectedSentence = ''
 
   get current () {
     return this.entries[this.i] || '' as any
@@ -72,6 +83,76 @@ export default class Vocab extends Vue {
 
   get q () {
     return this.$route.query.q as string || ''
+  }
+
+  get vocabContextmenuItems () {
+    const v = this.selectedVocab
+
+    return [
+      {
+        label: 'Speak',
+        command: () => speak(v)
+      },
+      {
+        label: 'Search for vocab',
+        url: this.$router.resolve({
+          path: '/vocab',
+          query: {
+            q: v
+          }
+        }).href,
+        target: '_blank'
+      },
+      {
+        label: 'Search for Hanzi',
+        url: this.$router.resolve({
+          path: '/hanzi',
+          query: {
+            q: v
+          }
+        }).href,
+        target: '_blank'
+      },
+      {
+        label: 'Open in MDBG',
+        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${v}*`,
+        target: '_blank'
+      }
+    ]
+  }
+
+  get sentenceContextmenuItems () {
+    return [
+      {
+        label: 'Speak',
+        command: () => speak(this.selectedSentence)
+      },
+      {
+        label: 'Search for vocab',
+        url: this.$router.resolve({
+          path: '/vocab',
+          query: {
+            q: this.selectedSentence
+          }
+        }).href,
+        target: '_blank'
+      },
+      {
+        label: 'Search for Hanzi',
+        url: this.$router.resolve({
+          path: '/hanzi',
+          query: {
+            q: this.selectedSentence
+          }
+        }).href,
+        target: '_blank'
+      },
+      {
+        label: 'Open in MDBG',
+        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${this.selectedSentence}`,
+        target: '_blank'
+      }
+    ]
   }
 
   mounted () {

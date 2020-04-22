@@ -3,20 +3,20 @@ article#Home
   .columns(style="width: 100%; margin-top: 1em;")
     .column.is-6
       .item-display
-        .font-hanzi.clickable(style="font-size: 50px;"
+        .font-hanzi.clickable(style="font-size: 50px; min-height: 60px;"
           @contextmenu="(evt) => $refs.hanziContextmenu.show(evt)"
         ) {{hanzi}}
         b-loading(:active="!hanzi" :is-full-page="false")
       center Hanzi of the day
     .column.is-6
       .item-display
-        .font-hanzi.clickable(style="font-size: 50px;"
+        .font-hanzi.clickable(style="font-size: 50px; min-height: 60px;"
           @contextmenu="(evt) => $refs.vocabContextmenu.show(evt)"
         ) {{vocab}}
         b-loading(:active="!vocab" :is-full-page="false")
       center Vocab of the day
   .item-display
-    .font-hanzi.clickable.text-center(style="font-size: 30px;"
+    .font-hanzi.clickable.text-center(style="font-size: 30px; min-width: 3em; min-height: 40px"
       @contextmenu="(evt) => $refs.sentenceContextmenu.show(evt)"
     ) {{sentence}}
     b-loading(:active="!sentence" :is-full-page="false")
@@ -40,6 +40,7 @@ export default class Home extends Vue {
   vocab = ''
   sentence = ''
 
+  levelMin = 0
   level = 0
 
   get user () {
@@ -58,7 +59,7 @@ export default class Home extends Vue {
         command: () => speak(this.hanzi)
       },
       {
-        label: 'Search',
+        label: 'Search for Hanzi',
         url: this.$router.resolve({
           path: '/hanzi',
           query: {
@@ -86,7 +87,7 @@ export default class Home extends Vue {
         command: () => speak(this.vocab)
       },
       {
-        label: 'Search as vocab',
+        label: 'Search for vocab',
         url: this.$router.resolve({
           path: '/vocab',
           query: {
@@ -96,7 +97,7 @@ export default class Home extends Vue {
         target: '_blank'
       },
       {
-        label: 'Search as hanzi',
+        label: 'Search for Hanzi',
         url: this.$router.resolve({
           path: '/hanzi',
           query: {
@@ -124,7 +125,7 @@ export default class Home extends Vue {
         command: () => speak(this.sentence)
       },
       {
-        label: 'Search as vocab',
+        label: 'Search for vocab',
         url: this.$router.resolve({
           path: '/vocab',
           query: {
@@ -134,7 +135,7 @@ export default class Home extends Vue {
         target: '_blank'
       },
       {
-        label: 'Search as hanzi',
+        label: 'Search for Hanzi',
         url: this.$router.resolve({
           path: '/hanzi',
           query: {
@@ -159,28 +160,41 @@ export default class Home extends Vue {
   async onUserChanged () {
     if (this.user) {
       const r = await firebase.firestore().collection('user').doc(this.user).get()
-      this.level = (r.data() || {}).level || 60
+      const data = r.data()
+      if (data) {
+        this.levelMin = data.levelMin || 1
+        this.level = data.level || 60
+      }
     }
   }
 
   @Watch('level')
   async loadHanzi () {
     if (this.level) {
-      this.hanzi = (await api.post('/api/hanzi/random', { level: this.level })).data.result || ' '
+      this.hanzi = (await api.post('/api/hanzi/random', {
+        levelMin: this.levelMin,
+        level: this.level
+      })).data.result || ' '
     }
   }
 
   @Watch('level')
   async loadVocab () {
     if (this.level) {
-      this.vocab = (await api.post('/api/vocab/random', { level: this.level })).data.result || ' '
+      this.vocab = (await api.post('/api/vocab/random', {
+        levelMin: this.levelMin,
+        level: this.level
+      })).data.result || ' '
     }
   }
 
   @Watch('level')
   async loadSentence () {
     if (this.level) {
-      this.sentence = (await api.post('/api/sentence/random', { level: this.level })).data.result || ' '
+      this.sentence = (await api.post('/api/sentence/random', {
+        levelMin: this.levelMin,
+        level: this.level
+      })).data.result || ' '
     }
   }
 }
