@@ -1,10 +1,13 @@
 <template lang="pug">
 article#Settings.container
-  b-field(label="Level")
-    b-slider(:min="1" :max="60" ticks v-model="lv")
-    .label-level {{lv}}
+  .columns
+    .column.is-11
+      b-field(label="Level Range")
+        b-slider(:min="1" :max="60" ticks v-model="lv" lazy)
+    .column
+      .label-level {{lv[0]}} - {{lv[1]}}
   b-field
-    b-button(:disabled="!user" @click="doSave") Save
+    b-button(type="is-success" :disabled="!user" @click="doSave") Save
   b-loading(:active="isLoading")
 </template>
 
@@ -16,7 +19,7 @@ import 'firebase/firebase-firestore'
 
 @Component
 export default class Settings extends Vue {
-  lv = 0
+  lv = [1, 60]
   isLoading = false
 
   get user () {
@@ -34,7 +37,10 @@ export default class Settings extends Vue {
       this.isLoading = true
 
       const r = await firebase.firestore().collection('user').doc(this.user).get()
-      this.lv = (r.data() || {}).level || 60
+      const data = r.data()
+      if (data) {
+        this.lv = [data.levelMin || 1, data.level || 60]
+      }
 
       this.isLoading = false
     }
@@ -45,7 +51,8 @@ export default class Settings extends Vue {
       this.isLoading = true
 
       await firebase.firestore().collection('user').doc(this.user).set({
-        level: this.lv
+        levelMin: this.lv[0],
+        level: this.lv[1]
       })
 
       this.isLoading = false
@@ -60,8 +67,9 @@ export default class Settings extends Vue {
 
   .label-level {
     text-align: right;
-    width: 2em;
+    width: 5em;
     margin-left: 1em;
+    padding-top: 2em;
   }
 }
 </style>
