@@ -5,7 +5,7 @@
       input.input(name="q" placeholder="Type here to search." :value="q")
   .columns
     .column.is-6.entry-display
-      .font-hanzi.clickable(style="font-size: 150px; height: 200px;") {{current}}
+      .font-hanzi.clickable(style="font-size: 150px; min-height: 200px;") {{current}}
       .buttons.has-addons
         button.button(@click="i--" :disabled="i < 1") Previous
         button.button(@click="i++" :disabled="i > entries.length - 2") Next

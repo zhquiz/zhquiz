@@ -16,7 +16,7 @@ article#Home
         b-loading(:active="!vocab" :is-full-page="false")
       center Vocab of the day
   .item-display
-    .font-hanzi.clickable(style="font-size: 30px;"
+    .font-hanzi.clickable.text-center(style="font-size: 30px;"
       @contextmenu="(evt) => $refs.sentenceContextmenu.show(evt)"
     ) {{sentence}}
     b-loading(:active="!sentence" :is-full-page="false")
@@ -153,7 +153,7 @@ export default class Home extends Vue {
   align-items: center;
 
   .item-display {
-    height: 60px;
+    min-height: 60px;
     display: flex;
     flex-direction: column;
     align-items: center;
