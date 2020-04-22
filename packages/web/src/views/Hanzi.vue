@@ -5,7 +5,7 @@
       input.input(name="q" placeholder="Type here to search." :value="q")
   .columns
     .column.is-6.entry-display
-      .font-hanzi(style="font-size: 150px; height: 200px;") {{current}}
+      .font-hanzi.clickable(style="font-size: 150px; height: 200px;") {{current}}
       .buttons.has-addons
         button.button(@click="i--" :disabled="i < 1") Previous
         button.button(@click="i++" :disabled="i > entries.length - 2") Next
@@ -21,7 +21,7 @@
             fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
         .card-content
           span.font-hanzi.clickable(style="font-size: 50px;"
-            v-for="h in sub.split('')" :key="h"
+            v-for="h in sub" :key="h"
             role="button" @click="$router.push({ query: { q: h }})"
           ) {{h}}
       b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="!!sup")
