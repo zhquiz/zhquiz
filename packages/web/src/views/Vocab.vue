@@ -5,7 +5,7 @@
       input.input(name="q" placeholder="Type here to search." :value="q")
   .columns
     .column.is-6.entry-display
-      .font-hanzi(style="font-size: 120px; height: 200px; position: relative;")
+      .font-hanzi(style="font-size: 120px; min-height: 200px; position: relative;")
         span.clickable {{simplified}}
         b-loading(:active="isQLoading" :is-full-page="false")
       .buttons.has-addons
@@ -21,9 +21,8 @@
           h2.card-header-title Reading
           a.card-header-icon
             fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
-        .card-content(style="position: relative; height: 100px;")
+        .card-content
           span {{current.pinyin}}
-          b-loading(:active="!current.pinyin" :is-full-page="false")
       b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="!!current.traditional")
         .card-header(slot="trigger" slot-scope="props" role="button")
           h2.card-header-title Traditional
@@ -36,9 +35,8 @@
           h2.card-header-title English
           a.card-header-icon
             fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
-        .card-content(style="position: relative; height: 100px;")
+        .card-content
           span {{current.english}}
-          b-loading(:active="typeof current === 'object' && !current.english" :is-full-page="false")
       b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="sentences.length > 0")
         .card-header(slot="trigger" slot-scope="props" role="button")
           h2.card-header-title Sentences
