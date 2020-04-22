@@ -28,6 +28,9 @@ article#Home
 
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
+import firebase, { User } from 'firebase/app'
+
+import 'firebase/firebase-firestore'
 
 import { api, speak } from '../utils'
 
@@ -37,10 +40,19 @@ export default class Home extends Vue {
   vocab = ''
   sentence = ''
 
-  level = 23
+  level = 0
+
+  get user () {
+    const u = this.$store.state.user as User | null
+    return u ? u.email : undefined
+  }
 
   get hanziContextmenuItems () {
     return [
+      {
+        label: 'Reload',
+        command: () => this.loadHanzi()
+      },
       {
         label: 'Speak',
         command: () => speak(this.hanzi)
@@ -65,6 +77,10 @@ export default class Home extends Vue {
 
   get vocabContextmenuItems () {
     return [
+      {
+        label: 'Reload',
+        command: () => this.loadVocab()
+      },
       {
         label: 'Speak',
         command: () => speak(this.vocab)
@@ -100,6 +116,10 @@ export default class Home extends Vue {
   get sentenceContextmenuItems () {
     return [
       {
+        label: 'Reload',
+        command: () => this.loadSentence()
+      },
+      {
         label: 'Speak',
         command: () => speak(this.sentence)
       },
@@ -122,26 +142,46 @@ export default class Home extends Vue {
           }
         }).href,
         target: '_blank'
+      },
+      {
+        label: 'Open in MDBG',
+        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${this.sentence}`,
+        target: '_blank'
       }
     ]
   }
 
   mounted () {
-    this.loadHanzi()
-    this.loadVocab()
-    this.loadSentence()
+    this.onUserChanged()
   }
 
+  @Watch('user')
+  async onUserChanged () {
+    if (this.user) {
+      const r = await firebase.firestore().collection('user').doc(this.user).get()
+      this.level = (r.data() || {}).level || 60
+    }
+  }
+
+  @Watch('level')
   async loadHanzi () {
-    this.hanzi = (await api.post('/api/hanzi/random', { level: this.level })).data.result || ' '
+    if (this.level) {
+      this.hanzi = (await api.post('/api/hanzi/random', { level: this.level })).data.result || ' '
+    }
   }
 
+  @Watch('level')
   async loadVocab () {
-    this.vocab = (await api.post('/api/vocab/random', { level: this.level })).data.result || ' '
+    if (this.level) {
+      this.vocab = (await api.post('/api/vocab/random', { level: this.level })).data.result || ' '
+    }
   }
 
+  @Watch('level')
   async loadSentence () {
-    this.sentence = (await api.post('/api/sentence/random', { level: this.level })).data.result || ' '
+    if (this.level) {
+      this.sentence = (await api.post('/api/sentence/random', { level: this.level })).data.result || ' '
+    }
   }
 }
 </script>
