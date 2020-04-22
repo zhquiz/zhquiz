@@ -52,7 +52,8 @@ export default class Home extends Vue {
           query: {
             q: this.hanzi
           }
-        }).href
+        }).href,
+        target: '_blank'
       },
       {
         label: 'Open in MDBG',
@@ -75,7 +76,8 @@ export default class Home extends Vue {
           query: {
             q: this.vocab
           }
-        }).href
+        }).href,
+        target: '_blank'
       },
       {
         label: 'Search as hanzi',
@@ -84,7 +86,8 @@ export default class Home extends Vue {
           query: {
             q: this.vocab
           }
-        }).href
+        }).href,
+        target: '_blank'
       },
       {
         label: 'Open in MDBG',
@@ -107,7 +110,8 @@ export default class Home extends Vue {
           query: {
             q: this.sentence
           }
-        }).href
+        }).href,
+        target: '_blank'
       },
       {
         label: 'Search as hanzi',
@@ -116,7 +120,8 @@ export default class Home extends Vue {
           query: {
             q: this.sentence
           }
-        }).href
+        }).href,
+        target: '_blank'
       }
     ]
   }
@@ -128,15 +133,15 @@ export default class Home extends Vue {
   }
 
   async loadHanzi () {
-    this.hanzi = (await api.post('/api/hanzi/random', { level: this.level })).data.result
+    this.hanzi = (await api.post('/api/hanzi/random', { level: this.level })).data.result || ' '
   }
 
   async loadVocab () {
-    this.vocab = (await api.post('/api/vocab/random', { level: this.level })).data.result
+    this.vocab = (await api.post('/api/vocab/random', { level: this.level })).data.result || ' '
   }
 
   async loadSentence () {
-    this.sentence = (await api.post('/api/sentence/random', { level: this.level })).data.result
+    this.sentence = (await api.post('/api/sentence/random', { level: this.level })).data.result || ' '
   }
 }
 </script>
