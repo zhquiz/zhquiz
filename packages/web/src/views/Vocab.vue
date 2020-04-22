@@ -6,7 +6,7 @@
   .columns
     .column.is-6.entry-display
       .font-hanzi(style="font-size: 120px; min-height: 200px; position: relative;")
-        span.clickable(
+        span.clickable.text-center(
           @contextmenu="(evt) => { selectedVocab = simplified; $refs.vocabContextmenu.show(evt) }"
         ) {{simplified}}
         b-loading(:active="isQLoading" :is-full-page="false")
