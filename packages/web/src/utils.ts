@@ -33,7 +33,6 @@ export function speak (s: string, lang: string = 'zh') {
   if (lang) {
     const utterance = new SpeechSynthesisUtterance(s)
     utterance.lang = lang
-    utterance.rate = 1
     speechSynthesis.speak(utterance)
   }
 }

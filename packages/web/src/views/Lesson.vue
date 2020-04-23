@@ -21,7 +21,13 @@
           b-table-column(field="item" label="Item") {{props.row.item}}
           b-table-column(field="tag" label="Tag")
             b-tag(v-for="t in props.row.tag || []" :key="t") {{t}}
-  p-contextmenu(ref="contextmenu" :model="contextmenuItems")
+  vue-context(ref="contextmenu")
+    li
+      a(role="button" @click.prevent="speak(selectedRow.item)") Speak
+    li
+      a(role="button" @click.prevent="isEditTagModal = true") Edit tags
+    li
+      a(role="button" @click.prevent="removeItem()") Remove item
   b-modal(:active.sync="isEditTagModal" @close="onEditTagModelClose")
     .card
       .card-header
@@ -29,9 +35,8 @@
       .card-content
         b-taginput(v-model="selectedRow.tag" icon="tag" placeholder="Add a tag"
           :data="filteredTags" autocomplete :allow-new="true" open-on-focus @typing="getFilteredTags")
-      .card-footer
-        div(style="flex-grow: 1;")
-        b-buttton(@click="isEditTagModal = false") Close
+        .field(style="padding-top: 1em; display: flex; flex-direction: row-reverse;")
+          b-button(@click="isEditTagModal = false") Close
   b-loading(:active="isLoading")
 </template>
 
@@ -59,39 +64,11 @@ export default class Lesson extends Vue {
   selectedRow = {} as any
   isEditTagModal = false
 
+  speak = speak
+
   get email () {
     const u = this.$store.state.user
     return u ? u.email as string : undefined
-  }
-
-  get contextMenuItems () {
-    return [
-      {
-        label: 'Speak',
-        command: () => speak(this.selectedRow.item)
-      },
-      {
-        label: 'Edit tags',
-        command: () => {
-          this.isEditTagModal = true
-        }
-      },
-      {
-        label: 'Remove item',
-        command: () => {
-          this.$buefy.dialog.confirm({
-            message: 'Are you sure you want to remove this item?',
-            confirmText: 'Remove',
-            type: 'is-danger',
-            hasIcon: true,
-            onConfirm: async () => {
-              await firebase.firestore().collection('lesson').doc(this.selectedRow.id).delete()
-              this.data = this.data.filter(d => d.id === this.selectedRow.id)
-            }
-          })
-        }
-      }
-    ]
   }
 
   created () {
@@ -176,9 +153,24 @@ export default class Lesson extends Vue {
   }
 
   onTableContextmenu (row: any, evt: MouseEvent) {
+    evt.preventDefault()
+
     this.selectedRow = row
     const contextmenu = this.$refs.contextmenu as any
-    contextmenu.show(evt)
+    contextmenu.open(evt)
+  }
+
+  removeItem () {
+    this.$buefy.dialog.confirm({
+      message: 'Are you sure you want to remove this item?',
+      confirmText: 'Remove',
+      type: 'is-danger',
+      hasIcon: true,
+      onConfirm: async () => {
+        firebase.firestore().collection('lesson').doc(this.selectedRow.id).delete()
+        this.data = this.data.filter(d => d.id !== this.selectedRow.id)
+      }
+    })
   }
 
   onEditTagModelClose () {

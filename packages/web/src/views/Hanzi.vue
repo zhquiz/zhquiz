@@ -7,7 +7,7 @@
     .column.is-6.entry-display
       .font-hanzi.clickable(
         style="font-size: 150px; min-height: 200px;"
-        @contextmenu="(evt) => { selectedHanzi = current; $refs.hanziContextmenu.show(evt) }"
+        @contextmenu.prevent="(evt) => { selectedHanzi = current; $refs.hanziContextmenu.open(evt) }"
       ) {{current}}
       .buttons.has-addons
         button.button(@click="i--" :disabled="i < 1") Previous
@@ -25,7 +25,7 @@
         .card-content
           span.font-hanzi.clickable(style="font-size: 50px;"
             v-for="h in sub" :key="h"
-            @contextmenu="(evt) => { selectedHanzi = h; $refs.hanziContextmenu.show(evt) }"
+            @contextmenu.prevent="(evt) => { selectedHanzi = h; $refs.hanziContextmenu.open(evt) }"
           ) {{h}}
       b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="!!sup")
         .card-header(slot="trigger" slot-scope="props" role="button")
@@ -35,7 +35,7 @@
         .card-content
           span.font-hanzi.clickable(style="font-size: 50px;"
             v-for="h in sup" :key="h"
-            @contextmenu="(evt) => { selectedHanzi = h; $refs.hanziContextmenu.show(evt) }"
+            @contextmenu.prevent="(evt) => { selectedHanzi = h; $refs.hanziContextmenu.open(evt) }"
           ) {{h}}
       b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="!!variants")
         .card-header(slot="trigger" slot-scope="props" role="button")
@@ -45,7 +45,7 @@
         .card-content
           span.font-hanzi.clickable(style="font-size: 50px;"
             v-for="h in variants" :key="h"
-            @contextmenu="(evt) => { selectedHanzi = h; $refs.hanziContextmenu.show(evt) }"
+            @contextmenu.prevent="(evt) => { selectedHanzi = h; $refs.hanziContextmenu.open(evt) }"
           ) {{h}}
       b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="vocabs.length > 0")
         .card-header(slot="trigger" slot-scope="props" role="button")
@@ -55,15 +55,31 @@
         .card-content
           div(v-for="v, i in vocabs" :key="i")
             span.clickable.vocab-part(
-              @contextmenu="(evt) => { selectedVocab = v.simplified; $refs.vocabContextmenu.show(evt) }"
+              @contextmenu.prevent="(evt) => { selectedVocab = v.simplified; $refs.vocabContextmenu.open(evt) }"
             ) {{v.simplified}}&nbsp;
             span.clickable.vocab-part(v-if="v.traditional"
-              @contextmenu="(evt) => { selectedVocab = v.traditional; $refs.vocabContextmenu.show(evt) }"
+              @contextmenu.prevent="(evt) => { selectedVocab = v.traditional; $refs.vocabContextmenu.open(evt) }"
             ) {{v.traditional}}&nbsp;
             span.vocab-part(style="min-width: 8em;") [{{v.pinyin}}]&nbsp;
             span.vocab-part {{v.english}}
-  p-contextmenu(ref="hanziContextmenu" :model="hanziContextmenuItems")
-  p-contextmenu(ref="vocabContextmenu" :model="vocabContextmenuItems")
+  vue-context(ref="hanziContextmenu")
+    li
+      a(role="button" @click.prevent="speak(selectedHanzi)") Speak
+    li
+      router-link(:to="{ path: '/hanzi', query: { q: selectedHanzi } }" target="_blank") Search for Hanzi
+    li
+      a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selectedHanzi}*`"
+        target="_blank" rel="noopener") Open in MDBG
+  vue-context(ref="vocabContextmenu")
+    li
+      a(role="button" @click.prevent="speak(selectedVocab)") Speak
+    li
+      router-link(:to="{ path: '/vocab', query: { q: selectedVocab } }" target="_blank") Search for vocab
+    li
+      router-link(:to="{ path: '/hanzi', query: { q: selectedVocab } }" target="_blank") Search for Hanzi
+    li
+      a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selectedVocab}*`"
+        target="_blank" rel="noopener") Open in MDBG
 </template>
 
 <script lang="ts">
@@ -84,74 +100,14 @@ export default class Hanzi extends Vue {
   selectedHanzi = ''
   selectedVocab = ''
 
+  speak = speak
+
   get current () {
     return this.entries[this.i]
   }
 
   get q () {
     return this.$route.query.q as string || ''
-  }
-
-  get hanziContextmenuItems () {
-    const h = this.selectedHanzi
-
-    return [
-      {
-        label: 'Speak',
-        command: () => speak(h)
-      },
-      {
-        label: 'Search for Hanzi',
-        url: this.$router.resolve({
-          path: '/hanzi',
-          query: {
-            q: h
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Open in MDBG',
-        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${h}*`,
-        target: '_blank'
-      }
-    ]
-  }
-
-  get vocabContextmenuItems () {
-    const v = this.selectedVocab
-
-    return [
-      {
-        label: 'Speak',
-        command: () => speak(v)
-      },
-      {
-        label: 'Search for vocab',
-        url: this.$router.resolve({
-          path: '/vocab',
-          query: {
-            q: v
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Search for Hanzi',
-        url: this.$router.resolve({
-          path: '/hanzi',
-          query: {
-            q: v
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Open in MDBG',
-        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${v}*`,
-        target: '_blank'
-      }
-    ]
   }
 
   created () {

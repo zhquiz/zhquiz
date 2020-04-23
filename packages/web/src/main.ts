@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import firebase from 'firebase/app'
+
 import 'firebase/auth'
 import 'firebase/analytics'
 import 'firebase/firestore'
@@ -10,7 +11,7 @@ import store from './store'
 
 import './plugins/buefy'
 import './plugins/fontawesome'
-import './plugins/primevue'
+import './plugins/vue-context'
 import './main.scss'
 
 firebase.initializeApp(require('../firebase.config.js'))

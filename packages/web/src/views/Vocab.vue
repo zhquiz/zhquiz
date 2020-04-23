@@ -7,7 +7,7 @@
     .column.is-6.entry-display
       .font-hanzi(style="font-size: 120px; min-height: 200px; position: relative;")
         .clickable.text-center(
-          @contextmenu="(evt) => { selectedVocab = simplified; $refs.vocabContextmenu.show(evt) }"
+          @contextmenu.prevent="(evt) => { selectedVocab = simplified; $refs.vocabContextmenu.open(evt) }"
         ) {{simplified}}
         b-loading(:active="isQLoading" :is-full-page="false")
       .buttons.has-addons
@@ -32,7 +32,7 @@
             fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
         .card-content
           .font-hanzi.clickable(style="font-size: 60px; height: 80px;"
-            @contextmenu="(evt) => { selectedVocab = current.traditional; $refs.vocabContextmenu.show(evt) }"
+            @contextmenu.prevent="(evt) => { selectedVocab = current.traditional; $refs.vocabContextmenu.open(evt) }"
           ) {{current.traditional}}
       b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="typeof current === 'object'")
         .card-header(slot="trigger" slot-scope="props" role="button")
@@ -49,11 +49,29 @@
         .card-content
           div(v-for="s, i in sentences" :key="i")
             span.clickable.sentence-part(
-              @contextmenu="(evt) => { selectedSentence = s.chinese; $refs.sentenceContextmenu.show(evt) }"
+              @contextmenu.prevent="(evt) => { selectedSentence = s.chinese; $refs.sentenceContextmenu.open(evt) }"
             ) {{s.chinese}}&nbsp;
             span.sentence-part {{s.english}}
-  p-contextmenu(ref="vocabContextmenu" :model="vocabContextmenuItems")
-  p-contextmenu(ref="sentenceContextmenu" :model="sentenceContextmenuItems")
+  vue-context(ref="vocabContextmenu")
+    li
+      a(role="button" @click.prevent="speak(selectedVocab)") Speak
+    li
+      router-link(:to="{ path: '/vocab', query: { q: selectedVocab } }" target="_blank") Search for vocab
+    li
+      router-link(:to="{ path: '/hanzi', query: { q: selectedVocab } }" target="_blank") Search for Hanzi
+    li
+      a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selectedVocab}*`"
+        target="_blank" rel="noopener") Open in MDBG
+  vue-context(ref="sentenceContextmenu")
+    li
+      a(role="button" @click.prevent="speak(selectedSentence)") Speak
+    li
+      router-link(:to="{ path: '/vocab', query: { q: selectedSentence } }" target="_blank") Search for vocab
+    li
+      router-link(:to="{ path: '/hanzi', query: { q: selectedSentence } }" target="_blank") Search for Hanzi
+    li
+      a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${selectedSentence}`"
+        target="_blank" rel="noopener") Open in MDBG
 </template>
 
 <script lang="ts">
@@ -73,6 +91,8 @@ export default class Vocab extends Vue {
   selectedVocab = ''
   selectedSentence = ''
 
+  speak = speak
+
   get current () {
     return this.entries[this.i] || '' as any
   }
@@ -83,76 +103,6 @@ export default class Vocab extends Vue {
 
   get q () {
     return this.$route.query.q as string || ''
-  }
-
-  get vocabContextmenuItems () {
-    const v = this.selectedVocab
-
-    return [
-      {
-        label: 'Speak',
-        command: () => speak(v)
-      },
-      {
-        label: 'Search for vocab',
-        url: this.$router.resolve({
-          path: '/vocab',
-          query: {
-            q: v
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Search for Hanzi',
-        url: this.$router.resolve({
-          path: '/hanzi',
-          query: {
-            q: v
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Open in MDBG',
-        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${v}*`,
-        target: '_blank'
-      }
-    ]
-  }
-
-  get sentenceContextmenuItems () {
-    return [
-      {
-        label: 'Speak',
-        command: () => speak(this.selectedSentence)
-      },
-      {
-        label: 'Search for vocab',
-        url: this.$router.resolve({
-          path: '/vocab',
-          query: {
-            q: this.selectedSentence
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Search for Hanzi',
-        url: this.$router.resolve({
-          path: '/hanzi',
-          query: {
-            q: this.selectedSentence
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Open in MDBG',
-        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${this.selectedSentence}`,
-        target: '_blank'
-      }
-    ]
   }
 
   created () {
