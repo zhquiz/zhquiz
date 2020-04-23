@@ -152,7 +152,7 @@ export default class Home extends Vue {
     ]
   }
 
-  mounted () {
+  created () {
     this.onUserChanged()
   }
 
