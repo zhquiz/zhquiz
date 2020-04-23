@@ -154,7 +154,7 @@ export default class Hanzi extends Vue {
     ]
   }
 
-  mounted () {
+  created () {
     this.onQChange()
   }
 

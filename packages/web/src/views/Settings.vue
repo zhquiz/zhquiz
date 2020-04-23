@@ -27,7 +27,7 @@ export default class Settings extends Vue {
     return u ? u.email : undefined
   }
 
-  mounted () {
+  created () {
     this.onUserChanged()
   }
 
@@ -50,7 +50,7 @@ export default class Settings extends Vue {
     if (this.user) {
       this.isLoading = true
 
-      await firebase.firestore().collection('user').doc(this.user).set({
+      await firebase.firestore().collection('user').doc(this.user).update({
         levelMin: this.lv[0],
         level: this.lv[1]
       })

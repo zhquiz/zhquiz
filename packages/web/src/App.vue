@@ -8,6 +8,8 @@ main
     template(slot="start")
       b-navbar-item(tag="router-link" to="/hanzi" :active="$route.path === '/hanzi'") Hanzi
       b-navbar-item(tag="router-link" to="/vocab" :active="$route.path === '/vocab'") Vocab
+      b-navbar-item(tag="router-link" to="/lesson" :active="$route.path === '/lesson'") Lesson
+      b-navbar-item(tag="router-link" to="/level" :active="$route.path === '/level'") Level
       b-navbar-item(tag="router-link" to="/settings" :active="$route.path === '/settings'") Settings
       b-navbar-item(href="https://github.com/patarapolw/zhview" target="_blank" rel="noopener") About
     template(slot="end")
@@ -42,7 +44,7 @@ export default class App extends Vue {
     return this.$store.state.lastStatus !== 401
   }
 
-  mounted () {
+  created () {
     this.onUserChange()
   }
 

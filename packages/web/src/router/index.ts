@@ -7,6 +7,8 @@ const routes: RouteConfig[] = [
   { path: '/', name: 'Home' },
   { path: '/hanzi', name: 'Hanzi' },
   { path: '/vocab', name: 'Vocab' },
+  { path: '/lesson', name: 'Lesson' },
+  { path: '/level', name: 'Level' },
   { path: '/settings', name: 'Settings' }
 ]
 

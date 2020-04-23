@@ -19,3 +19,7 @@
     color: blue;
   }
 }
+
+.tag + .tag {
+  margin-left: 1em;
+}
