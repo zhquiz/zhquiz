@@ -4,26 +4,69 @@ article#Home
     .column.is-6
       .item-display
         .font-hanzi.clickable(style="font-size: 50px; min-height: 60px;"
-          @contextmenu="(evt) => $refs.hanziContextmenu.show(evt)"
-        ) {{hanzi}}
-        b-loading(:active="!hanzi" :is-full-page="false")
+          @contextmenu.prevent="(evt) => $refs.hanziContextmenu.open(evt)"
+        ) {{hanzi.item}}
+        b-loading(:active="!hanzi.item" :is-full-page="false")
       center Hanzi of the day
     .column.is-6
       .item-display
         .font-hanzi.clickable(style="font-size: 50px; min-height: 60px;"
-          @contextmenu="(evt) => $refs.vocabContextmenu.show(evt)"
-        ) {{vocab}}
-        b-loading(:active="!vocab" :is-full-page="false")
+          @contextmenu.prevent="(evt) => $refs.vocabContextmenu.open(evt)"
+        ) {{vocab.item}}
+        b-loading(:active="!vocab.item" :is-full-page="false")
       center Vocab of the day
   .item-display
     .font-hanzi.clickable.text-center(style="font-size: 30px; min-width: 3em; min-height: 40px"
-      @contextmenu="(evt) => $refs.sentenceContextmenu.show(evt)"
-    ) {{sentence}}
-    b-loading(:active="!sentence" :is-full-page="false")
+      @contextmenu.prevent="(evt) => $refs.sentenceContextmenu.open(evt)"
+    ) {{sentence.item}}
+    b-loading(:active="!sentence.item" :is-full-page="false")
   center Sentence of the day
-  p-contextmenu(ref="hanziContextmenu" :model="hanziContextmenuItems")
-  p-contextmenu(ref="vocabContextmenu" :model="vocabContextmenuItems")
-  p-contextmenu(ref="sentenceContextmenu" :model="sentenceContextmenuItems")
+  vue-context(ref="hanziContextmenu")
+    li
+      a(role="button" @click.prevent="loadHanzi()") Reload
+    li
+      a(role="button" @click.prevent="speak(hanzi.item)") Speak
+    li(v-if="hanzi.status === false")
+      a(role="button" @click.prevent="addToLesson(hanzi)") Add to lesson
+    li(v-else-if="hanzi.status === true")
+      a(role="button" @click.prevent="removeFromLesson(hanzi)") Remove from lesson
+    li
+      router-link(:to="{ path: '/hanzi', query: { q: hanzi.item } }" target="_blank") Search for Hanzi
+    li
+      a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${hanzi.item}*`"
+        target="_blank" rel="noopener") Open in MDBG
+  vue-context(ref="vocabContextmenu")
+    li
+      a(role="button" @click.prevent="loadVocab()") Reload
+    li
+      a(role="button" @click.prevent="speak(vocab.item)") Speak
+    li(v-if="vocab.status === false")
+      a(role="button" @click.prevent="addToLesson(vocab)") Add to lesson
+    li(v-else-if="vocab.status === true")
+      a(role="button" @click.prevent="removeFromLesson(vocab)") Remove from lesson
+    li
+      router-link(:to="{ path: '/vocab', query: { q: vocab.item } }" target="_blank") Search for vocab
+    li
+      router-link(:to="{ path: '/hanzi', query: { q: vocab.item } }" target="_blank") Search for Hanzi
+    li
+      a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${vocab.item}*`"
+        target="_blank" rel="noopener") Open in MDBG
+  vue-context(ref="sentenceContextmenu")
+    li
+      a(role="button" @click.prevent="loadHanzi()") Reload
+    li
+      a(role="button" @click.prevent="speak(sentence.item)") Speak
+    li(v-if="sentence.status === false")
+      a(role="button" @click.prevent="addToLesson(sentence)") Add to lesson
+    li(v-else-if="sentence.status === true")
+      a(role="button" @click.prevent="removeFromLesson(sentence)") Remove from lesson
+    li
+      router-link(:to="{ path: '/vocab', query: { q: sentence.item } }" target="_blank") Search for vocab
+    li
+      router-link(:to="{ path: '/hanzi', query: { q: sentence.item } }" target="_blank") Search for Hanzi
+    li
+      a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${sentence.item}`"
+        target="_blank" rel="noopener") Open in MDBG
 </template>
 
 <script lang="ts">
@@ -36,120 +79,35 @@ import { api, speak } from '../utils'
 
 @Component
 export default class Home extends Vue {
-  hanzi = ''
-  vocab = ''
-  sentence = ''
+  hanzi = {
+    type: 'hanzi',
+    item: '',
+    id: '',
+    status: null as null | boolean
+  }
+
+  vocab = {
+    type: 'vocab',
+    item: '',
+    id: '',
+    status: null as null | boolean
+  }
+
+  sentence = {
+    type: 'sentence',
+    item: '',
+    id: '',
+    status: null as null | boolean
+  }
 
   levelMin = 0
   level = 0
 
+  speak = speak
+
   get user () {
     const u = this.$store.state.user as User | null
     return u ? u.email : undefined
-  }
-
-  get hanziContextmenuItems () {
-    return [
-      {
-        label: 'Reload',
-        command: () => this.loadHanzi()
-      },
-      {
-        label: 'Speak',
-        command: () => speak(this.hanzi)
-      },
-      {
-        label: 'Search for Hanzi',
-        url: this.$router.resolve({
-          path: '/hanzi',
-          query: {
-            q: this.hanzi
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Open in MDBG',
-        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${this.hanzi}*`,
-        target: '_blank'
-      }
-    ]
-  }
-
-  get vocabContextmenuItems () {
-    return [
-      {
-        label: 'Reload',
-        command: () => this.loadVocab()
-      },
-      {
-        label: 'Speak',
-        command: () => speak(this.vocab)
-      },
-      {
-        label: 'Search for vocab',
-        url: this.$router.resolve({
-          path: '/vocab',
-          query: {
-            q: this.vocab
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Search for Hanzi',
-        url: this.$router.resolve({
-          path: '/hanzi',
-          query: {
-            q: this.vocab
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Open in MDBG',
-        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${this.vocab}*`,
-        target: '_blank'
-      }
-    ]
-  }
-
-  get sentenceContextmenuItems () {
-    return [
-      {
-        label: 'Reload',
-        command: () => this.loadSentence()
-      },
-      {
-        label: 'Speak',
-        command: () => speak(this.sentence)
-      },
-      {
-        label: 'Search for vocab',
-        url: this.$router.resolve({
-          path: '/vocab',
-          query: {
-            q: this.sentence
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Search for Hanzi',
-        url: this.$router.resolve({
-          path: '/hanzi',
-          query: {
-            q: this.sentence
-          }
-        }).href,
-        target: '_blank'
-      },
-      {
-        label: 'Open in MDBG',
-        url: `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${this.sentence}`,
-        target: '_blank'
-      }
-    ]
   }
 
   created () {
@@ -171,30 +129,73 @@ export default class Home extends Vue {
   @Watch('level')
   async loadHanzi () {
     if (this.level) {
-      this.hanzi = (await api.post('/api/hanzi/random', {
+      this.hanzi.item = (await api.post('/api/hanzi/random', {
         levelMin: this.levelMin,
         level: this.level
-      })).data.result || ' '
+      })).data.result
+      await this.getLessonStatus(this.hanzi)
     }
   }
 
   @Watch('level')
   async loadVocab () {
     if (this.level) {
-      this.vocab = (await api.post('/api/vocab/random', {
+      this.vocab.item = (await api.post('/api/vocab/random', {
         levelMin: this.levelMin,
         level: this.level
-      })).data.result || ' '
+      })).data.result
+      await this.getLessonStatus(this.vocab)
     }
   }
 
   @Watch('level')
   async loadSentence () {
     if (this.level) {
-      this.sentence = (await api.post('/api/sentence/random', {
+      this.sentence.item = (await api.post('/api/sentence/random', {
         levelMin: this.levelMin,
         level: this.level
-      })).data.result || ' '
+      })).data.result
+      await this.getLessonStatus(this.sentence)
+    }
+  }
+
+  async getLessonStatus (item: any) {
+    const vm = this as any
+
+    if (this.user) {
+      const r = await firebase.firestore().collection('lesson')
+        .where('user', '==', this.user)
+        .where('item', '==', item.item)
+        .where('type', '==', item.type)
+        .limit(1)
+        .get()
+
+      const doc = r.docs[0]
+
+      this.$set(vm[item.type], 'status', !!doc)
+      this.$set(vm[item.type], 'id', doc ? doc.id : null)
+    } else {
+      this.$set(vm[item.type], 'status', null)
+      this.$set(vm[item.type], 'id', null)
+    }
+  }
+
+  async addToLesson (item: any) {
+    if (this.user) {
+      await firebase.firestore().collection('lesson').doc().set({
+        user: this.user,
+        item: item.item,
+        type: item.type,
+        updatedAt: new Date()
+      })
+      this.getLessonStatus(item)
+    }
+  }
+
+  async removeFromLesson (item: any) {
+    if (this.user) {
+      await firebase.firestore().collection('lesson').doc(item.id).delete()
+      this.getLessonStatus(item)
     }
   }
 }
