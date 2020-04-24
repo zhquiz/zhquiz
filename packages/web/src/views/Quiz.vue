@@ -41,13 +41,13 @@
       .columns
         .column.is-3
           span(style="width: 5em; display: inline-block;") Due:
-          span {{dueItems.length}}
+          span {{dueItems.length | format}}
         .column.is-3
           span(style="width: 5em; display: inline-block;") New:
-          span {{newItems.length}}
+          span {{newItems.length | format}}
         .column.is-3
           span(style="width: 5em; display: inline-block;") Leech:
-          span {{leechItems.length}}
+          span {{leechItems.length | format}}
         .column.is-3(style="display: flex; flex-direction: row;")
           div(style="flex-grow: 1;")
           b-button(type="is-success" @click="startQuiz" :disabled="dueItems.length === 0") Start Quiz
@@ -66,9 +66,12 @@
           b-table-column(field="direction" label="Direction" searchable sortable)
             span(v-if="props.row.direction === 'ec'") English-Chinese
             span(v-else-if="props.row.direction === 'te'") Traditional-English
-            span(v-else) Simplfied-English
+            span(v-else-if="props.row.type === 'vocab'") Simplfied-English
+            span(v-else) Chinese-English
           b-table-column(field="tag" label="Tag" searchable)
             b-tag(v-for="t in props.row.tag || []" :key="t") {{t}}
+          b-table-column(field="srsLevel" label="SRS Level" searchable sortable) {{props.row.srsLevel}}
+          b-table-column(field="nextReview" label="Next Review" searchable sortable) {{props.row.nextReview | formatDate}}
   vue-context(ref="contextmenu" lazy)
     li
       a(role="button" @click.prevent="speak(selectedRow.item)") Speak
@@ -90,8 +93,6 @@
       .card-content(v-if="quizCurrent")
         .content(v-if="!isQuizShownAnswer" v-html="quizFront" ref="quizFront")
         .content(v-else v-html="quizBack" ref="quizBack")
-          h4 {{capitalize(quizCurrent.type)}}
-          h3 {{quizCurrent.item}}
       .buttons-area
         .buttons(v-if="!quizCurrent")
           button.button.is-warning(@click="endQuiz") End quiz
@@ -111,6 +112,7 @@
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import { AxiosInstance } from 'axios'
+import h from 'hyperscript'
 
 import { speak, shuffle, capitalize } from '../utils'
 
@@ -138,8 +140,13 @@ export default class Quiz extends Vue {
   quizIndex = 0
   isQuizShownAnswer = false
 
+  quizData = {
+    hanzi: {} as any,
+    vocab: {} as any,
+    sentence: {} as any
+  }
+
   speak = speak
-  capitalize = capitalize
 
   get email () {
     const u = this.$store.state.user
@@ -168,6 +175,161 @@ export default class Quiz extends Vue {
 
   get quizCurrent () {
     return this.quizItems[this.quizIndex]
+  }
+
+  get quizFront () {
+    if (this.quizCurrent) {
+      const { type, item, direction, front } = this.quizCurrent
+      if (front) {
+        return front
+      }
+
+      const quizData = this.quizData as any
+
+      if (type === 'hanzi') {
+        const r = quizData[type][item]
+
+        if (direction === 'ec') {
+          return r ? h('center', [
+            h('h4', 'Hanzi English-Chinese'),
+            h('p', r.english)
+          ]).outerHTML : ''
+        } else {
+          return h('center', [
+            h('h4', 'Hanzi Chinese-English'),
+            h('h1', item)
+          ]).outerHTML
+        }
+      } else if (type === 'vocab') {
+        const r = quizData[type][item] as any[]
+
+        if (direction === 'ec') {
+          return r ? h('center', [
+            h('h4', 'Vocab English-Chinese'),
+            h('ul', r.map((r0) => {
+              return h('li', r0.english)
+            }))
+          ]).outerHTML : ''
+        } else if (direction === 'te') {
+          return r ? h('center', [
+            h('h4', 'Vocab Traditional-English'),
+            h('h1', r.map((r0) => r0.traditional).filter((el) => el).join(' | '))
+          ]).outerHTML : ''
+        } else {
+          return h('center', [
+            h('h4', 'Vocab Simplified-English'),
+            h('h1', item)
+          ]).outerHTML
+        }
+      } else {
+        const r = quizData[type][item] as any[]
+
+        if (type === 'ec') {
+          return r ? h('center', [
+            h('h4', 'Sentence English-Chinese'),
+            h('ul', r.map((r0) => {
+              return h('li', r0.english)
+            }))
+          ]).outerHTML : ''
+        } else {
+          return h('center', [
+            h('h4', 'Sentence Chinese-English'),
+            h('h2', item)
+          ]).outerHTML
+        }
+      }
+    }
+
+    return ''
+  }
+
+  get quizBack () {
+    if (this.quizCurrent) {
+      const { type, item, direction, back } = this.quizCurrent
+      if (back) {
+        return back
+      }
+
+      const quizData = this.quizData as any
+
+      if (type === 'hanzi') {
+        const r = quizData[type][item]
+
+        if (direction === 'ec') {
+          return r ? h('center', [
+            h('h1', item),
+            h('p', r.pinyin)
+          ]).outerHTML : h('center', [
+            h('h1', item)
+          ]).outerHTML
+        } else {
+          return r ? h('center', [
+            h('p', r.pinyin),
+            h('p', r.english)
+          ]).outerHTML : ''
+        }
+      } else if (type === 'vocab') {
+        const r = quizData[type][item] as any[]
+
+        if (direction === 'ec') {
+          return r ? h('center', [
+            h('h1', item),
+            h('ul', r.map((r0) => {
+              return h('li', r0.pinyin)
+            }))
+          ]).outerHTML : h('center', [
+            h('h1', item)
+          ]).outerHTML
+        } else if (direction === 'te') {
+          return r ? h('center', [
+            h('h1', item),
+            h('ul', r.map((r0) => {
+              return h('li', r0.pinyin)
+            })),
+            h('hr'),
+            h('ul', r.map((r0) => {
+              return h('li', r0.english)
+            }))
+          ]).outerHTML : ''
+        } else {
+          return r ? h('center', [
+            h('h1', r.map((r0) => r0.traditional).filter((el) => el).join(' | ')),
+            h('ul', r.map((r0) => {
+              return h('li', r0.pinyin)
+            })),
+            h('hr'),
+            h('ul', r.map((r0) => {
+              return h('li', r0.english)
+            }))
+          ]).outerHTML : ''
+        }
+      } else {
+        const r = quizData[type][item] as any[]
+
+        if (direction === 'ec') {
+          return r ? h('center', [
+            h('h2', item),
+            h('ul', r.map((r0) => {
+              return h('li', r0.pinyin)
+            }))
+          ]).outerHTML : h('center', [
+            h('h2', item)
+          ]).outerHTML
+        } else {
+          return r ? h('center', [
+            h('ul', r.map((r0) => {
+              return h('li', r0.pinyin)
+            })),
+            h('hr'),
+            h('ul', r.map((r0) => {
+              return h('li', r0.english)
+            }))
+          ]).outerHTML : ''
+        }
+      }
+    }
+
+    return ''
   }
 
   created () {
@@ -284,26 +446,57 @@ export default class Quiz extends Vue {
     })
   }
 
-  startQuiz () {
+  async startQuiz () {
     this.quizItems = shuffle(this.dueItems)
-    this.quizIndex = 0
+    this.quizIndex = -1
+    await this.initNextQuizItem()
+
     this.isQuizModal = true
   }
 
   endQuiz () {
+    this.isQuizModal = false
     this.load()
   }
 
-  markRight () {
+  async initNextQuizItem () {
     this.quizIndex++
+    this.isQuizShownAnswer = false
+
+    if (this.quizCurrent) {
+      const { type, item } = this.quizCurrent
+      const quizData = this.quizData as any
+
+      if (!quizData[type][item]) {
+        const api = await this.getApi()
+        const r = await api.post(`/api/${type}/match`, { entry: item })
+        quizData[type][item] = r.data.result
+      }
+    }
   }
 
-  markWrong () {
-    this.quizIndex++
+  async markRight () {
+    const api = await this.getApi()
+    await api.patch('/api/quiz/right', {}, {
+      params: { id: this.quizCurrent._id }
+    })
+    this.initNextQuizItem()
   }
 
-  markRepeat () {
-    this.quizIndex++
+  async markWrong () {
+    const api = await this.getApi()
+    await api.patch('/api/quiz/wrong', {}, {
+      params: { id: this.quizCurrent._id }
+    })
+    this.initNextQuizItem()
+  }
+
+  async markRepeat () {
+    const api = await this.getApi()
+    await api.patch('/api/quiz/repeat', {}, {
+      params: { id: this.quizCurrent._id }
+    })
+    this.initNextQuizItem()
   }
 }
 </script>

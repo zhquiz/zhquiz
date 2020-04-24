@@ -8,7 +8,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   const zh = sqlite3('assets/zh.db', { readonly: true })
   const stmt = {
     hanziMatch: zh.prepare(/*sql*/`
-    SELECT sub, sup, [var] FROM token 
+    SELECT sub, sup, [var], pinyin, english FROM token 
     WHERE
       [entry] = ?
     ORDER BY frequency DESC
@@ -36,7 +36,9 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
               properties: {
                 sup: { type: 'string' },
                 sub: { type: 'string' },
-                var: { type: 'string' }
+                var: { type: 'string' },
+                pinyin: { type: 'string' },
+                english: { type: 'string' }
               }
             }
           }

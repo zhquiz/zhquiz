@@ -10,6 +10,7 @@ import vocabRouter from './vocab'
 import hanziRouter from './hanzi'
 import cardRouter from './card'
 import userRouter from './user'
+import quizRouter from './quiz'
 import db from '../db'
 
 admin.initializeApp({
@@ -79,6 +80,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   f.register(hanziRouter, { prefix: '/hanzi' })
   f.register(cardRouter, { prefix: '/card' })
   f.register(userRouter, { prefix: '/user' })
+  f.register(quizRouter, { prefix: '/quiz' })
 
   next()
 }

@@ -3,6 +3,7 @@ import sqlite3 from 'better-sqlite3'
 
 import db from '../db'
 import { DbCardModel } from '../db/schema'
+import { restoreDate } from '../util'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   const zh = sqlite3('assets/zh.db', { readonly: true })
@@ -75,7 +76,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
             }
           }
         ] : []),
-        { $match: cond }
+        { $match: restoreDate(cond) }
       ]
 
       const [rData, rCount = []] = await Promise.all([
