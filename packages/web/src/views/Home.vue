@@ -26,9 +26,9 @@ article#Home
       a(role="button" @click.prevent="loadHanzi()") Reload
     li
       a(role="button" @click.prevent="speak(hanzi.item)") Speak
-    li(v-if="hanzi.status === false")
+    li(v-if="!hanzi.id.length")
       a(role="button" @click.prevent="addToQuiz(hanzi)") Add to quiz
-    li(v-else-if="hanzi.status === true")
+    li(v-else)
       a(role="button" @click.prevent="removeFromQuiz(hanzi)") Remove from quiz
     li
       router-link(:to="{ path: '/hanzi', query: { q: hanzi.item } }" target="_blank") Search for Hanzi
@@ -40,9 +40,9 @@ article#Home
       a(role="button" @click.prevent="loadVocab()") Reload
     li
       a(role="button" @click.prevent="speak(vocab.item)") Speak
-    li(v-if="vocab.status === false")
+    li(v-if="!vocab.id.length")
       a(role="button" @click.prevent="addToQuiz(vocab)") Add to quiz
-    li(v-else-if="vocab.status === true")
+    li(v-else)
       a(role="button" @click.prevent="removeFromQuiz(vocab)") Remove from quiz
     li
       router-link(:to="{ path: '/vocab', query: { q: vocab.item } }" target="_blank") Search for vocab
@@ -56,9 +56,9 @@ article#Home
       a(role="button" @click.prevent="loadHanzi()") Reload
     li
       a(role="button" @click.prevent="speak(sentence.item)") Speak
-    li(v-if="sentence.status === false")
+    li(v-if="!sentence.id.length")
       a(role="button" @click.prevent="addToQuiz(sentence)") Add to quiz
-    li(v-else-if="sentence.status === true")
+    li(v-else)
       a(role="button" @click.prevent="removeFromQuiz(sentence)") Remove from quiz
     li
       router-link(:to="{ path: '/vocab', query: { q: sentence.item } }" target="_blank") Search for vocab
@@ -80,19 +80,19 @@ export default class Home extends Vue {
   hanzi = {
     type: 'hanzi',
     item: null,
-    status: null as null | boolean
+    id: []
   }
 
   vocab = {
     type: 'vocab',
     item: null,
-    status: null as null | boolean
+    id: []
   }
 
   sentence = {
     type: 'sentence',
     item: null,
-    status: null as null | boolean
+    id: []
   }
 
   levelMin = 0
@@ -162,15 +162,18 @@ export default class Home extends Vue {
 
     if (this.$store.state.user) {
       const api = await this.getApi()
-      const r = await api.post('/api/card/match', item)
+      const r = await api.post('/api/card/q', {
+        cond: {
+          item: item.item,
+          type: item.type
+        },
+        projection: { _id: 1 },
+        hasCount: false
+      })
 
-      const doc = r.data
-
-      this.$set(vm[item.type], 'status', !!doc)
-      this.$set(vm[item.type], 'id', doc ? doc._id : null)
+      this.$set(vm[item.type], 'id', r.data.result.map((el: any) => el._id))
     } else {
-      this.$set(vm[item.type], 'status', null)
-      this.$set(vm[item.type], 'id', null)
+      this.$set(vm[item.type], 'id', [])
     }
   }
 
@@ -179,16 +182,22 @@ export default class Home extends Vue {
       const api = await this.getApi()
       await api.put('/api/card/', item)
       this.getQuizStatus(item)
+
+      this.$buefy.snackbar.open(`Added ${item.type}: ${item.item} to quiz`)
     }
   }
 
   async removeFromQuiz (item: any) {
     if (this.$store.state.user) {
+      const vm = this as any
+
       const api = await this.getApi()
-      await api.delete('/api/card/', {
-        data: item
-      })
+      await Promise.all(vm[item.type].id.map((i: string) => api.delete('/api/card/', {
+        data: { id: i }
+      })))
       this.getQuizStatus(item)
+
+      this.$buefy.snackbar.open(`Removed ${item.type}: ${item.item} from quiz`)
     }
   }
 }

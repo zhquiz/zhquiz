@@ -55,7 +55,7 @@
   vue-context(ref="vocabContextmenu" lazy)
     li
       a(role="button" @click.prevent="speak(selectedVocab)") Speak
-    li(v-if="!vocabIds[selectedVocab]")
+    li(v-if="!vocabIds[selectedVocab] || !vocabIds[selectedVocab].length")
       a(role="button" @click.prevent="addToQuiz(selectedVocab, 'vocab')") Add to quiz
     li(v-else)
       a(role="button" @click.prevent="removeFromQuiz(selectedVocab, 'vocab')") Remove from quiz
@@ -69,7 +69,7 @@
   vue-context(ref="sentenceContextmenu" lazy)
     li
       a(role="button" @click.prevent="speak(selectedSentence)") Speak
-    li(v-if="!sentenceIds[selectedSentence]")
+    li(v-if="!sentenceIds[selectedSentence] || !sentenceIds[selectedSentence].length")
       a(role="button" @click.prevent="addToQuiz(selectedSentence, 'sentence')") Add to quiz
     li(v-else)
       a(role="button" @click.prevent="removeFromQuiz(selectedSentence, 'sentence')") Remove from quiz
@@ -174,12 +174,14 @@ export default class Vocab extends Vue {
   async loadVocabStatus () {
     if (this.selectedVocab) {
       const api = await this.getApi()
-      const r = await api.post('/api/card/match', { item: this.selectedVocab, type: 'vocab' })
-      if (r.data) {
-        this.$set(this.vocabIds, this.selectedVocab, r.data._id)
-      } else {
-        this.$set(this.vocabIds, this.selectedVocab, null)
-      }
+      const r = await api.post('/api/card/q', {
+        cond: { item: this.selectedVocab, type: 'vocab' },
+        hasCount: false,
+        projection: {
+          _id: 1
+        }
+      })
+      this.$set(this.vocabIds, this.selectedVocab, r.data.result.map((d: any) => d._id))
     }
   }
 
@@ -187,8 +189,14 @@ export default class Vocab extends Vue {
   async loadSentenceStatus () {
     if (this.selectedSentence) {
       const api = await this.getApi()
-      const r = await api.post('/api/card/match', { item: this.selectedVocab, type: 'sentence' })
-      this.$set(this.vocabIds, this.selectedVocab, !!r.data)
+      const r = await api.post('/api/card/q', {
+        cond: { item: this.selectedSentence, type: 'sentence' },
+        hasCount: false,
+        projection: {
+          _id: 1
+        }
+      })
+      this.$set(this.sentenceIds, this.selectedSentence, r.data.result.map((d: any) => d._id))
     }
   }
 
@@ -196,14 +204,20 @@ export default class Vocab extends Vue {
     const api = await this.getApi()
     await api.put('/api/card/', { item, type })
     this.$buefy.snackbar.open(`Added ${type}: ${item} to quiz`)
+
+    type === 'vocab' ? this.loadVocabStatus() : this.loadSentenceStatus()
   }
 
   async removeFromQuiz (item: string, type: string) {
     const api = await this.getApi()
-    await api.delete('/api/card/', {
-      data: { item, type }
-    })
+    const ids = (type === 'vocab' ? this.vocabIds[item] : this.sentenceIds[item]) || []
+    await Promise.all(ids.map((id: string) => api.delete('/api/card/', {
+      data: { id }
+    })))
+
     this.$buefy.snackbar.open(`Removed ${type}: ${item} from quiz`)
+
+    type === 'vocab' ? this.loadVocabStatus() : this.loadSentenceStatus()
   }
 }
 </script>

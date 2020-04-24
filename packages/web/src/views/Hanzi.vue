@@ -163,8 +163,15 @@ export default class Hanzi extends Vue {
   async loadHanziStatus () {
     if (this.selectedHanzi) {
       const api = await this.getApi()
-      const r = await api.post('/api/card/match', { item: this.selectedHanzi, type: 'hanzi' })
-      this.$set(this.hanziIds, this.selectedHanzi, !!r.data)
+      const r = await api.post('/api/card/q', {
+        cond: {
+          item: this.selectedHanzi,
+          type: 'hanzi'
+        },
+        projection: { _id: 1 },
+        hasCount: false
+      })
+      this.$set(this.hanziIds, this.selectedHanzi, !!r.data.result.length)
     }
   }
 
@@ -172,12 +179,15 @@ export default class Hanzi extends Vue {
   async loadVocabStatus () {
     if (this.selectedVocab) {
       const api = await this.getApi()
-      const r = await api.post('/api/card/match', { item: this.selectedVocab, type: 'vocab' })
-      if (r.data) {
-        this.$set(this.vocabIds, this.selectedVocab, r.data._id)
-      } else {
-        this.$set(this.vocabIds, this.selectedVocab, null)
-      }
+      const r = await api.post('/api/card/q', {
+        cond: {
+          item: this.selectedVocab,
+          type: 'vocab'
+        },
+        projection: { _id: 1 },
+        hasCount: false
+      })
+      this.$set(this.vocabIds, this.selectedVocab, !!r.data.result.length)
     }
   }
 
@@ -185,14 +195,19 @@ export default class Hanzi extends Vue {
     const api = await this.getApi()
     await api.put('/api/card/', { item, type })
     this.$buefy.snackbar.open(`Added ${type}: ${item} to quiz`)
+
+    type === 'vocab' ? this.loadVocabStatus() : this.loadHanziStatus()
   }
 
   async removeFromQuiz (item: string, type: string) {
     const api = await this.getApi()
-    await api.delete('/api/card/', {
-      data: { item, type }
-    })
+    const ids = (type === 'vocab' ? this.vocabIds[item] : this.hanziIds[item]) || []
+    await Promise.all(ids.map((id: string) => api.delete('/api/card/', {
+      data: { id }
+    })))
     this.$buefy.snackbar.open(`Removed ${type}: ${item} from quiz`)
+
+    type === 'vocab' ? this.loadVocabStatus() : this.loadHanziStatus()
   }
 }
 </script>

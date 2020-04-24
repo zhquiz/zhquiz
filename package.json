@@ -2,7 +2,9 @@
   "name": "zhview",
   "version": "0.2.0",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "dev": "concurrently 'cd packages/server && npm run dev' 'cd packages/web && npm run dev'"
+  },
   "dependencies": {},
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.29.0",
