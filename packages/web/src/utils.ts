@@ -1,9 +1,3 @@
-import axios from 'axios'
-
-export const api = axios.create({
-  baseURL: 'https://zhres.herokuapp.com'
-})
-
 const allVoices: Record<string, string> = {}
 speechSynthesis.getVoices().map(v => {
   allVoices[v.lang] = v.lang
