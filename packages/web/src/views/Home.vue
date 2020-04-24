@@ -21,29 +21,29 @@ article#Home
     ) {{sentence.item}}
     b-loading(:active="!sentence.item" :is-full-page="false")
   center Sentence of the day
-  vue-context(ref="hanziContextmenu")
+  vue-context(ref="hanziContextmenu" lazy)
     li
       a(role="button" @click.prevent="loadHanzi()") Reload
     li
       a(role="button" @click.prevent="speak(hanzi.item)") Speak
     li(v-if="hanzi.status === false")
-      a(role="button" @click.prevent="addToLesson(hanzi)") Add to lesson
+      a(role="button" @click.prevent="addToQuiz(hanzi)") Add to quiz
     li(v-else-if="hanzi.status === true")
-      a(role="button" @click.prevent="removeFromLesson(hanzi)") Remove from lesson
+      a(role="button" @click.prevent="removeFromQuiz(hanzi)") Remove from quiz
     li
       router-link(:to="{ path: '/hanzi', query: { q: hanzi.item } }" target="_blank") Search for Hanzi
     li
       a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${hanzi.item}*`"
         target="_blank" rel="noopener") Open in MDBG
-  vue-context(ref="vocabContextmenu")
+  vue-context(ref="vocabContextmenu" lazy)
     li
       a(role="button" @click.prevent="loadVocab()") Reload
     li
       a(role="button" @click.prevent="speak(vocab.item)") Speak
     li(v-if="vocab.status === false")
-      a(role="button" @click.prevent="addToLesson(vocab)") Add to lesson
+      a(role="button" @click.prevent="addToQuiz(vocab)") Add to quiz
     li(v-else-if="vocab.status === true")
-      a(role="button" @click.prevent="removeFromLesson(vocab)") Remove from lesson
+      a(role="button" @click.prevent="removeFromQuiz(vocab)") Remove from quiz
     li
       router-link(:to="{ path: '/vocab', query: { q: vocab.item } }" target="_blank") Search for vocab
     li
@@ -51,15 +51,15 @@ article#Home
     li
       a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${vocab.item}*`"
         target="_blank" rel="noopener") Open in MDBG
-  vue-context(ref="sentenceContextmenu")
+  vue-context(ref="sentenceContextmenu" lazy)
     li
       a(role="button" @click.prevent="loadHanzi()") Reload
     li
       a(role="button" @click.prevent="speak(sentence.item)") Speak
     li(v-if="sentence.status === false")
-      a(role="button" @click.prevent="addToLesson(sentence)") Add to lesson
+      a(role="button" @click.prevent="addToQuiz(sentence)") Add to quiz
     li(v-else-if="sentence.status === true")
-      a(role="button" @click.prevent="removeFromLesson(sentence)") Remove from lesson
+      a(role="button" @click.prevent="removeFromQuiz(sentence)") Remove from quiz
     li
       router-link(:to="{ path: '/vocab', query: { q: sentence.item } }" target="_blank") Search for vocab
     li
@@ -71,7 +71,6 @@ article#Home
 
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
-import firebase, { User } from 'firebase/app'
 import { AxiosInstance } from 'axios'
 
 import { speak } from '../utils'
@@ -101,11 +100,6 @@ export default class Home extends Vue {
 
   speak = speak
 
-  get user () {
-    const u = this.$store.state.user as User | null
-    return u ? u.email : undefined
-  }
-
   created () {
     this.onUserChanged()
   }
@@ -114,9 +108,9 @@ export default class Home extends Vue {
     return await this.$store.dispatch('getApi', silent) as AxiosInstance
   }
 
-  @Watch('user')
+  @Watch('$store.state.user')
   async onUserChanged () {
-    if (this.user) {
+    if (this.$store.state.user) {
       const api = await this.getApi()
       const r = await api.get('/api/user/')
       const data = r.data
@@ -135,7 +129,7 @@ export default class Home extends Vue {
         levelMin: this.levelMin,
         level: this.level
       })).data.result
-      await this.getLessonStatus(this.hanzi)
+      await this.getQuizStatus(this.hanzi)
     }
   }
 
@@ -147,7 +141,7 @@ export default class Home extends Vue {
         levelMin: this.levelMin,
         level: this.level
       })).data.result
-      await this.getLessonStatus(this.vocab)
+      await this.getQuizStatus(this.vocab)
     }
   }
 
@@ -159,14 +153,14 @@ export default class Home extends Vue {
         levelMin: this.levelMin,
         level: this.level
       })).data.result
-      await this.getLessonStatus(this.sentence)
+      await this.getQuizStatus(this.sentence)
     }
   }
 
-  async getLessonStatus (item: any) {
+  async getQuizStatus (item: any) {
     const vm = this as any
 
-    if (this.user) {
+    if (this.$store.state.user) {
       const api = await this.getApi()
       const r = await api.post('/api/card/match', item)
 
@@ -180,21 +174,21 @@ export default class Home extends Vue {
     }
   }
 
-  async addToLesson (item: any) {
-    if (this.user) {
+  async addToQuiz (item: any) {
+    if (this.$store.state.user) {
       const api = await this.getApi()
       await api.put('/api/card/', item)
-      this.getLessonStatus(item)
+      this.getQuizStatus(item)
     }
   }
 
-  async removeFromLesson (item: any) {
-    if (this.user) {
+  async removeFromQuiz (item: any) {
+    if (this.$store.state.user) {
       const api = await this.getApi()
       await api.delete('/api/card/', {
         data: item
       })
-      this.getLessonStatus(item)
+      this.getQuizStatus(item)
     }
   }
 }

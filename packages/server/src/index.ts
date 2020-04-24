@@ -19,7 +19,9 @@ async function main () {
   })
 
   const app = fastify({
-    logger: true
+    logger: {
+      prettyPrint: true
+    }
   })
   const port = parseInt(process.env.PORT || '8080')
 
