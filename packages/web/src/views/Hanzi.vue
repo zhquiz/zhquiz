@@ -139,10 +139,13 @@ export default class Hanzi extends Vue {
     this.load()
   }
 
+  @Watch('$store.state.user')
   @Watch('current')
   load () {
-    this.loadHanzi()
-    this.loadVocab()
+    if (this.$store.state.user) {
+      this.loadHanzi()
+      this.loadVocab()
+    }
   }
 
   async loadHanzi () {
