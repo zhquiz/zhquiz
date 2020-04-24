@@ -125,9 +125,10 @@ export default class Vocab extends Vue {
     return await this.$store.dispatch('getApi', silent) as AxiosInstance
   }
 
+  @Watch('$store.state.user')
   @Watch('q')
   async onQChange () {
-    if (this.q) {
+    if (this.q && this.$store.state.user) {
       this.isQLoading = true
       const api = await this.getApi()
 
