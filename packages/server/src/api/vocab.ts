@@ -19,7 +19,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       offset: number
     }) {
       return zh.prepare(/*sql*/`
-      SELECT simplified, traditional, pinyin, english
+      SELECT simplified, traditional, v.pinyin AS pinyin, v.english AS english
       FROM vocab v
       LEFT JOIN token t ON t.entry = v.simplified
       WHERE
