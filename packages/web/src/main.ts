@@ -3,7 +3,6 @@ import firebase from 'firebase/app'
 
 import 'firebase/auth'
 import 'firebase/analytics'
-import 'firebase/firestore'
 
 import App from './App.vue'
 import router from './router'
@@ -19,14 +18,6 @@ firebase.analytics()
 
 firebase.auth().onAuthStateChanged((user) => {
   store.commit('setUser', user)
-  if (user && user.email) {
-    const email = user.email
-    firebase.firestore().collection('user').doc(email).get().then(r => {
-      if (!r.data()) {
-        firebase.firestore().collection('user').doc(email).set({})
-      }
-    })
-  }
 })
 
 Vue.config.productionTip = false

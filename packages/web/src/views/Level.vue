@@ -24,11 +24,9 @@
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import firebase from 'firebase/app'
+import { AxiosInstance } from 'axios'
 
-import 'firebase/firebase-firestore'
 import { speak } from '../utils'
-// @ts-ignore
-import hsk from '../assets/hsk.yaml'
 
 @Component
 export default class Level extends Vue {
@@ -45,11 +43,17 @@ export default class Level extends Vue {
   }
 
   async created () {
-    this.onUserChange()
+    await this.onUserChange()
+    const api = await this.getApi()
+    const r = await api.post('/api/vocab/all')
 
-    this.$set(this, 'data', Object.entries<string[]>(hsk).map(([lv, vs]) => {
+    this.$set(this, 'data', Object.entries(r.data).map(([lv, vs]) => {
       return { level: parseInt(lv), item: vs }
     }))
+  }
+
+  async getApi (silent = true) {
+    return await this.$store.dispatch('getApi', silent) as AxiosInstance
   }
 
   @Watch('email')
@@ -57,15 +61,24 @@ export default class Level extends Vue {
     this.tagClassMap = {}
 
     if (this.email) {
-      const r = await firebase.firestore().collection('lesson')
-        .where('user', '==', this.email)
-        .where('type', '==', 'vocab')
-        .where('srsLevel', '>=', 0)
-        .get()
+      const api = await this.getApi()
+      const r = await api.post('/api/card/q', {
+        cond: {
+          type: 'vocab',
+          srsLevel: { $gte: 0 }
+        },
+        join: ['quiz'],
+        projection: {
+          item: 1,
+          srsLevel: 1
+        },
+        limit: null
+      })
 
-      r.docs.map(d => {
-        const data = d.data()
-        this.$set(this.tagClassMap, data.item, data.srsLevel < 2 ? 'is-warning' : 'is-success')
+      r.data.map(data => {
+        if (data.srsLevel) {
+          this.$set(this.tagClassMap, data.item, data.srsLevel < 2 ? 'is-warning' : 'is-success')
+        }
       })
     }
   }

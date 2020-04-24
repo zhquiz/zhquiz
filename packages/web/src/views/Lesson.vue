@@ -43,8 +43,8 @@
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import firebase from 'firebase/app'
+import { AxiosInstance } from 'axios'
 
-import 'firebase/firebase-firestore'
 import { speak } from '../utils'
 
 @Component
@@ -59,8 +59,9 @@ export default class Lesson extends Vue {
 
   data: any[] = []
   isTableShown = false
-  lastDataItem = ''
-  lastDocs = [] as any[]
+  page = 1
+  count = 0
+
   selectedRow = {} as any
   isEditTagModal = false
 
@@ -75,11 +76,16 @@ export default class Lesson extends Vue {
     this.onUserChange()
   }
 
+  async getApi (silent = true) {
+    return await this.$store.dispatch('getApi', silent) as AxiosInstance
+  }
+
   @Watch('email')
   async onUserChange () {
     if (this.email) {
-      const r = await firebase.firestore().collection('user').doc(this.email).get()
-      const data = r.data()
+      const api = await this.getApi()
+      const r = await api.get('/api/user/')
+      const data = r.data
       if (data) {
         this.allTags = data.allTags || []
       }
@@ -98,51 +104,23 @@ export default class Lesson extends Vue {
 
   @Watch('isTableShown')
   @Watch('selectedTags')
-  async load (newVal?: any) {
+  async load () {
     if (this.isTableShown) {
-      let limit = 20
-
-      if (newVal && typeof newVal === 'object') {
-        limit = newVal.limit || limit
-      }
-
-      if (this.data.length === 0) {
-        this.lastDataItem = ''
-      }
-
-      let c = firebase.firestore().collection('lesson')
-        .where('user', '==', this.email)
-
-      this.selectedTags.map(t => {
-        c = c.where('tag', 'array-contains', t)
+      const api = await this.getApi()
+      const r = await api.post('/api/card/q', {
+        cond: {
+          tag: this.selectedTags
+        },
+        offset: (this.page - 1) * 10,
+        limit: 10
       })
 
-      c = c.orderBy('updatedAt', 'desc')
+      this.data = r.data.result
+      this.count = r.data.count
 
-      if (this.lastDataItem) {
-        c = c.startAfter(this.lastDataItem).limit(limit)
-      }
-
-      const { docs } = await c.get()
-      const prevLastData = this.lastDataItem
-
-      docs.map(d => {
-        const data = d.data()
-        if (this.types.includes(data.type)) {
-          this.lastDataItem = data.item
-
-          data.id = d.id
-          this.data.push(data)
-        }
-      })
-
-      if (docs.length > this.lastDocs.length && this.lastDataItem === prevLastData) {
-        this.lastDocs = docs
-        await this.load({ limit: limit + 20 })
-      }
-
-      this.lastDocs = []
       this.$set(this, 'data', this.data)
+    } else {
+      this.page = 1
     }
   }
 
@@ -167,15 +145,18 @@ export default class Lesson extends Vue {
       type: 'is-danger',
       hasIcon: true,
       onConfirm: async () => {
-        firebase.firestore().collection('lesson').doc(this.selectedRow.id).delete()
+        const api = await this.getApi()
+        await api.delete('/api/card/', this.selectedRow)
         this.data = this.data.filter(d => d.id !== this.selectedRow.id)
       }
     })
   }
 
-  onEditTagModelClose () {
-    firebase.firestore().collection('lesson').doc(this.selectedRow.id).update({
-      tag: this.selectedRow.tag
+  async onEditTagModelClose () {
+    const api = await this.getApi()
+    await api.patch('/api/card/', {
+      id: this.selectedRow._id,
+      set: this.selectedRow.tag
     })
   }
 }

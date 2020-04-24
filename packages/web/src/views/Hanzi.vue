@@ -85,7 +85,9 @@
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import XRegExp from 'xregexp'
-import { api, speak } from '../utils'
+import { AxiosInstance } from 'axios'
+
+import { speak } from '../utils'
 
 @Component
 export default class Hanzi extends Vue {
@@ -114,6 +116,10 @@ export default class Hanzi extends Vue {
     this.onQChange()
   }
 
+  async getApi (silent = true) {
+    return await this.$store.dispatch('getApi', silent) as AxiosInstance
+  }
+
   @Watch('q')
   onQChange () {
     const qs = this.q.split('').filter(h => XRegExp('\\p{Han}').test(h))
@@ -129,6 +135,7 @@ export default class Hanzi extends Vue {
   }
 
   async loadHanzi () {
+    const api = await this.getApi()
     const r = (await api.post('/api/hanzi/match', { entry: this.current })).data.result
     this.sub = r.sub
     this.sup = r.sup
@@ -136,6 +143,7 @@ export default class Hanzi extends Vue {
   }
 
   async loadVocab () {
+    const api = await this.getApi()
     const r = (await api.post('/api/vocab/q', { entry: this.current })).data
     this.$set(this, 'vocabs', r.result)
   }
