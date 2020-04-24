@@ -1,4 +1,4 @@
-import { prop, getModelForClass, index, Ref, setGlobalOptions, Severity } from '@typegoose/typegoose'
+import { prop, getModelForClass, index, Ref, setGlobalOptions, Severity, pre } from '@typegoose/typegoose'
 import { nanoid } from 'nanoid'
 import dotProp from 'dot-prop'
 
@@ -15,12 +15,16 @@ export class DbUser {
 
 export const DbUserModel = getModelForClass(DbUser, { schemaOptions: { collection: 'user', timestamps: true } })
 
-@index({ userId: 1, type: 1, item: 1 }, { unique: true })
+@pre<DbCard>('remove', function () {
+  DbQuizModel.deleteMany({ cardId: this._id })
+})
+@index({ userId: 1, type: 1, item: 1, direction: 1 }, { unique: true })
 export class DbCard {
   @prop({ default: () => nanoid() }) _id!: string
   @prop({ required: true, index: true, ref: 'DbUser' }) userId!: Ref<DbUser>
   @prop({ required: true }) type!: string
   @prop({ required: true }) item!: string
+  @prop({ required: true }) direction!: string
   @prop({ default: () => [] }) tag!: string[]
 }
 

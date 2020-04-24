@@ -1,38 +1,11 @@
 import { FastifyInstance } from 'fastify'
+import sqlite3 from 'better-sqlite3'
 
 import db from '../db'
 import { DbCardModel } from '../db/schema'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
-  f.post('/match', {
-    schema: {
-      tags: ['card'],
-      summary: 'Get one card',
-      body: {
-        type: 'object',
-        required: ['item', 'type'],
-        properties: {
-          item: { type: 'string' },
-          type: { type: 'string' }
-        }
-      }
-    }
-  }, async (req, reply) => {
-    const u = db.user
-    if (u) {
-      const { item, type } = req.body
-
-      const r = await DbCardModel.findOne({
-        userId: u._id,
-        item,
-        type
-      })
-
-      return r ? r.toJSON() : null
-    }
-
-    return reply.status(400).send()
-  })
+  const zh = sqlite3('assets/zh.db', { readonly: true })
 
   f.post('/q', {
     schema: {
@@ -151,14 +124,28 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     const u = db.user
     if (u) {
       const { item, type } = req.body
+      const directions = ['se', 'ec']
 
-      const r = await DbCardModel.create({
+      if (type === 'vocab') {
+        const r = zh.prepare(/*sql*/`
+        SELECT traditional
+        FROM vocab
+        WHERE
+          simplified = ? AND traditional IS NOT NULL
+        LIMIT 1`).all(item)
+        if (r.length > 0) {
+          directions.push('te')
+        }
+      }
+
+      await Promise.all(directions.map((direction) => DbCardModel.create({
         userId: u._id,
         item,
-        type
-      })
+        type,
+        direction
+      })))
 
-      return r.toJSON()
+      return reply.status(201).send()
     }
 
     return reply.status(400).send()
@@ -167,7 +154,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   f.patch('/', {
     schema: {
       tags: ['card'],
-      summary: 'Create a card',
+      summary: 'Update a card',
       body: {
         type: 'object',
         required: ['id', 'set'],
@@ -198,23 +185,17 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       summary: 'Delete a card',
       body: {
         type: 'object',
-        required: ['item', 'type'],
+        required: ['id'],
         properties: {
-          item: { type: 'string' },
-          type: { type: 'string' }
+          id: { type: 'string' }
         }
       }
     }
   }, async (req, reply) => {
     const u = db.user
     if (u) {
-      const { item, type } = req.body
-
-      await DbCardModel.deleteOne({
-        userId: u._id,
-        item,
-        type
-      })
+      const { id } = req.body
+      await DbCardModel.findByIdAndRemove(id)
 
       return reply.status(201).send()
     }

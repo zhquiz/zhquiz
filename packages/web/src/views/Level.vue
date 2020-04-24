@@ -18,10 +18,10 @@
   vue-context(ref="contextmenu" lazy)
     li
       a(role="button" @click.prevent="speak(selected)") Speak
-    li(v-if="!vocabIds[selected]")
-      a(role="button" @click.prevent="addToQuiz(selected, 'vocab')") Add to quiz
+    li(v-if="!vocabIds[selected] || !vocabIds[selected].length")
+      a(role="button" @click.prevent="addToQuiz(selected)") Add to quiz
     li(v-else)
-      a(role="button" @click.prevent="removeFromQuiz(selected, 'vocab')") Remove from quiz
+      a(role="button" @click.prevent="removeFromQuiz(selected)") Remove from quiz
     li
       router-link(:to="{ path: '/vocab', query: { q: selected } }" target="_blank") Search for vocab
     li
@@ -109,10 +109,8 @@ export default class Level extends Vue {
 
   @Watch('email')
   async onUserChange () {
-    this.vocabSrsLevel = {}
-
     if (this.email) {
-      const api = await this.getApi()
+      const api = await this.getApi(false)
       const r = await api.post('/api/card/q', {
         cond: {
           type: 'vocab'
@@ -126,9 +124,20 @@ export default class Level extends Vue {
         hasCount: false
       })
 
-      r.data.result.map((data: any) => {
-        this.$set(this.vocabSrsLevel, data.item, typeof data.srsLevel === 'number' ? data.srsLevel : null)
+      this.vocabSrsLevel = {}
+      r.data.result.map((d: any) => {
+        const lv = this.vocabSrsLevel[d.item]
+
+        if (typeof d.srsLevel === 'number') {
+          this.vocabSrsLevel[d.item] = typeof lv === 'number'
+            ? lv > d.srsLevel ? d.srsLevel : lv
+            : lv
+        } else if (typeof lv === 'undefined') {
+          this.vocabSrsLevel[d.item] = null
+        }
       })
+
+      this.$set(this, 'vocabSrsLevel', this.vocabSrsLevel)
     }
   }
 
@@ -136,18 +145,32 @@ export default class Level extends Vue {
   async loadVocabStatus () {
     if (this.selected) {
       const api = await this.getApi()
-      const r = await api.post('/api/card/match', { item: this.selected, type: 'vocab' })
-      if (r.data) {
-        this.$set(this.vocabIds, this.selected, r.data._id)
-        this.$set(this.vocabSrsLevel, this.selected, null)
-      } else {
-        this.$set(this.vocabIds, this.selected, null)
-        this.$set(this.vocabSrsLevel, this.selected, undefined)
-      }
+      const r = await api.post('/api/card/q', {
+        cond: {
+          item: this.selected,
+          type: 'vocab'
+        },
+        join: ['quiz'],
+        projection: {
+          _id: 1,
+          srsLevel: 1
+        },
+        hasCount: false
+      })
+
+      const srsLevels = r.data.result.map((r: any) => r.srsLevel).filter((s: any) => typeof s === 'number')
+      const srsLevel = srsLevels.length > 0
+        ? Math.min(...srsLevels)
+        : (r.data.result.length > 0 ? null : undefined)
+
+      this.$set(this.vocabIds, this.selected, r.data.result.map((r: any) => r._id))
+      this.$set(this.vocabSrsLevel, this.selected, srsLevel)
     }
   }
 
-  async addToQuiz (item: string, type: string) {
+  async addToQuiz (item: string) {
+    const type = 'vocab'
+
     const api = await this.getApi()
     await api.put('/api/card/', { item, type })
     this.$buefy.snackbar.open(`Added ${type}: ${item} to quiz`)
@@ -156,11 +179,12 @@ export default class Level extends Vue {
   }
 
   async removeFromQuiz (item: string, type: string) {
+    const ids = this.vocabIds[item] || []
     const api = await this.getApi()
-    await api.delete('/api/card/', {
-      data: { item, type }
-    })
-    this.$set(this.tagClassMap, item, '')
+    await Promise.all(ids.map((id: string) => api.delete('/api/card/', {
+      data: { id }
+    })))
+    this.$buefy.snackbar.open(`Removed vocab: ${item} from quiz`)
 
     this.loadVocabStatus()
   }
