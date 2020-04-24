@@ -21,6 +21,9 @@ module.exports = {
     '@typescript-eslint'
   ],
   rules: {
-    'no-unused-vars': 0
+    'no-unused-vars': 0,
+    'no-useless-constructor': 0,
+    'spaced-comment': 0,
+    quote: 0
   }
 }

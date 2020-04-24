@@ -2,10 +2,10 @@ import dayjs from 'dayjs'
 
 export const srsMap = [
   durationOf(4, 'hour'),
-  durationOf(8, 'hour')
-  // durationOf(1, 'day'),
-  // durationOf(3, 'day'),
-  // durationOf(1, 'week'),
+  durationOf(8, 'hour'),
+  durationOf(1, 'day'),
+  durationOf(3, 'day'),
+  durationOf(1, 'week')
   // durationOf(2, 'week'),
   // durationOf(4, 'week'),
   // durationOf(16, 'week')

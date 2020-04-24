@@ -61,7 +61,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         200: {
           type: 'object',
           properties: {
-            result: { type: 'array', items: { type: 'object' } },
+            result: { type: 'array', items: {} },
             offset: { type: 'integer' },
             limit: { type: ['integer', 'null'] },
             count: { type: 'integer' }
@@ -105,7 +105,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         { $match: cond }
       ]
 
-      const [rData, rCount = {} as any] = await Promise.all([
+      const [rData, rCount = []] = await Promise.all([
         DbCardModel.aggregate([
           ...match,
           { $sort: sort },
@@ -127,7 +127,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         result: rData,
         offset,
         limit,
-        count: rCount.count
+        count: hasCount ? ((rCount[0] || {}).count || 0) : undefined
       }
     }
 

@@ -62,17 +62,25 @@
             ) {{v.traditional}}&nbsp;
             span.vocab-part(style="min-width: 8em;") [{{v.pinyin}}]&nbsp;
             span.vocab-part {{v.english}}
-  vue-context(ref="hanziContextmenu")
+  vue-context(ref="hanziContextmenu" lazy)
     li
       a(role="button" @click.prevent="speak(selectedHanzi)") Speak
+    li(v-if="!hanziIds[selectedHanzi]")
+      a(role="button" @click.prevent="addToQuiz(selectedHanzi, 'hanzi')") Add to quiz
+    li(v-else)
+      a(role="button" @click.prevent="removeFromQuiz(selectedHanzi, 'hanzi')") Remove from quiz
     li
       router-link(:to="{ path: '/hanzi', query: { q: selectedHanzi } }" target="_blank") Search for Hanzi
     li
       a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selectedHanzi}*`"
         target="_blank" rel="noopener") Open in MDBG
-  vue-context(ref="vocabContextmenu")
+  vue-context(ref="vocabContextmenu" lazy)
     li
       a(role="button" @click.prevent="speak(selectedVocab)") Speak
+    li(v-if="!vocabIds[selectedVocab]")
+      a(role="button" @click.prevent="addToQuiz(selectedVocab, 'vocab')") Add to quiz
+    li(v-else)
+      a(role="button" @click.prevent="removeFromQuiz(selectedVocab, 'vocab')") Remove from quiz
     li
       router-link(:to="{ path: '/vocab', query: { q: selectedVocab } }" target="_blank") Search for vocab
     li
@@ -101,6 +109,9 @@ export default class Hanzi extends Vue {
 
   selectedHanzi = ''
   selectedVocab = ''
+
+  hanziIds: any = {}
+  vocabIds: any = {}
 
   speak = speak
 
@@ -146,6 +157,42 @@ export default class Hanzi extends Vue {
     const api = await this.getApi()
     const r = (await api.post('/api/vocab/q', { entry: this.current })).data
     this.$set(this, 'vocabs', r.result)
+  }
+
+  @Watch('selectedHanzi')
+  async loadHanziStatus () {
+    if (this.selectedHanzi) {
+      const api = await this.getApi()
+      const r = await api.post('/api/card/match', { item: this.selectedHanzi, type: 'hanzi' })
+      this.$set(this.hanziIds, this.selectedHanzi, !!r.data)
+    }
+  }
+
+  @Watch('selectedVocab')
+  async loadVocabStatus () {
+    if (this.selectedVocab) {
+      const api = await this.getApi()
+      const r = await api.post('/api/card/match', { item: this.selectedVocab, type: 'vocab' })
+      if (r.data) {
+        this.$set(this.vocabIds, this.selectedVocab, r.data._id)
+      } else {
+        this.$set(this.vocabIds, this.selectedVocab, null)
+      }
+    }
+  }
+
+  async addToQuiz (item: string, type: string) {
+    const api = await this.getApi()
+    await api.put('/api/card/', { item, type })
+    this.$buefy.snackbar.open(`Added ${type}: ${item} to quiz`)
+  }
+
+  async removeFromQuiz (item: string, type: string) {
+    const api = await this.getApi()
+    await api.delete('/api/card/', {
+      data: { item, type }
+    })
+    this.$buefy.snackbar.open(`Removed ${type}: ${item} from quiz`)
   }
 }
 </script>
