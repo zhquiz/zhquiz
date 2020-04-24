@@ -32,7 +32,7 @@ async function main () {
     root: path.resolve('public')
   })
 
-  app.get('*', (_, reply) => {
+  app.setNotFoundHandler((_, reply) => {
     reply.sendFile('index.html')
   })
 
