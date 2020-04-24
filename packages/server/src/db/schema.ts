@@ -25,6 +25,8 @@ export class DbCard {
   @prop({ required: true }) type!: string
   @prop({ required: true }) item!: string
   @prop({ required: true }) direction!: string
+  @prop({ default: '' }) front!: string
+  @prop({ default: '' }) back!: string
   @prop({ default: () => [] }) tag!: string[]
 }
 
@@ -46,9 +48,17 @@ class DbQuiz {
 
   @prop({ required: true }) cardId!: string
 
-  markRight = this._updateSrsLevel(+1)
-  markWrong = this._updateSrsLevel(-1)
-  markRepeat = this._updateSrsLevel(0)
+  markRight () {
+    return this._updateSrsLevel(+1)()
+  }
+
+  markWrong () {
+    return this._updateSrsLevel(-1)()
+  }
+
+  markRepeat () {
+    return this._updateSrsLevel(0)()
+  }
 
   private _updateSrsLevel (dSrsLevel: number) {
     return () => {

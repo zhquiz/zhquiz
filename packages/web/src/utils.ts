@@ -18,6 +18,19 @@ export function capitalize (s: string): string {
   return s[0].toLocaleUpperCase() + s.substr(1)
 }
 
+window.addEventListener('keydown', (ev) => {
+  if (ev.target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(ev.target.tagName.toLocaleUpperCase())) {
+    return
+  }
+
+  if (ev.key === 's') {
+    const s = window.getSelection()!.toString()
+    if (s) {
+      speak(s)
+    }
+  }
+})
+
 const allVoices: Record<string, string> = {}
 speechSynthesis.getVoices().map(v => {
   allVoices[v.lang] = v.lang

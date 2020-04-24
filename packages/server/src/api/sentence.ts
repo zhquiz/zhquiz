@@ -4,6 +4,11 @@ import sqlite3 from 'better-sqlite3'
 export default (f: FastifyInstance, _: any, next: () => void) => {
   const zh = sqlite3('assets/zh.db', { readonly: true })
   const stmt = {
+    sentenceMatch: zh.prepare(/*sql*/`
+    SELECT chinese, pinyin, english
+    FROM sentence
+    WHERE chinese = ?
+    `),
     sentenceQ (opts: {
       limit: number
       offset: number
@@ -27,6 +32,44 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     WHERE [level] <= ? AND [level] >= ?
     ORDER BY RANDOM()`)
   }
+
+  f.post('/match', {
+    schema: {
+      tags: ['sentence'],
+      summary: 'Get sentence data',
+      body: {
+        type: 'object',
+        required: ['entry'],
+        properties: {
+          entry: { type: 'string' }
+        }
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            result: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  chinese: { type: 'string' },
+                  pinyin: { type: 'string' },
+                  english: { type: 'string' }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }, async (req) => {
+    const { entry } = req.body
+
+    return {
+      result: stmt.sentenceMatch.all(entry)
+    }
+  })
 
   f.post('/q', {
     schema: {
