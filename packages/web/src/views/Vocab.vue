@@ -77,8 +77,9 @@
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import XRegExp from 'xregexp'
+import { AxiosInstance } from 'axios'
 
-import { api, speak } from '../utils'
+import { speak } from '../utils'
 
 @Component
 export default class Vocab extends Vue {
@@ -109,10 +110,16 @@ export default class Vocab extends Vue {
     this.onQChange()
   }
 
+  async getApi (silent = true) {
+    return await this.$store.dispatch('getApi', silent) as AxiosInstance
+  }
+
   @Watch('q')
   async onQChange () {
     if (this.q) {
       this.isQLoading = true
+      const api = await this.getApi()
+
       let qs = (await api.post('/api/lib/jieba', { entry: this.q })).data.result as string[]
       qs = qs.filter(h => XRegExp('\\p{Han}+').test(h))
       this.$set(this, 'entries', qs.filter((h, i) => qs.indexOf(h) === i))
@@ -131,6 +138,8 @@ export default class Vocab extends Vue {
   @Watch('current')
   async loadVocab () {
     if (typeof this.current === 'string') {
+      const api = await this.getApi()
+
       const vs = (await api.post('/api/vocab/match', { entry: this.current })).data.result as any[]
 
       if (vs.length > 0) {
@@ -145,6 +154,7 @@ export default class Vocab extends Vue {
 
   @Watch('simplified')
   async loadSentences () {
+    const api = await this.getApi()
     const ss = (await api.post('/api/sentence/q', { entry: this.simplified })).data.result as any[]
     this.$set(this, 'sentences', ss)
   }

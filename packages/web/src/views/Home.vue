@@ -72,31 +72,27 @@ article#Home
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import firebase, { User } from 'firebase/app'
+import { AxiosInstance } from 'axios'
 
-import 'firebase/firebase-firestore'
-
-import { api, speak } from '../utils'
+import { speak } from '../utils'
 
 @Component
 export default class Home extends Vue {
   hanzi = {
     type: 'hanzi',
-    item: '',
-    id: '',
+    item: null,
     status: null as null | boolean
   }
 
   vocab = {
     type: 'vocab',
-    item: '',
-    id: '',
+    item: null,
     status: null as null | boolean
   }
 
   sentence = {
     type: 'sentence',
-    item: '',
-    id: '',
+    item: null,
     status: null as null | boolean
   }
 
@@ -114,11 +110,16 @@ export default class Home extends Vue {
     this.onUserChanged()
   }
 
+  async getApi (silent = true) {
+    return await this.$store.dispatch('getApi', silent) as AxiosInstance
+  }
+
   @Watch('user')
   async onUserChanged () {
     if (this.user) {
-      const r = await firebase.firestore().collection('user').doc(this.user).get()
-      const data = r.data()
+      const api = await this.getApi()
+      const r = await api.get('/api/user/')
+      const data = r.data
       if (data) {
         this.levelMin = data.levelMin || 1
         this.level = data.level || 60
@@ -129,6 +130,7 @@ export default class Home extends Vue {
   @Watch('level')
   async loadHanzi () {
     if (this.level) {
+      const api = await this.getApi()
       this.hanzi.item = (await api.post('/api/hanzi/random', {
         levelMin: this.levelMin,
         level: this.level
@@ -140,6 +142,7 @@ export default class Home extends Vue {
   @Watch('level')
   async loadVocab () {
     if (this.level) {
+      const api = await this.getApi()
       this.vocab.item = (await api.post('/api/vocab/random', {
         levelMin: this.levelMin,
         level: this.level
@@ -151,6 +154,7 @@ export default class Home extends Vue {
   @Watch('level')
   async loadSentence () {
     if (this.level) {
+      const api = await this.getApi()
       this.sentence.item = (await api.post('/api/sentence/random', {
         levelMin: this.levelMin,
         level: this.level
@@ -163,17 +167,13 @@ export default class Home extends Vue {
     const vm = this as any
 
     if (this.user) {
-      const r = await firebase.firestore().collection('lesson')
-        .where('user', '==', this.user)
-        .where('item', '==', item.item)
-        .where('type', '==', item.type)
-        .limit(1)
-        .get()
+      const api = await this.getApi()
+      const r = await api.post('/api/card/match', item)
 
-      const doc = r.docs[0]
+      const doc = r.data
 
       this.$set(vm[item.type], 'status', !!doc)
-      this.$set(vm[item.type], 'id', doc ? doc.id : null)
+      this.$set(vm[item.type], 'id', doc ? doc._id : null)
     } else {
       this.$set(vm[item.type], 'status', null)
       this.$set(vm[item.type], 'id', null)
@@ -182,19 +182,18 @@ export default class Home extends Vue {
 
   async addToLesson (item: any) {
     if (this.user) {
-      await firebase.firestore().collection('lesson').doc().set({
-        user: this.user,
-        item: item.item,
-        type: item.type,
-        updatedAt: new Date()
-      })
+      const api = await this.getApi()
+      await api.put('/api/card/', item)
       this.getLessonStatus(item)
     }
   }
 
   async removeFromLesson (item: any) {
     if (this.user) {
-      await firebase.firestore().collection('lesson').doc(item.id).delete()
+      const api = await this.getApi()
+      await api.delete('/api/card/', {
+        data: item
+      })
       this.getLessonStatus(item)
     }
   }

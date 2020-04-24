@@ -14,8 +14,7 @@ article#Settings.container
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import firebase, { User } from 'firebase/app'
-
-import 'firebase/firebase-firestore'
+import { AxiosInstance } from 'axios'
 
 @Component
 export default class Settings extends Vue {
@@ -31,17 +30,18 @@ export default class Settings extends Vue {
     this.onUserChanged()
   }
 
+  async getApi (silent = true) {
+    return await this.$store.dispatch('getApi', silent) as AxiosInstance
+  }
+
   @Watch('user')
   async onUserChanged () {
     if (this.user) {
       this.isLoading = true
-
-      const r = await firebase.firestore().collection('user').doc(this.user).get()
-      const data = r.data()
-      if (data) {
-        this.lv = [data.levelMin || 1, data.level || 60]
-      }
-
+      const api = await this.getApi()
+      const r = await api.get('/api/user/')
+      const data = r.data
+      this.lv = [data.levelMin || 1, data.level || 60]
       this.isLoading = false
     }
   }
@@ -49,10 +49,13 @@ export default class Settings extends Vue {
   async doSave () {
     if (this.user) {
       this.isLoading = true
+      const api = await this.getApi()
 
-      await firebase.firestore().collection('user').doc(this.user).update({
-        levelMin: this.lv[0],
-        level: this.lv[1]
+      await api.patch('/api/user/', {
+        set: {
+          levelMin: this.lv[0],
+          level: this.lv[1]
+        }
       })
 
       this.isLoading = false
