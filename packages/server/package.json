@@ -34,7 +34,6 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^5.4.0",
-    "@types/dot-prop": "^5.0.1",
     "@types/js-yaml": "^3.12.3",
     "@types/mongoose": "^5.7.12",
     "@types/nanoid": "^2.1.0",
