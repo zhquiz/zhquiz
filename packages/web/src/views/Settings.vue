@@ -13,7 +13,7 @@ article#Settings.container
 
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
-import firebase, { User } from 'firebase/app'
+import { User } from 'firebase/app'
 import { AxiosInstance } from 'axios'
 
 @Component
@@ -57,6 +57,7 @@ export default class Settings extends Vue {
           level: this.lv[1]
         }
       })
+      this.$buefy.snackbar.open('Saved')
 
       this.isLoading = false
     }

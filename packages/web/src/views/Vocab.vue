@@ -52,9 +52,13 @@
               @contextmenu.prevent="(evt) => { selectedSentence = s.chinese; $refs.sentenceContextmenu.open(evt) }"
             ) {{s.chinese}}&nbsp;
             span.sentence-part {{s.english}}
-  vue-context(ref="vocabContextmenu")
+  vue-context(ref="vocabContextmenu" lazy)
     li
       a(role="button" @click.prevent="speak(selectedVocab)") Speak
+    li(v-if="!vocabIds[selectedVocab]")
+      a(role="button" @click.prevent="addToQuiz(selectedVocab, 'vocab')") Add to quiz
+    li(v-else)
+      a(role="button" @click.prevent="removeFromQuiz(selectedVocab, 'vocab')") Remove from quiz
     li
       router-link(:to="{ path: '/vocab', query: { q: selectedVocab } }" target="_blank") Search for vocab
     li
@@ -62,9 +66,13 @@
     li
       a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selectedVocab}*`"
         target="_blank" rel="noopener") Open in MDBG
-  vue-context(ref="sentenceContextmenu")
+  vue-context(ref="sentenceContextmenu" lazy)
     li
       a(role="button" @click.prevent="speak(selectedSentence)") Speak
+    li(v-if="!sentenceIds[selectedSentence]")
+      a(role="button" @click.prevent="addToQuiz(selectedSentence, 'sentence')") Add to quiz
+    li(v-else)
+      a(role="button" @click.prevent="removeFromQuiz(selectedSentence, 'sentence')") Remove from quiz
     li
       router-link(:to="{ path: '/vocab', query: { q: selectedSentence } }" target="_blank") Search for vocab
     li
@@ -91,6 +99,9 @@ export default class Vocab extends Vue {
 
   selectedVocab = ''
   selectedSentence = ''
+
+  vocabIds: any = {}
+  sentenceIds: any = {}
 
   speak = speak
 
@@ -157,6 +168,42 @@ export default class Vocab extends Vue {
     const api = await this.getApi()
     const ss = (await api.post('/api/sentence/q', { entry: this.simplified })).data.result as any[]
     this.$set(this, 'sentences', ss)
+  }
+
+  @Watch('selectedVocab')
+  async loadVocabStatus () {
+    if (this.selectedVocab) {
+      const api = await this.getApi()
+      const r = await api.post('/api/card/match', { item: this.selectedVocab, type: 'vocab' })
+      if (r.data) {
+        this.$set(this.vocabIds, this.selectedVocab, r.data._id)
+      } else {
+        this.$set(this.vocabIds, this.selectedVocab, null)
+      }
+    }
+  }
+
+  @Watch('selectedSentence')
+  async loadSentenceStatus () {
+    if (this.selectedSentence) {
+      const api = await this.getApi()
+      const r = await api.post('/api/card/match', { item: this.selectedVocab, type: 'sentence' })
+      this.$set(this.vocabIds, this.selectedVocab, !!r.data)
+    }
+  }
+
+  async addToQuiz (item: string, type: string) {
+    const api = await this.getApi()
+    await api.put('/api/card/', { item, type })
+    this.$buefy.snackbar.open(`Added ${type}: ${item} to quiz`)
+  }
+
+  async removeFromQuiz (item: string, type: string) {
+    const api = await this.getApi()
+    await api.delete('/api/card/', {
+      data: { item, type }
+    })
+    this.$buefy.snackbar.open(`Removed ${type}: ${item} from quiz`)
   }
 }
 </script>

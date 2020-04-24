@@ -1,17 +1,27 @@
 <template lang="pug">
 .container#Level
-  b-table(:data="data")
+  .field
+    label.label Filter
+    b-field
+      b-radio-button(v-model="whatToShow" native-value="all" type="is-success") Show all
+      b-radio-button(v-model="whatToShow" native-value="all-quiz" type="is-info") All quiz
+      b-radio-button(v-model="whatToShow" native-value="learning" type="is-warning") Learning
+  b-table(:data="shownData" :key="whatToShow")
     template(slot-scope="props")
       b-table-column(field="level" label="Level" width="40") {{props.row.level}}
       b-table-column(field="item" label="Item")
         div
           span.tag.clickable(v-for="t in props.row.item" :key="t"
-            :class="tagClassMap[t]"
+            :class="getTagClass(t)"
             @contextmenu.prevent="(evt) => { selected = t; $refs.contextmenu.open(evt) }"
           ) {{t}}
-  vue-context(ref="contextmenu")
+  vue-context(ref="contextmenu" lazy)
     li
       a(role="button" @click.prevent="speak(selected)") Speak
+    li(v-if="!vocabIds[selected]")
+      a(role="button" @click.prevent="addToQuiz(selected, 'vocab')") Add to quiz
+    li(v-else)
+      a(role="button" @click.prevent="removeFromQuiz(selected, 'vocab')") Remove from quiz
     li
       router-link(:to="{ path: '/vocab', query: { q: selected } }" target="_blank") Search for vocab
     li
@@ -30,16 +40,40 @@ import { speak } from '../utils'
 
 @Component
 export default class Level extends Vue {
-  data = []
+  data = [] as any[]
   selected = ''
 
-  tagClassMap = {}
+  vocabIds: any = {}
+
+  vocabSrsLevel: any = {}
+  tagClassMap = [
+    (lv: any) => lv > 2 ? 'is-info' : '',
+    (lv: any) => lv > 0 ? 'is-success' : '',
+    (lv: any) => lv === 0 ? 'is-danger' : ''
+  ]
+
+  whatToShow = 'all'
 
   speak = speak
 
   get email () {
     const u = this.$store.state.user
     return u ? u.email as string : undefined
+  }
+
+  get shownData () {
+    const data = JSON.parse(JSON.stringify(this.data)) as any[]
+    return data.map((d) => {
+      if (this.whatToShow === 'all-quiz' || this.whatToShow === 'learning') {
+        d.item = d.item.filter((v: string) => typeof this.vocabSrsLevel[v] !== 'undefined')
+      }
+
+      if (this.whatToShow === 'learning') {
+        d.item = d.item.filter((v: string) => !(this.vocabSrsLevel[v] > 2))
+      }
+
+      return d
+    }).filter(({ item }) => item.length > 0)
   }
 
   async created () {
@@ -52,35 +86,83 @@ export default class Level extends Vue {
     }))
   }
 
+  getTagClass (item: string) {
+    const srsLevel = this.vocabSrsLevel[item]
+
+    if (typeof srsLevel !== 'undefined') {
+      for (const fn of this.tagClassMap) {
+        const c = fn(srsLevel)
+        if (c) {
+          return c
+        }
+      }
+
+      return 'is-warning'
+    }
+
+    return ''
+  }
+
   async getApi (silent = true) {
     return await this.$store.dispatch('getApi', silent) as AxiosInstance
   }
 
   @Watch('email')
   async onUserChange () {
-    this.tagClassMap = {}
+    this.vocabSrsLevel = {}
 
     if (this.email) {
       const api = await this.getApi()
       const r = await api.post('/api/card/q', {
         cond: {
-          type: 'vocab',
-          srsLevel: { $gte: 0 }
+          type: 'vocab'
         },
         join: ['quiz'],
         projection: {
           item: 1,
           srsLevel: 1
         },
-        limit: null
+        limit: null,
+        hasCount: false
       })
 
-      r.data.map(data => {
-        if (data.srsLevel) {
-          this.$set(this.tagClassMap, data.item, data.srsLevel < 2 ? 'is-warning' : 'is-success')
-        }
+      r.data.result.map((data: any) => {
+        this.$set(this.vocabSrsLevel, data.item, typeof data.srsLevel === 'number' ? data.srsLevel : null)
       })
     }
+  }
+
+  @Watch('selected')
+  async loadVocabStatus () {
+    if (this.selected) {
+      const api = await this.getApi()
+      const r = await api.post('/api/card/match', { item: this.selected, type: 'vocab' })
+      if (r.data) {
+        this.$set(this.vocabIds, this.selected, r.data._id)
+        this.$set(this.vocabSrsLevel, this.selected, null)
+      } else {
+        this.$set(this.vocabIds, this.selected, null)
+        this.$set(this.vocabSrsLevel, this.selected, undefined)
+      }
+    }
+  }
+
+  async addToQuiz (item: string, type: string) {
+    const api = await this.getApi()
+    await api.put('/api/card/', { item, type })
+    this.$buefy.snackbar.open(`Added ${type}: ${item} to quiz`)
+
+    this.loadVocabStatus()
+  }
+
+  async removeFromQuiz (item: string, type: string) {
+    const api = await this.getApi()
+    await api.delete('/api/card/', {
+      data: { item, type }
+    })
+    this.$set(this.tagClassMap, item, '')
+
+    this.loadVocabStatus()
   }
 }
 </script>
