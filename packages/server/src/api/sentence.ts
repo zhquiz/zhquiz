@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import sqlite3 from 'better-sqlite3'
+import pinyin from 'chinese-to-pinyin'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   const zh = sqlite3('assets/zh.db', { readonly: true })
@@ -67,7 +68,13 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     const { entry } = req.body
 
     return {
-      result: stmt.sentenceMatch.all(entry)
+      result: stmt.sentenceMatch.all(entry).map((el) => {
+        if (!el.pinyin) {
+          el.pinyin = pinyin(entry, { keepRest: true })
+        }
+
+        return el
+      })
     }
   })
 

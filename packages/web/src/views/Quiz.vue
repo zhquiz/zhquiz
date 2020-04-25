@@ -40,9 +40,17 @@
         fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
     .card-content
       .columns
-        .column.is-3
+        .column.is-3(v-if="!isDue")
+          span(style="width: 5em; display: inline-block;") Pending:
+          span {{data.length | format}}
+        .column.is-3(v-else-if="dueItems.length")
           span(style="width: 5em; display: inline-block;") Due:
           span {{dueItems.length | format}}
+        .column.is-3(v-else-if="dueIn")
+          span(style="width: 5em; display: inline-block;") Due in:
+          span {{dueIn | duration}}
+        .column.is-3(v-else)
+          span No items due
         .column.is-3
           span(style="width: 5em; display: inline-block;") New:
           span {{newItems.length | format}}
@@ -51,7 +59,7 @@
           span {{leechItems.length | format}}
         .column.is-3(style="display: flex; flex-direction: row;")
           div(style="flex-grow: 1;")
-          b-button(type="is-success" @click="startQuiz" :disabled="dueItems.length === 0") Start Quiz
+          b-button(type="is-success" @click="startQuiz" :disabled="data.length === 0") Start Quiz
   b-collapse.card(animation="slide" :open.sync="isTableShown")
     .card-header(slot="trigger" slot-scope="props" role="button")
       p.card-header-title {{props.open ? 'Hide items' : 'Show items'}}
@@ -80,6 +88,8 @@
     li
       a(role="button" @click.prevent="isEditTagModal = true") Edit tags
     li
+      a(role="button" @click.prevent="editItem = selectedRow; isEditModal = true") Edit item
+    li
       a(role="button" @click.prevent="removeItem()") Remove item
   b-modal(:active.sync="isEditTagModal" @close="onEditTagModelClose")
     .card
@@ -107,16 +117,34 @@
             button.button.is-warning(@click="markRepeat") Repeat
           .buttons
             button.button.is-warning(@click="isQuizShownAnswer = false") Hide answer
-            a.button.is-info(target="_blank") Edit
+            button.button.is-info(@click="editItem = quizCurrent; isEditModal = true") Edit
+  b-modal(:active.sync="isEditModal")
+    .card
+      .card-content
+        b-tabs(type="is-boxed" @change="onEditTabChange")
+          b-tab-item(label="Front")
+            simplemde.content(v-model="editItem.front" :configs="mdeConfig" ref="mde0")
+          b-tab-item(label="Back")
+            simplemde.content(v-model="editItem.back" :configs="mdeConfig" ref="mde1")
+          b-tab-item(label="Mnemonic")
+            simplemde.content(v-model="editItem.mnemonic" :configs="mdeConfig" ref="mde2")
+      .card-footer(style="padding: 1em;")
+        div(style="flex-grow: 1;")
+        .buttons
+          button.button.is-success(@click="doEditSave()") Save
+          button.button.is-danger(@click="doEditLoad()") Reset
   b-loading(:active="isLoading")
 </template>
 
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import { AxiosInstance } from 'axios'
-import h from 'hyperscript'
+import MarkdownIt from 'markdown-it'
+import MdItEmoji from 'markdown-it-emoji'
+import hbs from 'handlebars'
 
-import { speak, shuffle, capitalize } from '../utils'
+import { speak, shuffle } from '../utils'
+import cardDefault from '../assets/card-default.yaml'
 
 @Component
 export default class Quiz extends Vue {
@@ -130,6 +158,7 @@ export default class Quiz extends Vue {
   stage = ['new', 'learning']
   direction = ['se']
   isDue = true
+  dueIn: Date | null = null
 
   data: any[] = []
   isTableShown = false
@@ -145,14 +174,33 @@ export default class Quiz extends Vue {
   quizFront = ''
   quizBack = ''
   quizMnemonic = ''
-  quizData = {
-    hanzi: {} as any,
-    vocab: {} as any,
-    sentence: {} as any,
-    extra: {} as any
+  quizData: {
+    type: string
+    item: string
+    raw: any
+    cards: {
+      _id: string
+      direction: string
+      front: string
+      back: string
+      mnemonic: string
+    }[]
+  }[] = []
+
+  isEditModal = false
+  editItem = {
+    _id: '',
+    front: '',
+    back: '',
+    mnemonic: '',
+    type: '',
+    item: '',
+    direction: ''
   }
 
   speak = speak
+
+  md = MarkdownIt().use(MdItEmoji)
 
   get email () {
     const u = this.$store.state.user
@@ -183,169 +231,71 @@ export default class Quiz extends Vue {
     return this.quizItems[this.quizIndex]
   }
 
+  get mdeConfig () {
+    return {
+      previewRender: (md: string) => {
+        const { type, item } = this.editItem
+        const { raw } = this.quizData.filter((d) => {
+          return d.type === type && d.item === item
+        })[0] || {}
+
+        return this.md.render(
+          hbs.compile(md)({
+            ...this.editItem,
+            raw
+          })
+        )
+      }
+    }
+  }
+
   getQuizFront () {
+    let template = ''
+
     if (this.quizCurrent) {
       const { type, item, direction } = this.quizCurrent
-      const { front, result: r } = (this.quizData as any)[type][item] || {}
+      const { raw, cards = [] } = this.quizData.filter((d) => {
+        return d.type === type && d.item === item
+      })[0] || {}
 
-      if (front) {
-        return front
-      }
+      const { front } = cards.filter((c) => {
+        return c.direction === direction
+      })[0] || {}
 
-      if (type === 'hanzi') {
-        if (direction === 'ec') {
-          return r ? h('div', [
-            h('h4', 'Hanzi English-Chinese'),
-            h('p', r.english)
-          ]).outerHTML : ''
-        } else {
-          return h('div', [
-            h('h4', 'Hanzi Chinese-English'),
-            h('h1', item)
-          ]).outerHTML
-        }
-      } else if (type === 'extra') {
-        if (direction === 'ec') {
-          return r ? h('div', [
-            h('h4', 'Extra English-Chinese'),
-            h('p', r.english)
-          ]).outerHTML : ''
-        } else {
-          return h('div', [
-            h('h4', 'Extra Chinese-English'),
-            h('h2', item)
-          ]).outerHTML
-        }
-      } else if (type === 'vocab') {
-        if (direction === 'ec') {
-          return r ? h('div', [
-            h('h4', 'Vocab English-Chinese'),
-            h('ul', r.map((r0: any) => {
-              return h('li', r0.english)
-            }))
-          ]).outerHTML : ''
-        } else if (direction === 'te') {
-          return r ? h('div', [
-            h('h4', 'Vocab Traditional-English'),
-            h('h1', r.map((r0: any) => r0.traditional).filter((el: any) => el).join(' | '))
-          ]).outerHTML : ''
-        } else {
-          return h('div', [
-            h('h4', 'Vocab Simplified-English'),
-            h('h1', item)
-          ]).outerHTML
-        }
-      } else {
-        if (direction === 'ec') {
-          return r ? h('div', [
-            h('h4', 'Sentence English-Chinese'),
-            h('ul', r.map((r0: any) => {
-              return h('li', r0.english)
-            }))
-          ]).outerHTML : ''
-        } else {
-          return h('div', [
-            h('h4', 'Sentence Chinese-English'),
-            h('h2', item)
-          ]).outerHTML
-        }
-      }
+      template = front || cardDefault[type][direction].front || ''
+
+      return this.md.render(
+        hbs.compile(template)({
+          ...this.quizCurrent,
+          raw
+        })
+      )
     }
 
     return ''
   }
 
   getQuizBack () {
+    let template = ''
+
     if (this.quizCurrent) {
       const { type, item, direction } = this.quizCurrent
-      const { back, result: r } = (this.quizData as any)[type][item] || {}
-      if (back) {
-        return back
-      }
+      const { raw, cards = [] } = this.quizData.filter((d) => {
+        return d.type === type && d.item === item
+      })[0] || {}
 
-      if (type === 'hanzi') {
-        if (direction === 'ec') {
-          return r ? h('div', [
-            h('h1', item),
-            h('p', r.pinyin)
-          ]).outerHTML : h('div', [
-            h('h1', item)
-          ]).outerHTML
-        } else {
-          return r ? h('div', [
-            h('p', r.pinyin),
-            h('p', r.english)
-          ]).outerHTML : ''
-        }
-      } else if (type === 'extra') {
-        if (direction === 'ec') {
-          return r ? h('div', [
-            h('h2', item),
-            h('p', r.pinyin)
-          ]).outerHTML : h('div', [
-            h('h2', item)
-          ]).outerHTML
-        } else {
-          return r ? h('div', [
-            h('p', r.pinyin),
-            h('p', r.english)
-          ]).outerHTML : ''
-        }
-      } else if (type === 'vocab') {
-        if (direction === 'ec') {
-          return r ? h('div', [
-            h('h1', item),
-            h('ul', r.map((r0: any) => {
-              return h('li', r0.pinyin)
-            }))
-          ]).outerHTML : h('div', [
-            h('h1', item)
-          ]).outerHTML
-        } else if (direction === 'te') {
-          return r ? h('div', [
-            h('h1', item),
-            h('ul', r.map((r0: any) => {
-              return h('li', r0.pinyin)
-            })),
-            h('hr'),
-            h('ul', r.map((r0: any) => {
-              return h('li', r0.english)
-            }))
-          ]).outerHTML : ''
-        } else {
-          return r ? h('div', [
-            h('h1', r.map((r0: any) => r0.traditional).filter((el: any) => el).join(' | ')),
-            h('ul', r.map((r0: any) => {
-              return h('li', r0.pinyin)
-            })),
-            h('hr'),
-            h('ul', r.map((r0: any) => {
-              return h('li', r0.english)
-            }))
-          ]).outerHTML : ''
-        }
-      } else {
-        if (direction === 'ec') {
-          return r ? h('div', [
-            h('h2', item),
-            h('ul', r.map((r0: any) => {
-              return h('li', r0.pinyin)
-            }))
-          ]).outerHTML : h('div', [
-            h('h2', item)
-          ]).outerHTML
-        } else {
-          return r ? h('div', [
-            h('ul', r.map((r0: any) => {
-              return h('li', r0.pinyin)
-            })),
-            h('hr'),
-            h('ul', r.map((r0: any) => {
-              return h('li', r0.english)
-            }))
-          ]).outerHTML : ''
-        }
-      }
+      const { back } = cards.filter((c) => {
+        return c.direction === direction
+      })[0] || {}
+
+      template = back || cardDefault[type][direction].back || ''
+
+      return this.md.render(
+        hbs.compile(template)({
+          ...this.quizCurrent,
+          raw
+        })
+      )
     }
 
     return ''
@@ -379,36 +329,59 @@ export default class Quiz extends Vue {
   @Watch('stage')
   @Watch('direction')
   @Watch('isDue')
-  async load () {
-    let cond: any = {
+  async load (opts?: {
+    _dueIn: boolean
+  }) {
+    let nextReview = undefined as any
+
+    if (opts && opts._dueIn) {
+      nextReview = { $exists: true }
+    } else if (this.isDue) {
+      nextReview = { $lt: { $toDate: new Date().toISOString() } }
+    }
+
+    const cond: any = {
       tag: this.selectedTags,
       type: { $in: this.type },
       direction: { $in: this.direction },
-      nextReview: this.isDue ? { $lt: { $toDate: new Date() } } : undefined
+      nextReview
     }
 
-    cond = {
-      $or: [
-        this.stage.includes('new') ? {
-          ...cond,
-          nextReview: { $exists: false }
-        } : null,
-        this.stage.includes('learning') ? {
-          ...cond,
-          srsLevel: { $gte: 0 }
-        } : null,
-        !this.stage.includes('graduated') ? {
-          ...cond,
-          srsLevel: { $lt: 2 }
-        } : null
-      ].filter(el => el)
+    const $and: any = [cond]
+    const $or: any = []
+
+    if (this.stage.includes('new')) {
+      $or.push({
+        ...cond,
+        nextReview: { $exists: false }
+      })
+    } else {
+      $or.push(cond)
     }
+
+    if (!this.stage.includes('learning') && !this.stage.includes('graduated')) {
+      $and.push({
+        srsLevel: { $exists: false }
+      })
+    } else if (!this.stage.includes('graduated')) {
+      $and.push({
+        srsLevel: { $lte: 2 }
+      })
+    } else if (!this.stage.includes('learning')) {
+      $and.push({
+        srsLevel: { $gt: 2 }
+      })
+    }
+
+    $or.push({ $and })
 
     const api = await this.getApi()
     const r = await api.post('/api/card/q', {
-      cond,
+      cond: { $or },
       join: ['quiz'],
-      projection: {
+      projection: (opts && opts._dueIn) ? {
+        nextReview: 1
+      } : {
         _id: 1,
         type: 1,
         item: 1,
@@ -418,13 +391,23 @@ export default class Quiz extends Vue {
         nextReview: 1,
         stat: 1
       },
-      limit: null,
+      limit: (opts && opts._dueIn) ? 1 : null,
+      sort: (opts && opts._dueIn) ? {
+        nextReview: 1
+      } : undefined,
       hasCount: false
     })
 
-    this.data = r.data.result
+    if (opts && opts._dueIn) {
+      return r.data.result
+    }
 
+    this.data = r.data.result
     this.$set(this, 'data', this.data)
+
+    this.getDueIn()
+
+    return r.data.result
   }
 
   getFilteredTags (text: string) {
@@ -468,7 +451,7 @@ export default class Quiz extends Vue {
   }
 
   async startQuiz () {
-    this.quizItems = shuffle(this.dueItems)
+    this.quizItems = shuffle(this.data)
     this.quizIndex = -1
     await this.initNextQuizItem()
 
@@ -488,20 +471,41 @@ export default class Quiz extends Vue {
     this.quizBack = this.getQuizBack()
 
     if (this.quizCurrent) {
-      const { type, item, _id } = this.quizCurrent
-      if (!(this.quizData as any)[type][item]) {
-        const api = await this.getApi()
-        const [r1, r2] = await Promise.all([
-          api.post(`/api/${type}/match`, { entry: item }),
-          api.get('/api/quiz/card', {
-            params: { id: _id }
-          })
-        ])
-        ;(this.quizData as any)[type][item] = Object.assign(r1.data, r2.data)
+      await this.cacheQuizItem(this.quizCurrent)
 
-        this.quizFront = this.getQuizFront()
-        this.quizBack = this.getQuizBack()
+      this.quizFront = this.getQuizFront()
+      this.quizBack = this.getQuizBack()
+    }
+  }
+
+  async cacheQuizItem (target: any) {
+    const { type, item, _id } = target
+    let data = this.quizData.filter((d) => {
+      return d.item === item && d.type === type
+    })[0]
+
+    const api = await this.getApi()
+
+    if (!data) {
+      const r = await api.post(`/api/${type}/match`, { entry: item })
+      data = {
+        type,
+        item,
+        raw: r.data.result,
+        cards: []
       }
+
+      this.quizData.push(data)
+    }
+
+    let card = data.cards.filter((c) => c._id === _id)[0]
+    if (!card) {
+      const r = await api.get('/api/quiz/card', {
+        params: { id: _id }
+      })
+      card = r.data
+
+      data.cards.push(card)
     }
   }
 
@@ -528,6 +532,76 @@ export default class Quiz extends Vue {
     })
     this.initNextQuizItem()
   }
+
+  async doEditSave () {
+    const { _id, front, back, mnemonic, type, item, direction } = this.editItem
+
+    const api = await this.getApi()
+    await api.patch('/api/card/', {
+      id: this.editItem._id,
+      set: {
+        front,
+        back,
+        mnemonic
+      }
+    })
+
+    const { cards = [] } = this.quizData.filter((d) => {
+      return d.type === type && d.item === item
+    })[0] || {}
+
+    const card = cards.filter((c) => {
+      return c.direction === direction
+    })[0]
+
+    if (!card) {
+      cards.push(this.editItem)
+    } else {
+      Object.assign(card, this.editItem)
+    }
+    this.doEditLoad()
+
+    this.$buefy.snackbar.open('Saved')
+  }
+
+  @Watch('isEditModal')
+  async doEditLoad () {
+    if (this.isEditModal) {
+      await this.cacheQuizItem(this.editItem)
+
+      const { type, item, direction } = this.editItem
+      const { raw: r, cards = [] } = this.quizData.filter((d) => {
+        return d.type === type && d.item === item
+      })[0] || {}
+
+      const { front, back, mnemonic } = cards.filter((c) => {
+        return c.direction === direction
+      })[0] || {}
+
+      this.editItem.front = front || cardDefault[type][direction].front || ''
+      this.editItem.back = back || cardDefault[type][direction].back || ''
+      this.editItem.mnemonic = mnemonic || ''
+
+      // this.$set(this, 'editItem', this.editItem)
+      this.$forceUpdate()
+    }
+  }
+
+  onEditTabChange (i: number) {
+    this.$nextTick(() => {
+      (this.$refs[`mde${i}`] as any).simplemde.codemirror.refresh()
+    })
+  }
+
+  async getDueIn () {
+    if (this.dueItems.length > 0) {
+      this.dueIn = null
+      return
+    }
+
+    const it = (await this.load({ _dueIn: true }))[0]
+    this.dueIn = it ? it.nextReview : null
+  }
 }
 </script>
 
@@ -548,6 +622,12 @@ export default class Quiz extends Vue {
           margin-bottom: 0;
         }
       }
+    }
+  }
+
+  .vue-simplemde {
+    .CodeMirror {
+      height: 400px;
     }
   }
 }

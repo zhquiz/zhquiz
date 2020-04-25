@@ -8,10 +8,12 @@ import 'firebase/analytics'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import { humanizeDuration } from './utils'
 
 import './plugins/buefy'
 import './plugins/fontawesome'
 import './plugins/vue-context'
+import './plugins/simplemde'
 import './main.scss'
 
 firebase.initializeApp(require('../firebase.config.js'))
@@ -36,6 +38,10 @@ Vue.filter('format', (v: any) => {
 
 Vue.filter('formatDate', (v: any) => {
   return dayjs(v).format('YYYY-MM-DD HH:mm')
+})
+
+Vue.filter('duration', (v: any) => {
+  return v ? humanizeDuration(+new Date(v) - +new Date()) : ''
 })
 
 new Vue({
