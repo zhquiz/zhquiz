@@ -24,8 +24,6 @@ vocab:
 
       # {{item}}
     back: |
-      # {{item}}
-
       ## {{#each raw}} {{traditional}} {{/each}}
 
       {{#each raw}}
@@ -80,7 +78,7 @@ sentence:
     front: |
       #### Sentence Chinese-English
 
-      {{item}}
+      ## {{item}}
     back: |
       {{#each raw}}
       - {{pinyin}}

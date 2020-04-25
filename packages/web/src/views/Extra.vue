@@ -238,5 +238,12 @@ export default class Extra extends Vue {
       }
     }
   }
+
+  tbody {
+    tr:hover {
+      cursor: pointer;
+      color: blue;
+    }
+  }
 }
 </style>

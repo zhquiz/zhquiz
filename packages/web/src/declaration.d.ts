@@ -4,6 +4,6 @@ declare module '*.yaml' {
 }
 
 declare module 'vue-context'
-declare module 'vue-simplemde'
+declare module 'vue-codemirror'
 declare module 'markdown-it-emoji'
 declare module 'punycode'

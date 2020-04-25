@@ -47,8 +47,8 @@ export default class Level extends Vue {
 
   vocabSrsLevel: any = {}
   tagClassMap = [
-    (lv: any) => lv > 2 ? 'is-info' : '',
-    (lv: any) => lv > 0 ? 'is-success' : '',
+    (lv: any) => lv > 2 ? 'is-success' : '',
+    (lv: any) => lv > 0 ? 'is-warning' : '',
     (lv: any) => lv === 0 ? 'is-danger' : ''
   ]
 
@@ -90,17 +90,19 @@ export default class Level extends Vue {
     const srsLevel = this.vocabSrsLevel[item]
 
     if (typeof srsLevel !== 'undefined') {
+      if (srsLevel === Infinity) {
+        return 'is-info'
+      }
+
       for (const fn of this.tagClassMap) {
         const c = fn(srsLevel)
         if (c) {
           return c
         }
       }
-
-      return 'is-warning'
     }
 
-    return ''
+    return 'is-light'
   }
 
   async getApi (silent = true) {
@@ -133,7 +135,7 @@ export default class Level extends Vue {
             ? lv > d.srsLevel ? d.srsLevel : lv
             : lv
         } else if (typeof lv === 'undefined') {
-          this.vocabSrsLevel[d.item] = null
+          this.vocabSrsLevel[d.item] = Infinity
         }
       })
 
@@ -161,7 +163,7 @@ export default class Level extends Vue {
       const srsLevels = r.data.result.map((r: any) => r.srsLevel).filter((s: any) => typeof s === 'number')
       const srsLevel = srsLevels.length > 0
         ? Math.min(...srsLevels)
-        : (r.data.result.length > 0 ? null : undefined)
+        : (r.data.result.length > 0 ? Infinity : undefined)
 
       this.$set(this.vocabIds, this.selected, r.data.result.map((r: any) => r._id))
       this.$set(this.vocabSrsLevel, this.selected, srsLevel)
