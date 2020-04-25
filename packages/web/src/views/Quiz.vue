@@ -8,6 +8,7 @@
           b-checkbox(v-model="type" native-value="hanzi") Hanzi
           b-checkbox(v-model="type" native-value="vocab") Vocab
           b-checkbox(v-model="type" native-value="sentence") Sentence
+          b-checkbox(v-model="type" native-value="extra") Extra
     .column.is-4
       .field
         label.label Learning stage
@@ -59,6 +60,7 @@
     .card-content
       b-table(:data="data" @contextmenu="onTableContextmenu"
         paginated :per-page="10"
+        checkable
       )
         template(slot-scope="props")
           b-table-column(field="type" label="Type" width="100" searchable sortable) {{props.row.type}}
@@ -88,9 +90,9 @@
           :data="filteredTags" autocomplete :allow-new="true" open-on-focus @typing="getFilteredTags")
         .field(style="padding-top: 1em; display: flex; flex-direction: row-reverse;")
           b-button(@click="isEditTagModal = false") Close
-  b-modal(:active.sync="isQuizModal" @close="endQuiz")
+  b-modal#quiz-modal(:active.sync="isQuizModal" @close="endQuiz")
     .card
-      .card-content(v-if="quizCurrent")
+      .card-content(v-if="quizCurrent" style="min-height: 100px;")
         .content(v-if="!isQuizShownAnswer" v-html="quizFront" ref="quizFront")
         .content(v-else v-html="quizBack" ref="quizBack")
       .buttons-area
@@ -124,7 +126,7 @@ export default class Quiz extends Vue {
   filteredTags: string[] = []
   allTags: string[] = []
 
-  type = ['hanzi', 'vocab', 'sentence']
+  type = ['hanzi', 'vocab', 'sentence', 'extra']
   stage = ['new', 'learning']
   direction = ['se']
   isDue = true
@@ -140,10 +142,14 @@ export default class Quiz extends Vue {
   quizIndex = 0
   isQuizShownAnswer = false
 
+  quizFront = ''
+  quizBack = ''
+  quizMnemonic = ''
   quizData = {
     hanzi: {} as any,
     vocab: {} as any,
-    sentence: {} as any
+    sentence: {} as any,
+    extra: {} as any
   }
 
   speak = speak
@@ -177,62 +183,68 @@ export default class Quiz extends Vue {
     return this.quizItems[this.quizIndex]
   }
 
-  get quizFront () {
+  getQuizFront () {
     if (this.quizCurrent) {
-      const { type, item, direction, front } = this.quizCurrent
+      const { type, item, direction } = this.quizCurrent
+      const { front, result: r } = (this.quizData as any)[type][item] || {}
+
       if (front) {
         return front
       }
 
-      const quizData = this.quizData as any
-
       if (type === 'hanzi') {
-        const r = quizData[type][item]
-
         if (direction === 'ec') {
-          return r ? h('center', [
+          return r ? h('div', [
             h('h4', 'Hanzi English-Chinese'),
             h('p', r.english)
           ]).outerHTML : ''
         } else {
-          return h('center', [
+          return h('div', [
             h('h4', 'Hanzi Chinese-English'),
             h('h1', item)
           ]).outerHTML
         }
-      } else if (type === 'vocab') {
-        const r = quizData[type][item] as any[]
-
+      } else if (type === 'extra') {
         if (direction === 'ec') {
-          return r ? h('center', [
+          return r ? h('div', [
+            h('h4', 'Extra English-Chinese'),
+            h('p', r.english)
+          ]).outerHTML : ''
+        } else {
+          return h('div', [
+            h('h4', 'Extra Chinese-English'),
+            h('h2', item)
+          ]).outerHTML
+        }
+      } else if (type === 'vocab') {
+        if (direction === 'ec') {
+          return r ? h('div', [
             h('h4', 'Vocab English-Chinese'),
-            h('ul', r.map((r0) => {
+            h('ul', r.map((r0: any) => {
               return h('li', r0.english)
             }))
           ]).outerHTML : ''
         } else if (direction === 'te') {
-          return r ? h('center', [
+          return r ? h('div', [
             h('h4', 'Vocab Traditional-English'),
-            h('h1', r.map((r0) => r0.traditional).filter((el) => el).join(' | '))
+            h('h1', r.map((r0: any) => r0.traditional).filter((el: any) => el).join(' | '))
           ]).outerHTML : ''
         } else {
-          return h('center', [
+          return h('div', [
             h('h4', 'Vocab Simplified-English'),
             h('h1', item)
           ]).outerHTML
         }
       } else {
-        const r = quizData[type][item] as any[]
-
-        if (type === 'ec') {
-          return r ? h('center', [
+        if (direction === 'ec') {
+          return r ? h('div', [
             h('h4', 'Sentence English-Chinese'),
-            h('ul', r.map((r0) => {
+            h('ul', r.map((r0: any) => {
               return h('li', r0.english)
             }))
           ]).outerHTML : ''
         } else {
-          return h('center', [
+          return h('div', [
             h('h4', 'Sentence Chinese-English'),
             h('h2', item)
           ]).outerHTML
@@ -243,85 +255,92 @@ export default class Quiz extends Vue {
     return ''
   }
 
-  get quizBack () {
+  getQuizBack () {
     if (this.quizCurrent) {
-      const { type, item, direction, back } = this.quizCurrent
+      const { type, item, direction } = this.quizCurrent
+      const { back, result: r } = (this.quizData as any)[type][item] || {}
       if (back) {
         return back
       }
 
-      const quizData = this.quizData as any
-
       if (type === 'hanzi') {
-        const r = quizData[type][item]
-
         if (direction === 'ec') {
-          return r ? h('center', [
+          return r ? h('div', [
             h('h1', item),
             h('p', r.pinyin)
-          ]).outerHTML : h('center', [
+          ]).outerHTML : h('div', [
             h('h1', item)
           ]).outerHTML
         } else {
-          return r ? h('center', [
+          return r ? h('div', [
+            h('p', r.pinyin),
+            h('p', r.english)
+          ]).outerHTML : ''
+        }
+      } else if (type === 'extra') {
+        if (direction === 'ec') {
+          return r ? h('div', [
+            h('h2', item),
+            h('p', r.pinyin)
+          ]).outerHTML : h('div', [
+            h('h2', item)
+          ]).outerHTML
+        } else {
+          return r ? h('div', [
             h('p', r.pinyin),
             h('p', r.english)
           ]).outerHTML : ''
         }
       } else if (type === 'vocab') {
-        const r = quizData[type][item] as any[]
-
         if (direction === 'ec') {
-          return r ? h('center', [
+          return r ? h('div', [
             h('h1', item),
-            h('ul', r.map((r0) => {
+            h('ul', r.map((r0: any) => {
               return h('li', r0.pinyin)
             }))
-          ]).outerHTML : h('center', [
+          ]).outerHTML : h('div', [
             h('h1', item)
           ]).outerHTML
         } else if (direction === 'te') {
-          return r ? h('center', [
+          return r ? h('div', [
             h('h1', item),
-            h('ul', r.map((r0) => {
+            h('ul', r.map((r0: any) => {
               return h('li', r0.pinyin)
             })),
             h('hr'),
-            h('ul', r.map((r0) => {
+            h('ul', r.map((r0: any) => {
               return h('li', r0.english)
             }))
           ]).outerHTML : ''
         } else {
-          return r ? h('center', [
-            h('h1', r.map((r0) => r0.traditional).filter((el) => el).join(' | ')),
-            h('ul', r.map((r0) => {
+          return r ? h('div', [
+            h('h1', r.map((r0: any) => r0.traditional).filter((el: any) => el).join(' | ')),
+            h('ul', r.map((r0: any) => {
               return h('li', r0.pinyin)
             })),
             h('hr'),
-            h('ul', r.map((r0) => {
+            h('ul', r.map((r0: any) => {
               return h('li', r0.english)
             }))
           ]).outerHTML : ''
         }
       } else {
-        const r = quizData[type][item] as any[]
-
         if (direction === 'ec') {
-          return r ? h('center', [
+          return r ? h('div', [
             h('h2', item),
-            h('ul', r.map((r0) => {
+            h('ul', r.map((r0: any) => {
               return h('li', r0.pinyin)
             }))
-          ]).outerHTML : h('center', [
+          ]).outerHTML : h('div', [
             h('h2', item)
           ]).outerHTML
         } else {
-          return r ? h('center', [
-            h('ul', r.map((r0) => {
+          return r ? h('div', [
+            h('ul', r.map((r0: any) => {
               return h('li', r0.pinyin)
             })),
             h('hr'),
-            h('ul', r.map((r0) => {
+            h('ul', r.map((r0: any) => {
               return h('li', r0.english)
             }))
           ]).outerHTML : ''
@@ -431,7 +450,9 @@ export default class Quiz extends Vue {
       onConfirm: async () => {
         const api = await this.getApi()
         await api.delete('/api/card/', {
-          data: this.selectedRow
+          data: {
+            id: this.selectedRow._id
+          }
         })
         this.data = this.data.filter(d => d._id !== this.selectedRow._id)
       }
@@ -463,14 +484,23 @@ export default class Quiz extends Vue {
     this.quizIndex++
     this.isQuizShownAnswer = false
 
-    if (this.quizCurrent) {
-      const { type, item } = this.quizCurrent
-      const quizData = this.quizData as any
+    this.quizFront = this.getQuizFront()
+    this.quizBack = this.getQuizBack()
 
-      if (!quizData[type][item]) {
+    if (this.quizCurrent) {
+      const { type, item, _id } = this.quizCurrent
+      if (!(this.quizData as any)[type][item]) {
         const api = await this.getApi()
-        const r = await api.post(`/api/${type}/match`, { entry: item })
-        quizData[type][item] = r.data.result
+        const [r1, r2] = await Promise.all([
+          api.post(`/api/${type}/match`, { entry: item }),
+          api.get('/api/quiz/card', {
+            params: { id: _id }
+          })
+        ])
+        ;(this.quizData as any)[type][item] = Object.assign(r1.data, r2.data)
+
+        this.quizFront = this.getQuizFront()
+        this.quizBack = this.getQuizBack()
       }
     }
   }
@@ -503,15 +533,21 @@ export default class Quiz extends Vue {
 
 <style lang="scss">
 #Quiz {
-  .buttons-area {
-    min-height: 100px;
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
+  #quiz-modal {
+    .modal-content {
+      max-width: 500px !important;
 
-    .buttons {
-      margin-bottom: 0;
+      .buttons-area {
+        min-height: 100px;
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+
+        .buttons {
+          margin-bottom: 0;
+        }
+      }
     }
   }
 }

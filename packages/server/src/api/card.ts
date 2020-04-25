@@ -14,7 +14,6 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       summary: 'Query for cards',
       body: {
         type: 'object',
-        required: ['cond'],
         properties: {
           cond: { type: 'object' },
           projection: {
@@ -47,7 +46,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     const u = db.user
     if (u) {
       const {
-        cond,
+        cond = {},
         projection,
         sort = { updatedAt: -1 },
         offset = 0,
