@@ -9,6 +9,7 @@ const routes: RouteConfig[] = [
   { path: '/vocab', name: 'Vocab' },
   { path: '/quiz', name: 'Quiz' },
   { path: '/level', name: 'Level' },
+  { path: '/extra', name: 'Extra' },
   { path: '/settings', name: 'Settings' }
 ]
 

@@ -11,6 +11,7 @@ export class DbUser {
   @prop({ required: true, unique: true }) email!: string
   @prop({ default: 1 }) levelMin!: number
   @prop({ default: 60 }) level!: number
+  @prop({ default: true }) userContentWarning?: boolean
 }
 
 export const DbUserModel = getModelForClass(DbUser, { schemaOptions: { collection: 'user', timestamps: true } })
@@ -27,6 +28,7 @@ export class DbCard {
   @prop({ required: true }) direction!: string
   @prop({ default: '' }) front!: string
   @prop({ default: '' }) back!: string
+  @prop({ default: '' }) mnemonic?: string
   @prop({ default: () => [] }) tag!: string[]
 }
 
@@ -102,3 +104,17 @@ class DbQuiz {
 }
 
 export const DbQuizModel = getModelForClass(DbQuiz, { schemaOptions: { collection: 'quiz', timestamps: true } })
+
+@pre<DbExtra>('remove', function () {
+  DbCardModel.deleteMany({ item: this.chinese, type: 'extra' })
+})
+@index({ userId: 1, chinese: 1 }, { unique: true })
+class DbExtra {
+  @prop({ default: () => nanoid() }) _id!: string
+  @prop({ required: true, index: true, ref: 'DbUser' }) userId!: Ref<DbUser>
+  @prop({ required: true }) chinese!: string
+  @prop() pinyin?: string
+  @prop({ required: true }) english!: string
+}
+
+export const DbExtraModel = getModelForClass(DbExtra, { schemaOptions: { collection: 'extra', timestamps: true } })

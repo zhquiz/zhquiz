@@ -11,6 +11,7 @@ import hanziRouter from './hanzi'
 import cardRouter from './card'
 import userRouter from './user'
 import quizRouter from './quiz'
+import extraRouter from './extra'
 import db from '../db'
 
 admin.initializeApp({
@@ -30,16 +31,12 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       produces: ['application/json'],
       servers: [
         {
-          url: 'https://zhres.herokuapp.com',
-          description: 'Online server'
-        },
-        {
           url: 'http://localhost:8080',
           description: 'Local server'
         }
       ]
     },
-    exposeRoute: true
+    exposeRoute: process.env.NODE_ENV === 'development'
   })
 
   if (process.env.NODE_ENV === 'development') {
@@ -81,6 +78,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   f.register(cardRouter, { prefix: '/card' })
   f.register(userRouter, { prefix: '/user' })
   f.register(quizRouter, { prefix: '/quiz' })
+  f.register(extraRouter, { prefix: '/extra' })
 
   next()
 }

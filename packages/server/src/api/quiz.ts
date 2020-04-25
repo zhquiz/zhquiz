@@ -1,7 +1,40 @@
 import { FastifyInstance } from 'fastify'
-import { DbQuizModel } from '../db/schema'
+import { DbQuizModel, DbCardModel } from '../db/schema'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
+  f.get('/card', {
+    schema: {
+      tags: ['quiz'],
+      summary: 'Get card info for quiz',
+      querystring: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'string' }
+        }
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            front: { type: 'string' },
+            back: { type: 'string' },
+            mnemonic: { type: 'string' }
+          }
+        }
+      }
+    }
+  }, async (req) => {
+    const { id } = req.query
+    const r = await DbCardModel.findById(id).select({
+      front: 1,
+      back: 1,
+      mnemonic: 1
+    })
+
+    return r ? r.toJSON() : {}
+  })
+
   f.patch('/right', {
     schema: {
       tags: ['quiz'],

@@ -10,6 +10,7 @@ main
       b-navbar-item(tag="router-link" to="/vocab" :active="$route.path === '/vocab'") Vocab
       b-navbar-item(tag="router-link" to="/quiz" :active="$route.path === '/quiz'") Quiz
       b-navbar-item(tag="router-link" to="/level" :active="$route.path === '/level'") Level
+      b-navbar-item(tag="router-link" to="/extra" :active="$route.path === '/extra'") Extra
       b-navbar-item(tag="router-link" to="/settings" :active="$route.path === '/settings'") Settings
       b-navbar-item(href="https://github.com/patarapolw/zhview" target="_blank" rel="noopener") About
     template(slot="end")
@@ -53,7 +54,7 @@ export default class App extends Vue {
     if (!this.user) {
       setTimeout(() => {
         this.isLoginModal = !this.user
-      }, 2000)
+      }, 3000)
     } else {
       this.isLoginModal = false
     }
