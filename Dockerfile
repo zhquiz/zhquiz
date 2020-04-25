@@ -1,4 +1,4 @@
-FROM node:12-alpine AS web
+FROM node:10-alpine AS web
 RUN mkdir -p /web
 WORKDIR /web
 COPY packages/web/package.json /web

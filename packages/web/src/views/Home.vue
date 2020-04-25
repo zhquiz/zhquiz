@@ -31,6 +31,8 @@ article#Home
     li(v-else)
       a(role="button" @click.prevent="removeFromQuiz(hanzi)") Remove from quiz
     li
+      router-link(:to="{ path: '/vocab', query: { q: hanzi.item } }" target="_blank") Search for vocab
+    li
       router-link(:to="{ path: '/hanzi', query: { q: hanzi.item } }" target="_blank") Search for Hanzi
     li
       a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${hanzi.item}*`"

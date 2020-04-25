@@ -13,7 +13,7 @@ import { humanizeDuration } from './utils'
 import './plugins/buefy'
 import './plugins/fontawesome'
 import './plugins/vue-context'
-import './plugins/simplemde'
+import './plugins/codemirror'
 import './main.scss'
 
 firebase.initializeApp(require('../firebase.config.js'))

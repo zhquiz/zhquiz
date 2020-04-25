@@ -123,16 +123,17 @@
       .card-content
         b-tabs(type="is-boxed" @change="onEditTabChange")
           b-tab-item(label="Front")
-            simplemde.content(v-model="editItem.front" :configs="mdeConfig" ref="mde0")
+            MarkdownEditor(v-model="editItem.front" :renderer="previewRender" ref="mde0")
           b-tab-item(label="Back")
-            simplemde.content(v-model="editItem.back" :configs="mdeConfig" ref="mde1")
+            MarkdownEditor(v-model="editItem.back" :renderer="previewRender" ref="mde1")
           b-tab-item(label="Mnemonic")
-            simplemde.content(v-model="editItem.mnemonic" :configs="mdeConfig" ref="mde2")
+            MarkdownEditor(v-model="editItem.mnemonic" :renderer="previewRender" ref="mde2")
       .card-footer(style="padding: 1em;")
         div(style="flex-grow: 1;")
         .buttons
           button.button.is-success(@click="doEditSave()") Save
           button.button.is-danger(@click="doEditLoad()") Reset
+          button.button(@click="isEditModal = false") Close
   b-loading(:active="isLoading")
 </template>
 
@@ -145,8 +146,13 @@ import hbs from 'handlebars'
 
 import { speak, shuffle } from '../utils'
 import cardDefault from '../assets/card-default.yaml'
+import MarkdownEditor from '../components/MarkdownEditor.vue'
 
-@Component
+@Component({
+  components: {
+    MarkdownEditor
+  }
+})
 export default class Quiz extends Vue {
   isLoading = false
 
@@ -231,22 +237,22 @@ export default class Quiz extends Vue {
     return this.quizItems[this.quizIndex]
   }
 
-  get mdeConfig () {
-    return {
-      previewRender: (md: string) => {
-        const { type, item } = this.editItem
-        const { raw } = this.quizData.filter((d) => {
-          return d.type === type && d.item === item
-        })[0] || {}
+  created () {
+    this.onUserChange()
+  }
 
-        return this.md.render(
-          hbs.compile(md)({
-            ...this.editItem,
-            raw
-          })
-        )
-      }
-    }
+  previewRender (md: string) {
+    const { type, item } = this.editItem
+    const { raw } = this.quizData.filter((d) => {
+      return d.type === type && d.item === item
+    })[0] || {}
+
+    return this.md.render(
+      hbs.compile(md)({
+        ...this.editItem,
+        raw
+      })
+    )
   }
 
   getQuizFront () {
@@ -299,10 +305,6 @@ export default class Quiz extends Vue {
     }
 
     return ''
-  }
-
-  created () {
-    this.onUserChange()
   }
 
   async getApi (silent = true) {
@@ -589,7 +591,7 @@ export default class Quiz extends Vue {
 
   onEditTabChange (i: number) {
     this.$nextTick(() => {
-      (this.$refs[`mde${i}`] as any).simplemde.codemirror.refresh()
+      (this.$refs[`mde${i}`] as any).codemirror.refresh()
     })
   }
 
@@ -625,9 +627,10 @@ export default class Quiz extends Vue {
     }
   }
 
-  .vue-simplemde {
-    .CodeMirror {
-      height: 400px;
+  tbody {
+    tr:hover {
+      cursor: pointer;
+      color: blue;
     }
   }
 }
