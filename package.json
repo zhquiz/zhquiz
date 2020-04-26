@@ -4,14 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "concurrently 'cd packages/server && npm run dev' 'cd packages/web && npm run dev'",
-    "build": "docker build -t zhquiz .",
-    "start": "docker run -p 8080:8080 zhquiz",
+    "build": "env-cmd docker build -t zhquiz .",
+    "start": "env-cmd docker run -p 8080:8080 zhquiz",
     "deploy": "heroku container:push web"
   },
   "dependencies": {},
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.29.0",
     "@typescript-eslint/parser": "^2.29.0",
+    "concurrently": "^5.2.0",
+    "dotenv": "^8.2.0",
+    "env-cmd": "^10.1.0",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.20.2",

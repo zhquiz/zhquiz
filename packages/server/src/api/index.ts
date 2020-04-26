@@ -14,12 +14,12 @@ import quizRouter from './quiz'
 import extraRouter from './extra'
 import db from '../db'
 
-admin.initializeApp({
-  credential: admin.credential.cert(require('../../firebase-adminsdk.json')),
-  databaseURL: 'https://zhview-c23dc.firebaseio.com'
-})
-
 export default (f: FastifyInstance, _: any, next: () => void) => {
+  admin.initializeApp({
+    credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SDK!)),
+    databaseURL: 'https://zhview-c23dc.firebaseio.com'
+  })
+
   f.register(swagger, {
     routePrefix: '/doc',
     swagger: {

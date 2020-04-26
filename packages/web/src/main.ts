@@ -16,7 +16,7 @@ import './plugins/vue-context'
 import './plugins/codemirror'
 import './main.scss'
 
-firebase.initializeApp(require('../firebase.config.js'))
+firebase.initializeApp(JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG!))
 firebase.analytics()
 
 firebase.auth().onAuthStateChanged((user) => {
