@@ -6,7 +6,7 @@ RUN npm i
 COPY packages/web /web
 RUN npm run build
 
-FROM node:12-alpine
+FROM node:10-alpine
 RUN mkdir -p /server
 WORKDIR /server
 RUN apk add python alpine-sdk
