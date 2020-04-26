@@ -4,7 +4,7 @@ main
     template(slot="brand")
       b-navbar-item(tag="router-link" to="/")
         strong Zh
-        span View
+        span Quiz
     template(slot="start")
       b-navbar-item(tag="router-link" to="/hanzi" :active="$route.path === '/hanzi'") Hanzi
       b-navbar-item(tag="router-link" to="/vocab" :active="$route.path === '/vocab'") Vocab
@@ -12,7 +12,7 @@ main
       b-navbar-item(tag="router-link" to="/level" :active="$route.path === '/level'") Level
       b-navbar-item(tag="router-link" to="/extra" :active="$route.path === '/extra'") Extra
       b-navbar-item(tag="router-link" to="/settings" :active="$route.path === '/settings'") Settings
-      b-navbar-item(href="https://github.com/patarapolw/zhview" target="_blank" rel="noopener") About
+      b-navbar-item(href="https://github.com/patarapolw/zhquiz" target="_blank" rel="noopener") About
     template(slot="end")
       b-navbar-item(tag="div" v-if="user") Signed in as {{user.email}}
       b-navbar-item(tag="div")

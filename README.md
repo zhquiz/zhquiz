@@ -1,8 +1,8 @@
-# zhview
+# ZhQuiz
 
-ZhView, a Chinese quizzing platform
+ZhQuiz, a Chinese quizzing platform
 
-<https://zhview.herokuapp.com>
+<https://zhquiz.cc>
 
 ![Preview GIF](/docs/preview.gif)
 
