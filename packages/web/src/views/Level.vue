@@ -90,7 +90,7 @@ export default class Level extends Vue {
     const srsLevel = this.vocabSrsLevel[item]
 
     if (typeof srsLevel !== 'undefined') {
-      if (srsLevel === Infinity) {
+      if (srsLevel === -1) {
         return 'is-info'
       }
 
@@ -112,7 +112,7 @@ export default class Level extends Vue {
   @Watch('email')
   async onUserChange () {
     if (this.email) {
-      const api = await this.getApi(false)
+      const api = await this.getApi()
       const r = await api.post('/api/card/q', {
         cond: {
           type: 'vocab'
@@ -128,14 +128,11 @@ export default class Level extends Vue {
 
       this.vocabSrsLevel = {}
       r.data.result.map((d: any) => {
-        const lv = this.vocabSrsLevel[d.item]
+        let lv = this.vocabSrsLevel[d.item]
+        this.vocabSrsLevel[d.item] = lv = typeof lv === 'undefined' ? -1 : lv
 
         if (typeof d.srsLevel === 'number') {
-          this.vocabSrsLevel[d.item] = typeof lv === 'number'
-            ? lv > d.srsLevel ? d.srsLevel : lv
-            : lv
-        } else if (typeof lv === 'undefined') {
-          this.vocabSrsLevel[d.item] = Infinity
+          this.vocabSrsLevel[d.item] = lv > d.srsLevel ? lv : d.srsLevel
         }
       })
 
@@ -162,8 +159,8 @@ export default class Level extends Vue {
 
       const srsLevels = r.data.result.map((r: any) => r.srsLevel).filter((s: any) => typeof s === 'number')
       const srsLevel = srsLevels.length > 0
-        ? Math.min(...srsLevels)
-        : (r.data.result.length > 0 ? Infinity : undefined)
+        ? Math.max(...srsLevels)
+        : (r.data.result.length > 0 ? -1 : undefined)
 
       this.$set(this.vocabIds, this.selected, r.data.result.map((r: any) => r._id))
       this.$set(this.vocabSrsLevel, this.selected, srsLevel)
