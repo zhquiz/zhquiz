@@ -1,8 +1,7 @@
 application:
   name: zhquiz
   project: zhquiz
-  cloud_region: aws/us-east-2
-  publicly_accessible: true
+  cloud_region: aws/eu-west-3
 routers:
 - name: main
   routes:
