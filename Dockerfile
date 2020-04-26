@@ -12,9 +12,9 @@ WORKDIR /server
 RUN apk add python alpine-sdk
 COPY packages/server/package.json /server
 RUN npm i
-COPY --from=web /web/dist /server/public
 COPY packages/server /server
 RUN npm run build
 RUN npm prune
+COPY --from=web /web/dist /server/public
 EXPOSE 8080
 CMD [ "npm", "start" ]
