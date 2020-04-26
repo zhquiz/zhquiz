@@ -1,11 +1,11 @@
 {
-  "name": "zhview",
+  "name": "zhquiz",
   "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "concurrently 'cd packages/server && npm run dev' 'cd packages/web && npm run dev'",
-    "build": "docker build -t zhview .",
-    "start": "docker run -p 8080:8080 zhview",
+    "build": "docker build -t zhquiz .",
+    "start": "docker run -p 8080:8080 zhquiz",
     "deploy": "heroku container:push web"
   },
   "dependencies": {},
