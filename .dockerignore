@@ -2,3 +2,4 @@ node_modules
 **/node_modules
 packages/server/public
 packages/**/dist
+.env
