@@ -4,13 +4,10 @@ import fastify from 'fastify'
 import helmet from 'fastify-helmet'
 import fStatic from 'fastify-static'
 import mongoose from 'mongoose'
-import dotenv from 'dotenv'
 
 import apiRouter from './api'
 
 async function main () {
-  dotenv.config()
-
   await mongoose.connect(process.env.MONGO_URI!, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -19,9 +16,9 @@ async function main () {
   })
 
   const app = fastify({
-    logger: {
+    logger: process.env.NODE_ENV === 'development' ? {
       prettyPrint: true
-    }
+    } : true
   })
   const port = parseInt(process.env.PORT || '8080')
 
