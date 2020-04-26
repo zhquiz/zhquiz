@@ -1,0 +1,11 @@
+application:
+  name: zhquiz
+  project: zhquiz
+  cloud_region: aws/us-east-2
+  publicly_accessible: true
+routers:
+- name: main
+  routes:
+  - application_name: zhquiz
+    paths:
+    - /*
