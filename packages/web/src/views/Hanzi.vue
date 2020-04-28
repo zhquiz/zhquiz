@@ -62,6 +62,17 @@
             ) {{v.traditional}}&nbsp;
             span.vocab-part(style="min-width: 8em;") [{{v.pinyin}}]&nbsp;
             span.vocab-part {{v.english}}
+      b-collapse.card(animation="slide" style="margin-bottom: 1em;" :open="sentences.length > 0")
+        .card-header(slot="trigger" slot-scope="props" role="button")
+          h2.card-header-title Sentences
+          a.card-header-icon
+            fontawesome(:icon="props.open ? 'caret-down' : 'caret-up'")
+        .card-content
+          div(v-for="s, i in sentences" :key="i")
+            span.clickable.sentence-part(
+              @contextmenu.prevent="(evt) => { selectedSentence = s.chinese; $refs.sentenceContextmenu.open(evt) }"
+            ) {{s.chinese}}&nbsp;
+            span.sentence-part {{s.english}}
   vue-context(ref="hanziContextmenu" lazy)
     li
       a(role="button" @click.prevent="speak(selectedHanzi)") Speak
@@ -90,6 +101,20 @@
     li
       a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selectedVocab}*`"
         target="_blank" rel="noopener") Open in MDBG
+  vue-context(ref="sentenceContextmenu" lazy)
+    li
+      a(role="button" @click.prevent="speak(selectedSentence)") Speak
+    li(v-if="!sentenceIds[selectedSentence] || !sentenceIds[selectedSentence].length")
+      a(role="button" @click.prevent="addToQuiz(selectedSentence, 'sentence')") Add to quiz
+    li(v-else)
+      a(role="button" @click.prevent="removeFromQuiz(selectedSentence, 'sentence')") Remove from quiz
+    li
+      router-link(:to="{ path: '/vocab', query: { q: selectedSentence } }" target="_blank") Search for vocab
+    li
+      router-link(:to="{ path: '/hanzi', query: { q: selectedSentence } }" target="_blank") Search for Hanzi
+    li
+      a(:href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${selectedSentence}`"
+        target="_blank" rel="noopener") Open in MDBG
 </template>
 
 <script lang="ts">
@@ -101,28 +126,31 @@ import { speak } from '../utils'
 
 @Component
 export default class Hanzi extends Vue {
-  entries: string[] = []
-  i: number = 0
+  entries: string[] = [];
+  i: number = 0;
 
-  sub = ''
-  sup = ''
-  variants = ''
-  vocabs: any[] = []
+  sub = '';
+  sup = '';
+  variants = '';
+  vocabs: any[] = [];
+  sentences: any[] = [];
 
-  selectedHanzi = ''
-  selectedVocab = ''
+  selectedHanzi = '';
+  selectedVocab = '';
+  selectedSentence = '';
 
-  hanziIds: any = {}
-  vocabIds: any = {}
+  hanziIds: any = {};
+  vocabIds: any = {};
+  sentenceIds: any = {};
 
-  speak = speak
+  speak = speak;
 
   get current () {
     return this.entries[this.i]
   }
 
   get q () {
-    return this.$route.query.q as string || ''
+    return (this.$route.query.q as string) || ''
   }
 
   created () {
@@ -130,13 +158,17 @@ export default class Hanzi extends Vue {
   }
 
   async getApi (silent = true) {
-    return await this.$store.dispatch('getApi', silent) as AxiosInstance
+    return (await this.$store.dispatch('getApi', silent)) as AxiosInstance
   }
 
   @Watch('q')
   onQChange () {
     const qs = this.q.split('').filter(h => XRegExp('\\p{Han}').test(h))
-    this.$set(this, 'entries', qs.filter((h, i) => qs.indexOf(h) === i))
+    this.$set(
+      this,
+      'entries',
+      qs.filter((h, i) => qs.indexOf(h) === i)
+    )
     this.i = 0
     this.load()
   }
@@ -147,12 +179,14 @@ export default class Hanzi extends Vue {
     if (this.$store.state.user) {
       this.loadHanzi()
       this.loadVocab()
+      this.loadSentences()
     }
   }
 
   async loadHanzi () {
     const api = await this.getApi()
-    const r = (await api.post('/api/hanzi/match', { entry: this.current })).data.result
+    const r = (await api.post('/api/hanzi/match', { entry: this.current })).data
+      .result
     this.sub = r.sub
     this.sup = r.sup
     this.variants = r.var
@@ -162,6 +196,12 @@ export default class Hanzi extends Vue {
     const api = await this.getApi()
     const r = (await api.post('/api/vocab/q', { entry: this.current })).data
     this.$set(this, 'vocabs', r.result)
+  }
+
+  async loadSentences () {
+    const api = await this.getApi()
+    const r = (await api.post('/api/sentence/q', { entry: this.current })).data
+    this.$set(this, 'sentences', r.result)
   }
 
   @Watch('selectedHanzi')
@@ -196,6 +236,21 @@ export default class Hanzi extends Vue {
     }
   }
 
+  @Watch('selectedSentence')
+  async loadSentenceStatus () {
+    if (this.selectedSentence) {
+      const api = await this.getApi()
+      const r = await api.post('/api/card/q', {
+        cond: { item: this.selectedSentence, type: 'sentence' },
+        hasCount: false,
+        projection: {
+          _id: 1
+        }
+      })
+      this.$set(this.sentenceIds, this.selectedSentence, r.data.result.map((d: any) => d._id))
+    }
+  }
+
   async addToQuiz (item: string, type: string) {
     const api = await this.getApi()
     await api.put('/api/card/', { item, type })
@@ -206,10 +261,15 @@ export default class Hanzi extends Vue {
 
   async removeFromQuiz (item: string, type: string) {
     const api = await this.getApi()
-    const ids = (type === 'vocab' ? this.vocabIds[item] : this.hanziIds[item]) || []
-    await Promise.all(ids.map((id: string) => api.delete('/api/card/', {
-      data: { id }
-    })))
+    const ids =
+      (type === 'vocab' ? this.vocabIds[item] : this.hanziIds[item]) || []
+    await Promise.all(
+      ids.map((id: string) =>
+        api.delete('/api/card/', {
+          data: { id }
+        })
+      )
+    )
     this.$buefy.snackbar.open(`Removed ${type}: ${item} from quiz`)
 
     type === 'vocab' ? this.loadVocabStatus() : this.loadHanziStatus()
