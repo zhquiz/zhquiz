@@ -2,7 +2,6 @@ import { prop, getModelForClass, index, Ref, setGlobalOptions, Severity, pre } f
 import { nanoid } from 'nanoid'
 import dotProp from 'dot-prop'
 
-import db from '.'
 import { repeatReview, srsMap, getNextReview } from './quiz'
 
 setGlobalOptions({ options: { allowMixed: Severity.ALLOW } })
@@ -64,10 +63,6 @@ class DbQuiz {
 
   private _updateSrsLevel (dSrsLevel: number) {
     return () => {
-      if (!db.user) {
-        throw new Error('Not logged in')
-      }
-
       if (dSrsLevel > 0) {
         dotProp.set(this.stat, 'streak.right', dotProp.get(this.stat, 'streak.right', 0) + 1)
         dotProp.set(this.stat, 'streak.wrong', 0)
