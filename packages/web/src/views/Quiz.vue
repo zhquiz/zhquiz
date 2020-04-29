@@ -148,6 +148,10 @@ import { speak, shuffle } from '../utils'
 import cardDefault from '../assets/card-default.yaml'
 import MarkdownEditor from '../components/MarkdownEditor.vue'
 
+hbs.registerHelper('speak', (s: string) => {
+  return `<iframe src="https://speak-btn.now.sh/btn?q=${encodeURIComponent(s)}&lang=zh" style="width: 20px; height: 20px;" frameborder="0" allowtransparency="true"></iframe>`
+})
+
 @Component({
   components: {
     MarkdownEditor
@@ -206,7 +210,9 @@ export default class Quiz extends Vue {
 
   speak = speak
 
-  md = MarkdownIt().use(MdItEmoji)
+  md = MarkdownIt({
+    html: true
+  }).use(MdItEmoji)
 
   get email () {
     const u = this.$store.state.user
