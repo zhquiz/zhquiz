@@ -3,7 +3,7 @@ hanzi:
     front: |
       #### Hanzi Chinese-English
 
-      # {{item}}
+      # {{item}} {{{speak item}}}
     back: |
       {{raw.pinyin}}
 
@@ -14,7 +14,7 @@ hanzi:
 
       {{raw.english}}
     back: |
-      # {{item}}
+      # {{item}} {{{speak item}}}
 
       {{raw.pinyin}}
 vocab:
@@ -22,7 +22,7 @@ vocab:
     front: |
       #### Vocab Simplified-English
 
-      # {{item}}
+      # {{item}} {{{speak item}}}
     back: |
       ## {{#each raw}} {{traditional}} {{/each}}
 
@@ -41,7 +41,7 @@ vocab:
 
       ## {{#each raw}} {{traditional}} {{/each}}
     back: |
-      # {{item}}
+      # {{item}} {{{speak item}}}
 
       {{#each raw}}
       - {{pinyin}}
@@ -60,7 +60,7 @@ vocab:
       - {{english}}
       {{/each}}  
     back: |
-      # {{item}}
+      # {{item}} {{{speak item}}}
 
       ## {{#each raw}} {{traditional}} {{/each}}
 
@@ -78,7 +78,7 @@ sentence:
     front: |
       #### Sentence Chinese-English
 
-      ## {{item}}
+      ## {{item}} {{{speak item}}}
     back: |
       {{#each raw}}
       - {{pinyin}}
@@ -97,7 +97,7 @@ sentence:
       - {{english}}
       {{/each}}
     back: |
-      {{item}}
+      {{item}} {{{speak item}}}
 
       {{#each raw}}
       - {{pinyin}}
@@ -107,7 +107,7 @@ extra:
     front: |
       #### Extra Chinese-English
 
-      ## {{item}}
+      ## {{item}} {{{speak item}}}
     back: |
       {{raw.pinyin}}
 
@@ -118,6 +118,6 @@ extra:
 
       {{raw.english}}
     back: |
-      ## {{item}}
+      ## {{item}} {{{speak item}}}
 
       {{raw.pinyin}}
