@@ -1,5 +1,5 @@
 <template lang="pug">
-.container#Quiz
+#Quiz
   .columns
     .column.is-4
       .field
