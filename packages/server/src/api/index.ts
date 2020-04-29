@@ -12,7 +12,7 @@ import cardRouter from './card'
 import userRouter from './user'
 import quizRouter from './quiz'
 import extraRouter from './extra'
-import db from '../db'
+import { signIn } from '../db'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   admin.initializeApp({
@@ -48,7 +48,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
   f.addHook('preHandler', async (req, reply) => {
     if (process.env.NODE_ENV === 'development') {
-      await db.signIn('patarapolw@gmail.com')
+      req.session.user = await signIn('patarapolw@gmail.com')
       return
     }
 
@@ -65,9 +65,8 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
     const ticket = await admin.auth().verifyIdToken(m[1], true)
 
-    req.session.user = ticket
-    if (!db.user && ticket.email) {
-      await db.signIn(ticket.email)
+    if (!req.session.user && ticket.email) {
+      req.session.user = await signIn(ticket.email)
     }
   })
 

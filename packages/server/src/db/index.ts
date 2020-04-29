@@ -1,24 +1,10 @@
-import { DocumentType } from '@typegoose/typegoose'
+import { DbUserModel } from './schema'
 
-import { DbUser, DbUserModel } from './schema'
-
-class Db {
-  user: DocumentType<DbUser> | null = null
-
-  async signIn (email: string) {
-    this.user = await DbUserModel.findOne({ email })
-    if (!this.user) {
-      this.user = await DbUserModel.create({ email })
-    }
-
-    return this.user
+export async function signIn (email: string) {
+  let user = await DbUserModel.findOne({ email })
+  if (!user) {
+    user = await DbUserModel.create({ email })
   }
 
-  async signOut () {
-    this.user = null
-  }
+  return user
 }
-
-const db = new Db()
-
-export default db

@@ -1,5 +1,4 @@
 import { FastifyInstance } from 'fastify'
-import db from '../db'
 import { DbExtraModel } from '../db/schema'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
@@ -18,7 +17,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   }, async (req, reply) => {
     const { warn } = req.body
 
-    const u = db.user
+    const u = req.session.user
     if (u) {
       u.userContentWarning = warn
       await u.save()
@@ -61,7 +60,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }
     }
   }, async (req, reply) => {
-    const u = db.user
+    const u = req.session.user
     if (u) {
       const {
         cond = {},
@@ -157,7 +156,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }
     }
   }, async (req, reply) => {
-    const u = db.user
+    const u = req.session.user
     if (u) {
       const { chinese, pinyin, english } = req.body
       const r = await DbExtraModel.create({

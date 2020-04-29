@@ -1,7 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import sqlite3 from 'better-sqlite3'
 
-import db from '../db'
 import { DbCardModel } from '../db/schema'
 import { restoreDate } from '../util'
 
@@ -43,7 +42,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }
     }
   }, async (req, reply) => {
-    const u = db.user
+    const u = req.session.user
     if (u) {
       const {
         cond = {},
@@ -121,7 +120,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }
     }
   }, async (req, reply) => {
-    const u = db.user
+    const u = req.session.user
     if (u) {
       const { item, type } = req.body
       const directions = ['se', 'ec']
@@ -165,7 +164,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }
     }
   }, async (req, reply) => {
-    const u = db.user
+    const u = req.session.user
     if (u) {
       const { id, set } = req.body
 
@@ -192,7 +191,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }
     }
   }, async (req, reply) => {
-    const u = db.user
+    const u = req.session.user
     if (u) {
       const { id } = req.body
       await DbCardModel.findByIdAndRemove(id)
