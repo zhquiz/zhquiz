@@ -140,17 +140,11 @@
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'
 import { AxiosInstance } from 'axios'
-import MarkdownIt from 'markdown-it'
-import MdItEmoji from 'markdown-it-emoji'
-import hbs from 'handlebars'
 
 import { speak, shuffle } from '../utils'
+import { markdownToHtml } from '../assets/make-html'
 import cardDefault from '../assets/card-default.yaml'
 import MarkdownEditor from '../components/MarkdownEditor.vue'
-
-hbs.registerHelper('speak', (s: string) => {
-  return `<iframe src="https://speak-btn.now.sh/btn?q=${encodeURIComponent(s)}&lang=zh" style="width: 20px; height: 20px;" frameborder="0" allowtransparency="true"></iframe>`
-})
 
 @Component({
   components: {
@@ -210,10 +204,6 @@ export default class Quiz extends Vue {
 
   speak = speak
 
-  md = MarkdownIt({
-    html: true
-  }).use(MdItEmoji)
-
   get email () {
     const u = this.$store.state.user
     return u ? u.email as string : undefined
@@ -253,12 +243,10 @@ export default class Quiz extends Vue {
       return d.type === type && d.item === item
     })[0] || {}
 
-    return this.md.render(
-      hbs.compile(md)({
-        ...this.editItem,
-        raw
-      })
-    )
+    return markdownToHtml(md, {
+      ...this.editItem,
+      raw
+    })
   }
 
   getQuizFront () {
@@ -276,12 +264,10 @@ export default class Quiz extends Vue {
 
       template = front || cardDefault[type][direction].front || ''
 
-      return this.md.render(
-        hbs.compile(template)({
-          ...this.quizCurrent,
-          raw
-        })
-      )
+      return markdownToHtml(template, {
+        ...this.quizCurrent,
+        raw
+      })
     }
 
     return ''
@@ -302,12 +288,10 @@ export default class Quiz extends Vue {
 
       template = back || cardDefault[type][direction].back || ''
 
-      return this.md.render(
-        hbs.compile(template)({
-          ...this.quizCurrent,
-          raw
-        })
-      )
+      return markdownToHtml(template, {
+        ...this.quizCurrent,
+        raw
+      })
     }
 
     return ''
