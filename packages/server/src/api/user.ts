@@ -1,6 +1,5 @@
 import { FastifyInstance } from 'fastify'
 
-import db from '../db'
 import { DbUserModel } from '../db/schema'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
@@ -9,8 +8,8 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       tags: ['user'],
       summary: 'Get user config'
     }
-  }, async (_, reply) => {
-    const u = db.user
+  }, async (req, reply) => {
+    const u = req.session.user
     if (u) {
       return u.toJSON()
     }
@@ -31,7 +30,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }
     }
   }, async (req, reply) => {
-    const u = db.user
+    const u = req.session.user
     if (u) {
       await DbUserModel.findByIdAndUpdate(u._id, {
         $set: req.body.set
