@@ -1,8 +1,8 @@
 <template lang="pug">
 .container#Vocab
-  form.field
+  .field
     .control
-      input.input(name="q" placeholder="Type here to search." :value="q")
+      input.input(name="q" placeholder="Type here to search." v-model="q" @keydown.enter="onQChange()")
   .columns
     .column.is-6.entry-display
       .font-hanzi(style="font-size: 120px; min-height: 200px; position: relative;")
@@ -103,6 +103,8 @@ export default class Vocab extends Vue {
   vocabIds: any = {}
   sentenceIds: any = {}
 
+  q = ''
+
   speak = speak
 
   get current () {
@@ -113,11 +115,9 @@ export default class Vocab extends Vue {
     return typeof this.current === 'string' ? this.current : this.current.simplified
   }
 
-  get q () {
-    return this.$route.query.q as string || ''
-  }
-
   created () {
+    const q = this.$route.query.q
+    this.q = (Array.isArray(q) ? q[0] : q) || ''
     this.onQChange()
   }
 
@@ -126,8 +126,11 @@ export default class Vocab extends Vue {
   }
 
   @Watch('$store.state.user')
-  @Watch('q')
   async onQChange () {
+    if (this.$route.query.q !== this.q) {
+      this.$router.push({ query: { q: this.q } })
+    }
+
     if (this.q && this.$store.state.user) {
       this.isQLoading = true
       const api = await this.getApi()
