@@ -1,8 +1,8 @@
 <template lang="pug">
 .container#Hanzi
-  form.field
+  .field
     .control
-      input.input(name="q" placeholder="Type here to search." :value="q")
+      input.input(name="q" placeholder="Type here to search." v-model="q" @keydown.enter="onQChange()")
   .columns
     .column.is-6.entry-display
       .font-hanzi.clickable(
@@ -143,17 +143,17 @@ export default class Hanzi extends Vue {
   vocabIds: any = {};
   sentenceIds: any = {};
 
+  q = ''
+
   speak = speak;
 
   get current () {
     return this.entries[this.i]
   }
 
-  get q () {
-    return (this.$route.query.q as string) || ''
-  }
-
   created () {
+    const q = this.$route.query.q
+    this.q = (Array.isArray(q) ? q[0] : q) || ''
     this.onQChange()
   }
 
@@ -161,8 +161,11 @@ export default class Hanzi extends Vue {
     return (await this.$store.dispatch('getApi', silent)) as AxiosInstance
   }
 
-  @Watch('q')
   onQChange () {
+    if (this.$route.query.q !== this.q) {
+      this.$router.push({ query: { q: this.q } })
+    }
+
     const qs = this.q.split('').filter(h => XRegExp('\\p{Han}').test(h))
     this.$set(
       this,

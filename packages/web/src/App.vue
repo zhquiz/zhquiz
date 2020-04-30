@@ -40,10 +40,12 @@ export default class App extends Vue {
 
   @Watch('isLoading')
   onLoadingChange () {
-    if (!this.isLoading && !this.user) {
-      this.$router.push('/')
-    } else if (this.$route.path === '/') {
-      this.$router.push('/random')
+    if (!this.isLoading) {
+      if (!this.user) {
+        this.$router.push('/')
+      } else if (this.$route.path === '/') {
+        this.$router.push('/random')
+      }
     }
   }
 }
