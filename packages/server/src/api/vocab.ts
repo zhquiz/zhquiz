@@ -1,45 +1,7 @@
-import fs from 'fs'
-
 import { FastifyInstance } from 'fastify'
-import sqlite3 from 'better-sqlite3'
-import yaml from 'js-yaml'
+import { zh } from '../db/local'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
-  const zh = sqlite3('assets/zh.db', { readonly: true })
-  const stmt = {
-    vocabMatch: zh.prepare(/*sql*/`
-    SELECT simplified, traditional, pinyin, english FROM vocab 
-    WHERE
-      simplified = ? OR
-      traditional = ?
-    ORDER BY rating DESC
-    `),
-    vocabQ (opts: {
-      limit: number
-      offset: number
-    }) {
-      return zh.prepare(/*sql*/`
-      SELECT simplified, traditional, v.pinyin AS pinyin, v.english AS english
-      FROM vocab v
-      LEFT JOIN token t ON t.entry = v.simplified
-      WHERE
-        simplified LIKE ? OR
-        traditional LIKE ?
-      ORDER BY frequency DESC, rating DESC
-      LIMIT ${opts.limit} OFFSET ${opts.offset}
-      `)
-    },
-    vocabQCount: zh.prepare(/*sql*/`
-    SELECT COUNT(*) AS [count]
-    FROM vocab v
-    LEFT JOIN token t ON t.entry = v.simplified
-    WHERE
-      simplified LIKE ? OR
-      traditional LIKE ?
-    `)
-  }
-  const hsk = yaml.safeLoad(fs.readFileSync('assets/hsk.yaml', 'utf8')) as Record<string, string[]>
-
   f.post('/q', {
     schema: {
       tags: ['vocab'],
@@ -81,10 +43,10 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     const { entry, offset = 0, limit = 10 } = req.body
 
     return {
-      result: stmt.vocabQ({
+      result: zh.vocabQ({
         offset, limit
       }).all(`%${entry}%`, `%${entry}%`),
-      count: (stmt.vocabQCount.get(`%${entry}%`, `%${entry}%`) || {}).count || 0,
+      count: (zh.vocabQCount.get(`%${entry}%`, `%${entry}%`) || {}).count || 0,
       offset,
       limit
     }
@@ -106,15 +68,31 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           type: 'object',
           properties: {
             result: {
-              type: 'array',
-              items: {
-                type: 'object',
-                required: ['simplified', 'pinyin', 'english'],
-                properties: {
-                  simplified: { type: 'string' },
-                  traditional: { type: 'string' },
-                  pinyin: { type: 'string' },
-                  english: { type: 'string' }
+              type: 'object',
+              properties: {
+                vocab: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    required: ['simplified', 'pinyin', 'english'],
+                    properties: {
+                      simplified: { type: 'string' },
+                      traditional: { type: 'string' },
+                      pinyin: { type: 'string' },
+                      english: { type: 'string' }
+                    }
+                  }
+                },
+                sentences: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      chinese: { type: 'string' },
+                      pinyin: { type: 'string' },
+                      english: { type: 'string' }
+                    }
+                  }
                 }
               }
             }
@@ -126,7 +104,10 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     const { entry } = req.body
 
     return {
-      result: stmt.vocabMatch.all(entry, entry)
+      result: {
+        vocab: zh.vocabMatch.all(entry, entry),
+        sentences: zh.sentenceQ({ offset: 0, limit: 10 }).all(`%${entry}%`)
+      }
     }
   })
 
@@ -154,7 +135,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   }, async (req) => {
     const { levelMin, level } = req.body
 
-    const vs = Object.entries(hsk)
+    const vs = Object.entries(zh.hsk)
       .map(([lv, vs]) => ({ lv: parseInt(lv), vs }))
       .filter(({ lv }) => level ? lv <= level : true)
       .filter(({ lv }) => level ? lv >= levelMin : true)
@@ -186,7 +167,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }
     }
   }, async () => {
-    return hsk
+    return zh.hsk
   })
 
   next()
