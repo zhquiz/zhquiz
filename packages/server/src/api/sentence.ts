@@ -1,39 +1,8 @@
 import { FastifyInstance } from 'fastify'
-import sqlite3 from 'better-sqlite3'
 import pinyin from 'chinese-to-pinyin'
+import { zh } from '../db/local'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
-  const zh = sqlite3('assets/zh.db', { readonly: true })
-  const stmt = {
-    sentenceMatch: zh.prepare(/*sql*/`
-    SELECT chinese, pinyin, english
-    FROM sentence
-    WHERE chinese = ?
-    `),
-    sentenceQ (opts: {
-      limit: number
-      offset: number
-    }) {
-      return zh.prepare(/*sql*/`
-      SELECT chinese, pinyin, english
-      FROM sentence
-      WHERE chinese LIKE ?
-      ORDER BY frequency DESC
-      LIMIT ${opts.limit} OFFSET ${opts.offset}
-      `)
-    },
-    sentenceQCount: zh.prepare(/*sql*/`
-    SELECT COUNT(*) AS [count]
-    FROM sentence
-    WHERE chinese LIKE ?
-    `),
-    sentenceLevel: zh.prepare(/*sql*/`
-    SELECT chinese, [level]
-    FROM sentence
-    WHERE [level] <= ? AND [level] >= ?
-    ORDER BY RANDOM()`)
-  }
-
   f.post('/match', {
     schema: {
       tags: ['sentence'],
@@ -68,7 +37,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     const { entry } = req.body
 
     return {
-      result: stmt.sentenceMatch.all(entry).map((el) => {
+      result: zh.sentenceMatch.all(entry).map((el: any) => {
         if (!el.pinyin) {
           el.pinyin = pinyin(entry, { keepRest: true })
         }
@@ -118,10 +87,10 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     const { entry, offset = 0, limit = 10 } = req.body
 
     return {
-      result: stmt.sentenceQ({
+      result: zh.sentenceQ({
         offset, limit
       }).all(`%${entry}%`),
-      count: (stmt.sentenceQCount.get(`%${entry}%`) || {}).count || 0,
+      count: (zh.sentenceQCount.get(`%${entry}%`) || {}).count || 0,
       offset,
       limit
     }
@@ -150,7 +119,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     }
   }, async (req) => {
     const { levelMin, level } = req.body
-    const s = stmt.sentenceLevel.get(level || 60, levelMin || 1) || {} as any
+    const s = zh.sentenceLevel.get(level || 60, levelMin || 1) || {} as any
 
     return {
       result: s.chinese,

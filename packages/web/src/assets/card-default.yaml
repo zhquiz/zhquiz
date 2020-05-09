@@ -3,9 +3,9 @@ hanzi:
     front: |
       #### Hanzi Chinese-English
 
-      # {{item}} {{{speak item}}}
+      # {{item}}
     back: |
-      {{raw.pinyin}}
+      {{raw.pinyin}} {{{speak item}}}
 
       {{raw.english}}
   ec:
@@ -22,69 +22,90 @@ vocab:
     front: |
       #### Vocab Simplified-English
 
-      # {{item}} {{{speak item}}}
+      # {{item}}
     back: |
-      ## {{#each raw}} {{traditional}} {{/each}}
+      ## {{#each raw.vocab}} {{traditional}} {{/each}}
 
-      {{#each raw}}
+      {{#each raw.vocab}}
       - {{pinyin}}
-      {{/each}} 
+      {{/each}}
+
+      {{{speak item}}}
+
+      {{#each raw.vocab}}
+      - {{english}}
+      {{/each}}
 
       ---
 
-      {{#each raw}}
-      - {{english}}
-      {{/each}} 
+      {{#each raw.sentences}}
+      - {{chinese}} {{{speak chinese}}}
+          - {{english}}
+      {{/each}}
   te:
     front: |
       #### Vocab Traditional-English
 
-      ## {{#each raw}} {{traditional}} {{/each}}
+      ## {{#each raw.vocab}} {{traditional}} {{/each}}
     back: |
       # {{item}} {{{speak item}}}
 
-      {{#each raw}}
+      {{#each raw.vocab}}
       - {{pinyin}}
       {{/each}} 
 
       ---
 
-      {{#each raw}}
+      {{#each raw.vocab}}
       - {{english}}
       {{/each}} 
+
+      ---
+
+      {{#each raw.sentences}}
+      - {{chinese}} {{{speak chinese}}}
+          - {{english}}
+      {{/each}}
   ec:
     front: |
       #### Vocab English-Chinese
 
-      {{#each raw}}
+      {{#each raw.vocab}}
       - {{english}}
       {{/each}}  
     back: |
       # {{item}} {{{speak item}}}
 
-      ## {{#each raw}} {{traditional}} {{/each}}
+      ## {{#each raw.vocab}} {{traditional}} {{/each}}
 
-      {{#each raw}}
+      {{#each raw.vocab}}
       - {{pinyin}}
       {{/each}} 
 
       ---
 
-      {{#each raw}}
+      {{#each raw.vocab}}
       - {{english}}
       {{/each}} 
+
+      ---
+
+      {{#each raw.sentences}}
+      - {{chinese}} {{{speak chinese}}}
+          - {{english}}
+      {{/each}}
 sentence:
   se:
     front: |
       #### Sentence Chinese-English
 
-      ## {{item}} {{{speak item}}}
+      ## {{item}}
     back: |
       {{#each raw}}
       - {{pinyin}}
       {{/each}}
 
-      ---
+      {{{speak item}}}
 
       {{#each raw}}
       - {{english}}
@@ -107,9 +128,9 @@ extra:
     front: |
       #### Extra Chinese-English
 
-      ## {{item}} {{{speak item}}}
+      ## {{item}}
     back: |
-      {{raw.pinyin}}
+      {{raw.pinyin}} {{{speak item}}}
 
       {{raw.english}}
   ec:

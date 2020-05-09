@@ -1,21 +1,7 @@
-import fs from 'fs'
-
 import { FastifyInstance } from 'fastify'
-import sqlite3 from 'better-sqlite3'
-import yaml from 'js-yaml'
+import { zh } from '../db/local'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
-  const zh = sqlite3('assets/zh.db', { readonly: true })
-  const stmt = {
-    hanziMatch: zh.prepare(/*sql*/`
-    SELECT sub, sup, [var], pinyin, english FROM token 
-    WHERE
-      [entry] = ?
-    ORDER BY frequency DESC
-    `)
-  }
-  const hsk = yaml.safeLoad(fs.readFileSync('assets/hsk.yaml', 'utf8')) as Record<string, string[]>
-
   f.post('/match', {
     schema: {
       tags: ['hanzi'],
@@ -49,7 +35,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     const { entry } = req.body
 
     return {
-      result: stmt.hanziMatch.get(entry)
+      result: zh.hanziMatch.get(entry)
     }
   })
 
@@ -79,7 +65,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
     const hsMap = new Map<string, number>()
 
-    Object.entries(hsk)
+    Object.entries(zh.hsk)
       .map(([lv, vs]) => ({ lv: parseInt(lv), vs }))
       .filter(({ lv }) => level ? lv <= level : true)
       .filter(({ lv }) => levelMin ? lv >= levelMin : true)
