@@ -102,7 +102,7 @@
           b-button(@click="isEditTagModal = false") Close
   b-modal#quiz-modal(:active.sync="isQuizModal" @close="endQuiz")
     .card
-      .card-content(v-if="quizCurrent" style="min-height: 100px;")
+      .card-content(v-if="quizCurrent" style="min-height: 100px; max-height: calc(100vh - 100px - 100px); overflow: scroll;")
         .content(v-if="!isQuizShownAnswer" v-html="quizFront" ref="quizFront")
         .content(v-else v-html="quizBack" ref="quizBack")
       .buttons-area
