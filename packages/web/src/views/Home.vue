@@ -1,6 +1,6 @@
 <template lang="pug">
 .columns#Home
-  .column.is-6-desktop(style="margin-top: 1em;")
+  .column.is-6-desktop.is-offset-3-desktop(style="margin-top: 1em;")
     .content
       h1 ZhQuiz - A Chinese quizzing app
 
