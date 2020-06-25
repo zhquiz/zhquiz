@@ -3,7 +3,6 @@ import firebase from 'firebase/app'
 import dayjs from 'dayjs'
 
 import 'firebase/auth'
-import 'firebase/analytics'
 
 import App from './App.vue'
 import router from './router'
@@ -18,7 +17,6 @@ import './plugins/vue-mq'
 import './main.scss'
 
 firebase.initializeApp(JSON.parse(process.env.VUE_APP_FIREBASE_CONFIG!))
-firebase.analytics()
 
 firebase.auth().onAuthStateChanged((user) => {
   store.commit('setUser', user)
