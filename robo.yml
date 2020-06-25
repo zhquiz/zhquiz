@@ -8,7 +8,7 @@ build:
     docker build . --build-arg FIREBASE_CONFIG -t {{.docker.tag}}
 start:
   command: |
-    docker run -p 8080:8080 -e MONGO_URI -e SECRET -e FIREBASE_SDK {{.docker.tag}}
+    docker run -p 8080:8080 -e MONGO_URI -e SECRET -e FIREBASE_SDK -e FIREBASE_CONFIG {{.docker.tag}}
 deploy:
   command: |
     docker push {{.docker.tag}}
