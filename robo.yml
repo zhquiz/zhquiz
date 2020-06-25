@@ -18,11 +18,14 @@ heroku-token:
 heroku-docker-login:
   command: |
     docker login --username=_ --password=${HEROKU_TOKEN} registry.heroku.com
+heroku-release:
+  command: |
+    heroku container:release web
 
 ##########
 # Settings
 
 variables:
   docker:
-    tag: ${DOCKER_TAG:-zhquiz}
-    # tag: registry.heroku.com/${HEROKU_APP}/web
+    # tag: ${DOCKER_TAG:-zhquiz}
+    tag: registry.heroku.com/${HEROKU_APP}/web
