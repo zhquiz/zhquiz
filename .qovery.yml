@@ -1,0 +1,14 @@
+application:
+  name: zhquiz
+  project: zhquiz
+  cloud_region: aws/eu-west-3
+  publicly_accessible: true
+routers:
+- name: main
+  custom_domains:
+  - branch: qovery
+    domain: www.zhquiz.cc
+  routes:
+  - application_name: zhquiz
+    paths:
+    - /
