@@ -52,7 +52,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
     let quiz = await DbQuizModel.findOne({ cardId: id })
     if (!quiz) {
-      quiz = await DbQuizModel.create({ cardId: id })
+      quiz = await DbQuizModel.create({ cardId: id } as any)
     }
 
     quiz.markRight()
@@ -78,7 +78,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
     let quiz = await DbQuizModel.findOne({ cardId: id })
     if (!quiz) {
-      quiz = await DbQuizModel.create({ cardId: id })
+      quiz = await DbQuizModel.create({ cardId: id } as any)
     }
 
     quiz.markWrong()
@@ -104,7 +104,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
     let quiz = await DbQuizModel.findOne({ cardId: id })
     if (!quiz) {
-      quiz = await DbQuizModel.create({ cardId: id })
+      quiz = await DbQuizModel.create({ cardId: id } as any)
     }
 
     quiz.markRepeat()

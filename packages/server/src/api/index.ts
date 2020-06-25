@@ -17,7 +17,7 @@ import { signIn } from '../db'
 export default (f: FastifyInstance, _: any, next: () => void) => {
   admin.initializeApp({
     credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SDK!)),
-    databaseURL: 'https://zhview-c23dc.firebaseio.com'
+    databaseURL: JSON.parse(process.env.FIREBASE_CONFIG!).databaseURL
   })
 
   f.register(swagger, {

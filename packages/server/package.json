@@ -1,9 +1,9 @@
 {
-  "name": "server",
-  "version": "1.0.0",
+  "name": "@zhquiz/server",
   "private": true,
   "main": "dist/index.js",
   "scripts": {
+    "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('You must use Yarn to install, not NPM')\"",
     "start": "node dist/index.js",
     "dev": "ts-node-dev src/index.ts",
     "build": "tsc -P src/tsconfig.json",
@@ -41,5 +41,10 @@
     "neat-csv": "^5.2.0",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.8.3"
+  },
+  "engines": {
+    "node": "12.x",
+    "npm": "please-use-yarn",
+    "yarn": "1.x"
   }
 }

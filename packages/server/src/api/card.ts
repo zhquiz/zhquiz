@@ -142,7 +142,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         item,
         type,
         direction
-      })))
+      } as any)))
 
       return reply.status(201).send()
     }

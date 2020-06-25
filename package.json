@@ -1,12 +1,9 @@
 {
   "name": "zhquiz",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently 'cd packages/server && npm run dev' 'cd packages/web && npm run dev'",
-    "build": "docker build . --build-arg VUE_APP_FIREBASE_CONFIG -t gcr.io/$PROJECT_ID/zhquiz",
-    "start": "docker run -p 8080:8080 -e MONGO_URI -e SECRET -e FIREBASE_SDK gcr.io/$PROJECT_ID/zhquiz",
-    "deploy": "docker push gcr.io/$PROJECT_ID/zhquiz"
+    "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('You must use Yarn to install, not NPM')\""
   },
   "dependencies": {},
   "devDependencies": {
@@ -22,5 +19,10 @@
     "eslint-plugin-standard": "^4.0.1",
     "eslint-plugin-vue": "^6.2.2",
     "typescript": "^3.8.3"
+  },
+  "engines": {
+    "node": "12.x",
+    "npm": "please-use-yarn",
+    "yarn": "1.x"
   }
 }
