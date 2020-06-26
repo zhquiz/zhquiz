@@ -33,25 +33,6 @@ async function main () {
     reply.sendFile('index.html')
   })
 
-  app.addHook('preHandler', async (req, reply) => {
-    const isHttps = ((req.headers['x-forwarded-proto'] || '').substring(0, 5) === 'https')
-    if (isHttps) {
-      return
-    }
-
-    const host = req.headers.host || req.hostname
-
-    if (['localhost', '127.0.0.1'].includes(host.split(':')[0])) {
-      return
-    }
-
-    const { method, url } = req.req
-
-    if (method && ['GET', 'HEAD'].includes(method)) {
-      reply.redirect(301, `https://${host}${url}`)
-    }
-  })
-
   app.listen(
     port,
     process.env.NODE_ENV === 'development' ? 'localhost' : '0.0.0.0',
