@@ -1,6 +1,6 @@
 <template lang="pug">
-.columns#Home
-  .column.is-6-desktop.is-offset-3-desktop(style="margin-top: 1em;")
+section
+  article.column
     .content
       h1 ZhQuiz - A Chinese quizzing app
 
@@ -37,7 +37,24 @@ export default class Home extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
+section:first-child {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+article:first-child {
+  margin-top: 1rem;
+  width: calc(100vw - 2rem);
+}
+
+@media (min-width: 769px) {
+  article:first-child {
+    max-width: 60vw;
+  }
+}
+
 .background {
   position: fixed;
   top: 0;
