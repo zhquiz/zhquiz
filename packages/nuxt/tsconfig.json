@@ -28,7 +28,7 @@
       "@nuxt/types",
       "@nuxtjs/axios",
       "@nuxtjs/firebase",
-      "nuxt-buefy/types"
+      "buefy/types"
     ]
   },
   "exclude": [
