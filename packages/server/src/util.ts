@@ -1,7 +1,7 @@
-export function restoreDate (obj: any): any {
+export function restoreDate(obj: any): any {
   if (obj && typeof obj === 'object') {
     if (Array.isArray(obj)) {
-      return obj.map(a => restoreDate(a))
+      return obj.map((a) => restoreDate(a))
     } else if (obj.$toDate) {
       return new Date(obj.$toDate)
     } else {

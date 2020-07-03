@@ -7,18 +7,21 @@ import mongoose from 'mongoose'
 
 import apiRouter from './api'
 
-async function main () {
+async function main() {
   await mongoose.connect(process.env.MONGO_URI!, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
-    useFindAndModify: false
+    useFindAndModify: false,
   })
 
   const app = fastify({
-    logger: process.env.NODE_ENV === 'development' ? {
-      prettyPrint: true
-    } : true
+    logger:
+      process.env.NODE_ENV === 'development'
+        ? {
+            prettyPrint: true,
+          }
+        : true,
   })
   const port = parseInt(process.env.PORT || '8080')
 
@@ -26,7 +29,7 @@ async function main () {
   app.register(apiRouter, { prefix: '/api' })
 
   app.register(fStatic, {
-    root: path.resolve('public')
+    root: path.resolve('public'),
   })
 
   app.setNotFoundHandler((_, reply) => {
