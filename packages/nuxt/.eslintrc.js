@@ -15,6 +15,7 @@ module.exports = {
   plugins: ['prettier', 'vue-a11y', 'simple-import-sort'],
   // add your custom rules here
   rules: {
+    'vue-a11y/label-has-for': 0,
     'import/named': 0,
     'no-unused-vars': 0,
     'vue/no-v-html': 0,

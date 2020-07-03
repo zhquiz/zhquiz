@@ -100,7 +100,7 @@
             :to="{ path: '/hanzi', query: { q: selectedRow.chinese } }"
             target="_blank"
           >
-            Search for hanzi
+            Search for Hanzi
           </nuxt-link>
         </li>
         <li>
