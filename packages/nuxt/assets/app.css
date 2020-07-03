@@ -1,0 +1,35 @@
+@font-face {
+  font-family: 'Hanzi';
+  src: url('~@/assets/fonts/HanaMinA.ttf') format('truetype'),
+    url('~@/assets/fonts/HanaMinB.ttf') format('truetype');
+}
+
+.font-hanzi {
+  font-family: 'Hanzi', sans-serif;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  color: blue;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.w-full {
+  width: 100%;
+}
+
+@media screen and (max-width: 1024px) {
+  .tablet\:w-full {
+    width: 100%;
+  }
+}
