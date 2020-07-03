@@ -68,12 +68,17 @@ export default (): Configuration => {
     /*
      ** Global CSS
      */
-    css: [],
+    css: ['~/assets/app.css'],
     /*
      ** Plugins to load before mounting the App
      ** https://nuxtjs.org/guide/plugins
      */
-    plugins: [],
+    plugins: [
+      '~/plugins/axios-loading',
+      '~/plugins/codemirror',
+      '~/plugins/firebase-auth',
+      '~/plugins/vue-context',
+    ],
     /*
      ** Auto import components
      ** See https://nuxtjs.org/api/configuration-components
@@ -82,23 +87,86 @@ export default (): Configuration => {
     /*
      ** Nuxt.js dev-modules
      */
-    buildModules: ['@nuxt/typescript-build'],
+    buildModules: [
+      '@nuxt/typescript-build',
+      [
+        '@nuxtjs/fontawesome',
+        {
+          component: 'fontawesome',
+          icons: {
+            solid: [
+              'faSearch',
+              'faCaretDown',
+              'faCaretUp',
+              'faTag',
+              'faExclamationCircle',
+              'faInfoCircle',
+              'faExclamationTriangle',
+              'faRandom',
+              'faAngleLeft',
+              'faAngleRight',
+              'faAngleUp',
+              'faArrowUp',
+              'faEyeSlash',
+              'faEye',
+              'faQuestionCircle',
+              'faFolderPlus',
+              'faCog',
+            ],
+            brands: ['faGithub', 'faGoogle'],
+          },
+        },
+      ],
+    ],
     /*
      ** Nuxt.js modules
      */
     modules: [
-      // Doc: https://buefy.github.io/#/documentation
-      'nuxt-buefy',
+      [
+        'nuxt-buefy',
+        {
+          materialDesignIcons: false,
+          defaultIconPack: 'fas',
+          defaultIconComponent: 'fontawesome',
+        },
+      ],
       // Doc: https://axios.nuxtjs.org/usage
-      '@nuxtjs/axios',
+      [
+        '@nuxtjs/axios',
+        {
+          proxy: true,
+          validateStatus: (status: number) => {
+            if (status === 401) {
+              return true
+            }
+
+            return status >= 200 && status < 300 // default
+          },
+        },
+      ],
+      [
+        '@nuxtjs/firebase',
+        {
+          config: JSON.parse(process.env.FIREBASE_CONFIG!),
+          services: {
+            auth: true,
+            storage: true,
+          },
+        },
+      ],
+      [
+        'nuxt-mq',
+        {
+          // Default breakpoint for SSR
+          defaultBreakpoint: 'mobile',
+          breakpoints: {
+            mobile: 600,
+            tablet: 1024,
+            desktop: Infinity,
+          },
+        },
+      ],
     ],
-    /*
-     ** Axios module configuration
-     ** See https://axios.nuxtjs.org/options
-     */
-    axios: {
-      proxy: true,
-    },
     proxy: {
       '/api/': 'http://localhost:8080',
     },

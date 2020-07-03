@@ -9,9 +9,18 @@
   "dependencies": {
     "@nuxt/typescript-runtime": "^0.4.10",
     "@nuxtjs/axios": "^5.11.0",
+    "@nuxtjs/firebase": "^6.1.0",
     "@patarapolw/make-html-frontend-functions": "^1.0.0-pre14",
+    "@types/codemirror": "^0.0.96",
+    "@types/spark-md5": "^3.0.2",
+    "codemirror": "^5.55.0",
+    "firebase": "^7.15.5",
     "nuxt": "^2.13.0",
-    "nuxt-buefy": "^0.3.31"
+    "nuxt-buefy": "^0.3.31",
+    "nuxt-mq": "^2.0.1",
+    "spark-md5": "^3.0.1",
+    "vue-codemirror": "^4.0.6",
+    "vue-context": "^5.2.0"
   },
   "devDependencies": {
     "@fortawesome/free-brands-svg-icons": "^5.13.0",
