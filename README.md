@@ -2,7 +2,7 @@
 
 ZhQuiz, a Chinese quizzing platform
 
-<https://zhquiz.cc>
+<https://www.zhquiz.cc>
 
 ![Preview GIF](/docs/preview.gif)
 
