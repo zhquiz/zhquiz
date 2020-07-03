@@ -1,8 +1,16 @@
-import { prop, getModelForClass, index, Ref, setGlobalOptions, Severity, pre } from '@typegoose/typegoose'
-import { nanoid } from 'nanoid'
+import {
+  getModelForClass,
+  index,
+  pre,
+  prop,
+  Ref,
+  setGlobalOptions,
+  Severity,
+} from '@typegoose/typegoose'
 import dotProp from 'dot-prop'
+import { nanoid } from 'nanoid'
 
-import { repeatReview, srsMap, getNextReview } from './quiz'
+import { getNextReview, repeatReview, srsMap } from './quiz'
 
 setGlobalOptions({ options: { allowMixed: Severity.ALLOW } })
 
@@ -13,7 +21,9 @@ export class DbUser {
   @prop({ default: true }) userContentWarning?: boolean
 }
 
-export const DbUserModel = getModelForClass(DbUser, { schemaOptions: { collection: 'user', timestamps: true } })
+export const DbUserModel = getModelForClass(DbUser, {
+  schemaOptions: { collection: 'user', timestamps: true },
+})
 
 @pre<DbCard>('remove', function () {
   DbQuizModel.deleteMany({ cardId: this._id })
@@ -31,7 +41,9 @@ export class DbCard {
   @prop({ default: () => [] }) tag!: string[]
 }
 
-export const DbCardModel = getModelForClass(DbCard, { schemaOptions: { collection: 'card', timestamps: true } })
+export const DbCardModel = getModelForClass(DbCard, {
+  schemaOptions: { collection: 'card', timestamps: true },
+})
 
 class DbQuiz {
   @prop({ default: () => repeatReview() }) nextReview!: Date
@@ -49,35 +61,57 @@ class DbQuiz {
 
   @prop({ required: true }) cardId!: string
 
-  markRight () {
+  markRight() {
     return this._updateSrsLevel(+1)()
   }
 
-  markWrong () {
+  markWrong() {
     return this._updateSrsLevel(-1)()
   }
 
-  markRepeat () {
+  markRepeat() {
     return this._updateSrsLevel(0)()
   }
 
-  private _updateSrsLevel (dSrsLevel: number) {
+  private _updateSrsLevel(dSrsLevel: number) {
     return () => {
       if (dSrsLevel > 0) {
-        dotProp.set(this.stat, 'streak.right', dotProp.get(this.stat, 'streak.right', 0) + 1)
+        dotProp.set(
+          this.stat,
+          'streak.right',
+          dotProp.get(this.stat, 'streak.right', 0) + 1
+        )
         dotProp.set(this.stat, 'streak.wrong', 0)
         dotProp.set(this.stat, 'lastRight', new Date())
 
-        if (dotProp.get(this.stat, 'streak.right', 1) > dotProp.get(this.stat, 'streak.maxRight', 0)) {
-          dotProp.set(this.stat, 'streak.maxRight', dotProp.get(this.stat, 'streak.right', 1))
+        if (
+          dotProp.get(this.stat, 'streak.right', 1) >
+          dotProp.get(this.stat, 'streak.maxRight', 0)
+        ) {
+          dotProp.set(
+            this.stat,
+            'streak.maxRight',
+            dotProp.get(this.stat, 'streak.right', 1)
+          )
         }
       } else if (dSrsLevel < 0) {
-        dotProp.set(this.stat, 'streak.wrong', dotProp.get(this.stat, 'streak.wrong', 0) + 1)
+        dotProp.set(
+          this.stat,
+          'streak.wrong',
+          dotProp.get(this.stat, 'streak.wrong', 0) + 1
+        )
         dotProp.set(this.stat, 'streak.right', 0)
         dotProp.set(this.stat, 'lastWrong', new Date())
 
-        if (dotProp.get(this.stat, 'streak.wrong', 1) > dotProp.get(this.stat, 'streak.maxWrong', 0)) {
-          dotProp.set(this.stat, 'streak.maxWrong', dotProp.get(this.stat, 'streak.wrong', 1))
+        if (
+          dotProp.get(this.stat, 'streak.wrong', 1) >
+          dotProp.get(this.stat, 'streak.maxWrong', 0)
+        ) {
+          dotProp.set(
+            this.stat,
+            'streak.maxWrong',
+            dotProp.get(this.stat, 'streak.wrong', 1)
+          )
         }
       }
 
@@ -98,7 +132,9 @@ class DbQuiz {
   }
 }
 
-export const DbQuizModel = getModelForClass(DbQuiz, { schemaOptions: { collection: 'quiz', timestamps: true } })
+export const DbQuizModel = getModelForClass(DbQuiz, {
+  schemaOptions: { collection: 'quiz', timestamps: true },
+})
 
 @pre<DbExtra>('remove', function () {
   DbCardModel.deleteMany({ item: this.chinese, type: 'extra' })
@@ -112,4 +148,6 @@ class DbExtra {
   @prop({ required: true }) english!: string
 }
 
-export const DbExtraModel = getModelForClass(DbExtra, { schemaOptions: { collection: 'extra', timestamps: true } })
+export const DbExtraModel = getModelForClass(DbExtra, {
+  schemaOptions: { collection: 'extra', timestamps: true },
+})

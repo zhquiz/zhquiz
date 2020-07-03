@@ -5,12 +5,17 @@ import yaml from 'js-yaml'
 
 class ZhDb {
   db = sqlite3('assets/zh.db', { readonly: true })
-  hsk = yaml.safeLoad(fs.readFileSync('assets/hsk.yaml', 'utf8')) as Record<string, string[]>
+  hsk = yaml.safeLoad(fs.readFileSync('assets/hsk.yaml', 'utf8')) as Record<
+    string,
+    string[]
+  >
 
   private _cache = new Map<string, sqlite3.Statement>()
 
-  get hanziMatch () {
-    const data = this._cache.get('hanziMatch') || this.db.prepare(/*sql*/`
+  get hanziMatch() {
+    const data =
+      this._cache.get('hanziMatch') ||
+      this.db.prepare(/* sql */ `
     SELECT sub, sup, [var], pinyin, english FROM token 
     WHERE
       [entry] = ?
@@ -21,8 +26,10 @@ class ZhDb {
     return data
   }
 
-  get vocabMatch () {
-    const data = this._cache.get('vocabMatch') || this.db.prepare(/*sql*/`
+  get vocabMatch() {
+    const data =
+      this._cache.get('vocabMatch') ||
+      this.db.prepare(/* sql */ `
     SELECT simplified, traditional, pinyin, english FROM vocab 
     WHERE
       simplified = ? OR
@@ -34,11 +41,8 @@ class ZhDb {
     return data
   }
 
-  vocabQ (opts: {
-    limit: number
-    offset: number
-  }) {
-    return this.db.prepare(/*sql*/`
+  vocabQ(opts: { limit: number; offset: number }) {
+    return this.db.prepare(/* sql */ `
     SELECT simplified, traditional, v.pinyin AS pinyin, v.english AS english
     FROM vocab v
     LEFT JOIN token t ON t.entry = v.simplified
@@ -50,8 +54,10 @@ class ZhDb {
     `)
   }
 
-  get vocabQCount () {
-    const data = this._cache.get('vocabQCount') || this.db.prepare(/*sql*/`
+  get vocabQCount() {
+    const data =
+      this._cache.get('vocabQCount') ||
+      this.db.prepare(/* sql */ `
     SELECT COUNT(*) AS [count]
     FROM vocab v
     LEFT JOIN token t ON t.entry = v.simplified
@@ -64,8 +70,10 @@ class ZhDb {
     return data
   }
 
-  get sentenceMatch () {
-    const data = this._cache.get('sentenceMatch') || this.db.prepare(/*sql*/`
+  get sentenceMatch() {
+    const data =
+      this._cache.get('sentenceMatch') ||
+      this.db.prepare(/* sql */ `
     SELECT chinese, pinyin, english
     FROM sentence
     WHERE chinese = ?
@@ -75,11 +83,8 @@ class ZhDb {
     return data
   }
 
-  sentenceQ (opts: {
-    limit: number
-    offset: number
-  }) {
-    return this.db.prepare(/*sql*/`
+  sentenceQ(opts: { limit: number; offset: number }) {
+    return this.db.prepare(/* sql */ `
     SELECT chinese, pinyin, english
     FROM sentence
     WHERE chinese LIKE ?
@@ -88,8 +93,10 @@ class ZhDb {
     `)
   }
 
-  get sentenceQCount () {
-    const data = this._cache.get('sentenceQCount') || this.db.prepare(/*sql*/`
+  get sentenceQCount() {
+    const data =
+      this._cache.get('sentenceQCount') ||
+      this.db.prepare(/* sql */ `
     SELECT COUNT(*) AS [count]
     FROM sentence
     WHERE chinese LIKE ?
@@ -99,8 +106,10 @@ class ZhDb {
     return data
   }
 
-  get sentenceLevel () {
-    const data = this._cache.get('sentenceLevel') || this.db.prepare(/*sql*/`
+  get sentenceLevel() {
+    const data =
+      this._cache.get('sentenceLevel') ||
+      this.db.prepare(/* sql */ `
     SELECT chinese, [level]
     FROM sentence
     WHERE [level] <= ? AND [level] >= ?
@@ -108,6 +117,18 @@ class ZhDb {
     this._cache.set('sentenceLevel', data)
 
     return data
+  }
+
+  get findTraditional() {
+    return (
+      this._cache.get('findTraditional') ||
+      this.db.prepare(/* sql */ `
+      SELECT traditional
+      FROM vocab
+      WHERE
+        simplified = ? AND traditional IS NOT NULL
+      LIMIT 1`)
+    )
   }
 }
 
