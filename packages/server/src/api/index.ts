@@ -1,23 +1,24 @@
 import { FastifyInstance } from 'fastify'
+import fCoookie from 'fastify-cookie'
 import swagger from 'fastify-oas'
 import fSession from 'fastify-session'
-import fCoookie from 'fastify-cookie'
 import admin from 'firebase-admin'
 
-import libRouter from './lib'
-import sentenceRouter from './sentence'
-import vocabRouter from './vocab'
-import hanziRouter from './hanzi'
-import cardRouter from './card'
-import userRouter from './user'
-import quizRouter from './quiz'
-import extraRouter from './extra'
 import { signIn } from '../db'
+
+import cardRouter from './card'
+import extraRouter from './extra'
+import hanziRouter from './hanzi'
+import libRouter from './lib'
+import quizRouter from './quiz'
+import sentenceRouter from './sentence'
+import userRouter from './user'
+import vocabRouter from './vocab'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   admin.initializeApp({
     credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SDK!)),
-    databaseURL: JSON.parse(process.env.FIREBASE_CONFIG!).databaseURL
+    databaseURL: JSON.parse(process.env.FIREBASE_CONFIG!).databaseURL,
   })
 
   f.register(swagger, {
@@ -25,18 +26,18 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     swagger: {
       info: {
         title: 'Swagger API',
-        version: '0.1.0'
+        version: '0.1.0',
       },
       consumes: ['application/json'],
       produces: ['application/json'],
       servers: [
         {
           url: 'http://localhost:8080',
-          description: 'Local server'
-        }
-      ]
+          description: 'Local server',
+        },
+      ],
     },
-    exposeRoute: process.env.NODE_ENV === 'development'
+    exposeRoute: process.env.NODE_ENV === 'development',
   })
 
   if (process.env.NODE_ENV === 'development') {

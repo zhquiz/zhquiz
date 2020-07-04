@@ -1,30 +1,30 @@
 declare module 'chinese-to-pinyin' {
-  export = pinyin;
+  export = pinyin
 
-  function pinyin(str: string, options?: pinyin.PinyinOptions): string;
+  function pinyin(str: string, options?: pinyin.PinyinOptions): string
 
   namespace pinyin {
     interface PinyinOptions {
       /**
        * 获取中文首字母
        */
-      firstCharacter?: boolean;
+      firstCharacter?: boolean
       /**
        * 略去声调
        */
-      removeTone?: boolean;
+      removeTone?: boolean
       /**
        * 声调转数字
        */
-      toneToNumber?: boolean;
+      toneToNumber?: boolean
       /**
        * 声调转数字,只输出音调
        */
-      toneToNumberOnly?: boolean;
+      toneToNumberOnly?: boolean
       /**
        * 保留未翻译的非中文字符
        */
-      keepRest?: boolean;
+      keepRest?: boolean
     }
   }
 }

@@ -1,5 +1,14 @@
-node_modules
+# Ignore everything
+**
+
+# Allow files and directories
+# !/submodules
+!/.qovery.yml
+
+!/packages/nuxt/dist
+!/packages/server/dist
+!/packages/server/assets
+!/packages/server/package.json
+!/packages/server/yarn.lock
+
 **/node_modules
-packages/server/public
-packages/**/dist
-.env

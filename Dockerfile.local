@@ -1,0 +1,14 @@
+FROM node:12-alpine AS server
+WORKDIR /app
+RUN apk add python alpine-sdk jq
+COPY packages/server/package.json packages/server/yarn.lock ./
+RUN echo $(cat package.json | jq 'del(.devDependencies)') > package.json
+RUN LDFLAGS='-static-libgcc -static-libstdc++' yarn --frozen-lockfile --build-from-source=better-sqlite3,nodejieba
+
+FROM astefanutti/scratch-node:12
+WORKDIR /app
+COPY --from=server /app .
+COPY packages/server .
+COPY packages/nuxt/dist public
+EXPOSE 8080
+ENTRYPOINT [ "node", "dist/index.js" ]
