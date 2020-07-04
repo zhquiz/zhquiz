@@ -1,9 +1,9 @@
 <template>
   <section class="VocabPage container">
-    <form class="field" @submit.prevent="onQChange">
+    <form class="field" @submit.prevent="q = q0">
       <div class="control">
         <input
-          v-model="q"
+          v-model="q0"
           type="search"
           class="input"
           name="q"
@@ -291,7 +291,9 @@ import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
 import { speak } from '~/assets/speak'
 
-@Component
+@Component({
+  layout: 'app',
+})
 export default class VocabPage extends Vue {
   entries: string[] = []
   i: number = 0
@@ -305,9 +307,18 @@ export default class VocabPage extends Vue {
   vocabIds: any = {}
   sentenceIds: any = {}
 
-  q = ''
-
   speak = speak
+
+  q0 = ''
+
+  get q() {
+    const q = this.$route.query.q
+    return (Array.isArray(q) ? q[0] : q) || ''
+  }
+
+  set q(q: string) {
+    this.$router.push({ query: { q } })
+  }
 
   get current() {
     return this.entries[this.i] || ('' as any)
@@ -320,21 +331,16 @@ export default class VocabPage extends Vue {
   }
 
   created() {
-    const q = this.$route.query.q
-    this.q = (Array.isArray(q) ? q[0] : q) || ''
-    this.onQChange()
+    this.q0 = this.q
+    this.onQChange(this.q0)
   }
 
-  @Watch('$store.state.user')
-  async onQChange() {
-    if (this.$route.query.q !== this.q) {
-      this.$router.push({ query: { q: this.q } })
-    }
-
-    if (this.q && this.$store.state.user) {
+  @Watch('q')
+  async onQChange(q: string) {
+    if (q) {
       this.isQLoading = true
 
-      let qs = (await this.$axios.$post('/api/lib/jieba', { entry: this.q }))
+      let qs = (await this.$axios.$post('/api/lib/jieba', { entry: q }))
         .result as string[]
       qs = qs.filter((h) => XRegExp('\\p{Han}+').test(h))
       this.$set(
@@ -463,7 +469,7 @@ export default class VocabPage extends Vue {
 }
 
 .card-content {
-  max-height: calc(100vh - 500px);
+  max-height: 250px;
   overflow: scroll;
 }
 

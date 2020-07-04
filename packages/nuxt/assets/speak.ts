@@ -28,7 +28,7 @@ if (process.client) {
   }
 }
 
-export function speak(s: string, lang: string = 'zh') {
+export async function speak(s: string, lang: string = 'zh') {
   const voices = Object.keys(allVoices)
   const stage1 = () => voices.filter((v) => v === lang)[0]
   const stage2 = () => {
@@ -48,5 +48,11 @@ export function speak(s: string, lang: string = 'zh') {
     const utterance = new SpeechSynthesisUtterance(s)
     utterance.lang = lang
     speechSynthesis.speak(utterance)
+
+    return new Promise((resolve) => {
+      utterance.onend = () => {
+        resolve()
+      }
+    })
   }
 }

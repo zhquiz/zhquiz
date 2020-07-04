@@ -29,7 +29,8 @@
       "@nuxtjs/axios",
       "@nuxtjs/firebase",
       "buefy/types"
-    ]
+    ],
+    "skipLibCheck": true
   },
   "exclude": [
     "node_modules",
