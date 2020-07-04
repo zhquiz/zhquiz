@@ -33,4 +33,5 @@ heroku-release:
 variables:
   docker:
     # tag: ${DOCKER_TAG:-zhquiz}
-    tag: registry.heroku.com/${HEROKU_APP}/web
+    # tag: registry.heroku.com/${HEROKU_APP}/web
+    tag: gcr.io/${PROJECT_ID}/zhquiz
