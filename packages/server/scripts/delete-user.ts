@@ -1,16 +1,20 @@
 import mongoose from 'mongoose'
 
-import { DbUserModel, DbCardModel } from '../src/db/schema'
+import { DbCardModel, DbUserModel } from '../src/db/schema'
 
-async function main () {
+async function main() {
   await mongoose.connect(process.env.MONGO_URI!, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
-    useFindAndModify: false
+    useFindAndModify: false,
   })
 
-  const userIds = (await DbUserModel.find({ email: { $ne: 'patarapolw@gmail.com' } }).select({ _id: 1 })).map(el => el._id)
+  const userIds = (
+    await DbUserModel.find({ email: { $ne: 'patarapolw@gmail.com' } }).select({
+      _id: 1,
+    })
+  ).map((el) => el._id)
 
   await DbCardModel.deleteMany({ userId: { $in: userIds } })
 
