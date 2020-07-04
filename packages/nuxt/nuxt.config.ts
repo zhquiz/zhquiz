@@ -76,6 +76,7 @@ export default (): Configuration => {
     plugins: [
       '~/plugins/axios-loading',
       '~/plugins/codemirror',
+      '~/plugins/filter',
       '~/plugins/firebase-auth',
       '~/plugins/vue-context',
     ],
@@ -151,18 +152,6 @@ export default (): Configuration => {
           services: {
             auth: true,
             storage: true,
-          },
-        },
-      ],
-      [
-        'nuxt-mq',
-        {
-          // Default breakpoint for SSR
-          defaultBreakpoint: 'mobile',
-          breakpoints: {
-            mobile: 600,
-            tablet: 1024,
-            desktop: Infinity,
           },
         },
       ],
