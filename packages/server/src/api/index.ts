@@ -48,11 +48,6 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   f.register(fSession, { secret: process.env.SECRET! })
 
   f.addHook('preHandler', async (req, reply) => {
-    if (process.env.NODE_ENV === 'development') {
-      req.session.user = await signIn('patarapolw@gmail.com')
-      return
-    }
-
     if (req.req.url && req.req.url.startsWith('/api/doc')) {
       return
     }
