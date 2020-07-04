@@ -24,7 +24,9 @@
 import { User } from 'firebase/app'
 import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
-@Component
+@Component({
+  layout: 'app',
+})
 export default class SettingsPage extends Vue {
   lv = [1, 60]
   isLoading = false

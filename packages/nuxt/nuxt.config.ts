@@ -74,11 +74,12 @@ export default (): Configuration => {
      ** https://nuxtjs.org/guide/plugins
      */
     plugins: [
-      '~/plugins/axios-loading',
-      '~/plugins/codemirror',
-      '~/plugins/filter',
-      '~/plugins/firebase-auth',
-      '~/plugins/vue-context',
+      '~/plugins/axios-loading.client.ts',
+      '~/plugins/codemirror.client.js',
+      '~/plugins/filter.ts',
+      '~/plugins/firebase-auth.client.ts',
+      '~/plugins/vue-context.client.js',
+      '~/plugins/webcomponents.client.ts',
     ],
     /*
      ** Auto import components

@@ -246,7 +246,7 @@
               Show answer
             </button>
           </div>
-          <div class="buttons-panel">
+          <div v-else class="buttons-panel">
             <div class="buttons">
               <button
                 class="button is-success"
@@ -403,11 +403,10 @@
 </template>
 
 <script lang="ts">
-import { MakeHtml } from '@patarapolw/make-html-frontend-functions'
-import hbs from 'handlebars'
 import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
 import cardDefault from '~/assets/card-default.yaml'
+import { markdownToHtml } from '~/assets/make-html'
 import { speak } from '~/assets/speak'
 import { shuffle } from '~/assets/util'
 
@@ -467,8 +466,6 @@ export default class QuizPage extends Vue {
 
   speak = speak
 
-  makeHtml = new MakeHtml()
-
   get email() {
     const u = this.$store.state.user
     return u ? (u.email as string) : undefined
@@ -501,10 +498,6 @@ export default class QuizPage extends Vue {
     this.onUserChange()
   }
 
-  markdownToHtml(md: string, ctx: any) {
-    return hbs.compile(this.makeHtml.render(md, true))(ctx)
-  }
-
   previewRender(md: string) {
     const { type, item } = this.editItem
     const { raw } =
@@ -512,7 +505,7 @@ export default class QuizPage extends Vue {
         return d.type === type && d.item === item
       })[0] || {}
 
-    return this.markdownToHtml(md, {
+    return markdownToHtml(md, {
       ...this.editItem,
       raw,
     })
@@ -535,7 +528,7 @@ export default class QuizPage extends Vue {
 
       template = front || cardDefault[type][direction].front || ''
 
-      return this.markdownToHtml(template, {
+      return markdownToHtml(template, {
         ...this.quizCurrent,
         raw,
       })
@@ -561,7 +554,7 @@ export default class QuizPage extends Vue {
 
       template = back || cardDefault[type][direction].back || ''
 
-      return this.markdownToHtml(template, {
+      return markdownToHtml(template, {
         ...this.quizCurrent,
         raw,
       })
@@ -875,9 +868,25 @@ export default class QuizPage extends Vue {
   flex-direction: row-reverse;
 }
 
+.quiz-modal .modal-content {
+  max-width: 500px !important;
+}
+
+.quiz-modal .buttons-area {
+  min-height: 100px;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-area .buttons {
+  margin-bottom: 0;
+}
+
 .quiz-modal .card-content {
   min-height: 100px;
-  max-height: calc(100vh - 100px - 100px);
+  max-height: calc(100vh - 300px);
   overflow: scroll;
 }
 
@@ -885,6 +894,10 @@ export default class QuizPage extends Vue {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.buttons-panel .buttons {
+  margin-bottom: 0;
 }
 
 .edit-modal .card-footer {

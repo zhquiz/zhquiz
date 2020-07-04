@@ -21,7 +21,7 @@
           <span>Vocab</span>
         </nuxt-link>
         <nuxt-link to="/level" :class="{ active: $route.path === '/level' }">
-          <span class="icon">60</span>
+          <span class="icon">{{ level }}</span>
           <span>Level</span>
         </nuxt-link>
         <nuxt-link to="/extra" :class="{ active: $route.path === '/extra' }">
@@ -156,6 +156,8 @@ import { getGravatarUrl } from '~/assets/gravatar'
 
 @Component
 export default class AppLayout extends Vue {
+  level = ''
+
   getGravatarUrl = getGravatarUrl
 
   get isReady() {
@@ -176,9 +178,14 @@ export default class AppLayout extends Vue {
 
   @Watch('isAuthReady')
   @Watch('user')
-  onAuthChanged() {
+  async onAuthChanged() {
     if (this.isAuthReady && !this.user) {
       this.$router.push('/')
+    }
+
+    if (this.user) {
+      const { level = 60 } = await this.$axios.$get('/api/user/')
+      this.level = level.toString()
     }
   }
 }
@@ -199,6 +206,7 @@ export default class AppLayout extends Vue {
   display: flex;
   flex-direction: column;
   width: 300px;
+  min-width: 300px;
   background-image: radial-gradient(
     circle at center right,
     rgb(255, 233, 162),
@@ -260,6 +268,21 @@ main {
   flex-grow: 1;
   padding: 1rem;
   background-color: rgb(250, 250, 250);
+}
+
+@media screen and (max-width: 1024px) {
+  .AppLayout {
+    flex-direction: column;
+  }
+
+  .vertical-nav {
+    display: none;
+  }
+
+  .main-nav {
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 @media (min-width: 1025px) {

@@ -1,9 +1,9 @@
 <template>
   <section class="HanziPage container">
-    <form class="field" @submit.prevent="onQChange">
+    <form class="field" @submit.prevent="q = q0">
       <div class="control">
         <input
-          v-model="q"
+          v-model="q0"
           class="input"
           type="search"
           name="q"
@@ -420,26 +420,31 @@ export default class HanziPage extends Vue {
   vocabIds: any = {}
   sentenceIds: any = {}
 
-  q = ''
-
   speak = speak
+
+  q0 = ''
+
+  get q() {
+    const q = this.$route.query.q
+    return (Array.isArray(q) ? q[0] : q) || ''
+  }
+
+  set q(q: string) {
+    this.$router.push({ query: { q } })
+  }
 
   get current() {
     return this.entries[this.i]
   }
 
   created() {
-    const q = this.$route.query.q
-    this.q = (Array.isArray(q) ? q[0] : q) || ''
-    this.onQChange()
+    this.q0 = this.q
+    this.onQChange(this.q0)
   }
 
-  onQChange() {
-    if (this.$route.query.q !== this.q) {
-      this.$router.push({ query: { q: this.q } })
-    }
-
-    const qs = this.q.split('').filter((h) => XRegExp('\\p{Han}').test(h))
+  @Watch('q')
+  onQChange(q: string) {
+    const qs = q.split('').filter((h) => XRegExp('\\p{Han}').test(h))
     this.$set(
       this,
       'entries',
@@ -449,13 +454,18 @@ export default class HanziPage extends Vue {
     this.load()
   }
 
-  @Watch('$store.state.user')
   @Watch('current')
   load() {
-    if (this.$store.state.user) {
+    if (this.current) {
       this.loadHanzi()
       this.loadVocab()
       this.loadSentences()
+    } else {
+      this.sub = ''
+      this.sup = ''
+      this.variants = ''
+      this.vocabs = []
+      this.sentences = []
     }
   }
 
@@ -570,8 +580,14 @@ export default class HanziPage extends Vue {
   margin-bottom: 1rem;
 }
 
+.card-content {
+  max-height: 250px;
+  overflow: scroll;
+}
+
 .card-content .font-hanzi {
   font-size: 50px;
+  display: inline-block;
 }
 
 .long-item > span + span {
