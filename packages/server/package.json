@@ -3,7 +3,6 @@
   "private": true,
   "main": "dist/index.js",
   "scripts": {
-    "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('You must use Yarn to install, not NPM')\"",
     "start": "node dist/index.js",
     "dev": "ts-node-dev src/index.ts",
     "build": "tsc -P src/tsconfig.json",
