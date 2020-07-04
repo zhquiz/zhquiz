@@ -880,7 +880,7 @@ export default class QuizPage extends Vue {
   justify-content: center;
 }
 
-.button-area .buttons {
+.buttons-area .buttons {
   margin-bottom: 0;
 }
 
@@ -900,7 +900,43 @@ export default class QuizPage extends Vue {
   margin-bottom: 0;
 }
 
+.buttons-area button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background-color: currentColor;
+  visibility: hidden;
+  z-index: 2;
+}
+
+.buttons-area button:not(:active)::before {
+  animation: ripple 0.4s cubic-bezier(0, 0, 0.2, 1);
+  transition: visibility 0.4s step-end;
+}
+
+.buttons-area button:active::before {
+  visibility: visible;
+}
+
 .edit-modal .card-footer {
   padding: 1rem;
+}
+
+@keyframes ripple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.5;
+  }
+  100% {
+    width: 150px;
+    height: 150px;
+    opacity: 0;
+  }
 }
 </style>

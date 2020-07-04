@@ -355,34 +355,23 @@ export default class VocabPage extends Vue {
     this.isQLoading = false
   }
 
-  loadContent() {
-    this.loadVocab()
-    this.loadSentences()
-  }
-
   @Watch('current')
-  async loadVocab() {
+  async loadContent() {
     if (typeof this.current === 'string') {
-      const vs = (
+      const { vocab, sentences } = (
         await this.$axios.$post('/api/vocab/match', { entry: this.current })
-      ).result as any[]
+      ).result
 
-      if (vs.length > 0) {
+      if (vocab.length > 0) {
         this.entries = [
           ...this.entries.slice(0, this.i),
-          ...vs,
+          ...vocab,
           ...this.entries.slice(this.i + 1),
         ]
       }
-    }
-  }
 
-  @Watch('simplified')
-  async loadSentences() {
-    const ss = (
-      await this.$axios.$post('/api/sentence/q', { entry: this.simplified })
-    ).result as any[]
-    this.$set(this, 'sentences', ss)
+      this.$set(this, 'sentences', sentences)
+    }
   }
 
   @Watch('selectedVocab')
