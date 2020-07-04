@@ -118,7 +118,9 @@ import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
 import { speak } from '~/assets/speak'
 
-@Component
+@Component({
+  layout: 'app',
+})
 export default class LevelPage extends Vue {
   data = [] as any[]
   selected = ''
