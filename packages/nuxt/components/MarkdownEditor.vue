@@ -11,7 +11,9 @@
     </button>
 
     <div class="column" :class="isPreview ? 'is-6' : ''">
-      <codemirror ref="cm" v-model="markdown" @input="onCodeChange" />
+      <client-only>
+        <codemirror ref="cm" v-model="markdown" @input="onCodeChange" />
+      </client-only>
     </div>
 
     <div v-show="isPreview" class="column is-6">
