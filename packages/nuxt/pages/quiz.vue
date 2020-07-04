@@ -407,12 +407,13 @@ import { MakeHtml } from '@patarapolw/make-html-frontend-functions'
 import hbs from 'handlebars'
 import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
-import { shuffle } from '../assets/util'
-
 import cardDefault from '~/assets/card-default.yaml'
 import { speak } from '~/assets/speak'
+import { shuffle } from '~/assets/util'
 
-@Component
+@Component({
+  layout: 'app',
+})
 export default class QuizPage extends Vue {
   isLoading = false
 
