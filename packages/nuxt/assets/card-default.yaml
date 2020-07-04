@@ -24,13 +24,11 @@ vocab:
 
       # {{item}}
     back: |
-      ## {{#each raw.vocab}} {{traditional}} {{/each}}
+      ## {{#each raw.vocab}} {{traditional}} {{/each}} {{{speak item}}}
 
       {{#each raw.vocab}}
       - {{pinyin}}
       {{/each}}
-
-      {{{speak item}}}
 
       {{#each raw.vocab}}
       - {{english}}
@@ -101,11 +99,11 @@ sentence:
 
       ## {{item}}
     back: |
+      ## {{item}} {{{speak item}}}
+
       {{#each raw}}
       - {{pinyin}}
       {{/each}}
-
-      {{{speak item}}}
 
       {{#each raw}}
       - {{english}}

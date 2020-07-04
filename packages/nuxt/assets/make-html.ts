@@ -5,7 +5,7 @@ import MarkdownIt from 'markdown-it'
 import MdItEmoji from 'markdown-it-emoji'
 
 hbs.registerHelper('speak', (s: string) => {
-  return `<x-speak-button data-s="${he.encode(s)}"/>`
+  return `<x-speak-button data-s="${he.encode(s)}"></x-speak-button>`
 })
 
 const markdownIt = MarkdownIt({

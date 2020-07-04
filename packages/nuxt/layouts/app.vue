@@ -172,6 +172,10 @@ export default class AppLayout extends Vue {
     return this.$store.state.user
   }
 
+  created() {
+    this.onAuthChanged()
+  }
+
   doLogout() {
     this.$fireAuth.signOut()
   }
