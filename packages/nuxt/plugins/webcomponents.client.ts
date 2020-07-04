@@ -44,6 +44,7 @@ customElements.define(
           justify-content: center;
           height: 1rem;
           width: 1rem;
+          cursor: pointer;
         }
 
         a.x-speak-button img {

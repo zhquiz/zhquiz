@@ -79,15 +79,31 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
             type: 'object',
             properties: {
               result: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  required: ['simplified', 'pinyin', 'english'],
-                  properties: {
-                    simplified: { type: 'string' },
-                    traditional: { type: 'string' },
-                    pinyin: { type: 'string' },
-                    english: { type: 'string' },
+                type: 'object',
+                properties: {
+                  vocab: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      required: ['simplified', 'pinyin', 'english'],
+                      properties: {
+                        simplified: { type: 'string' },
+                        traditional: { type: 'string' },
+                        pinyin: { type: 'string' },
+                        english: { type: 'string' },
+                      },
+                    },
+                  },
+                  sentences: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        chinese: { type: 'string' },
+                        pinyin: { type: 'string' },
+                        english: { type: 'string' },
+                      },
+                    },
                   },
                 },
               },
@@ -100,7 +116,10 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       const { entry } = req.body
 
       return {
-        result: zh.vocabMatch.all(entry, entry),
+        result: {
+          vocab: zh.vocabMatch.all(entry, entry),
+          sentences: zh.sentenceQ({ offset: 0, limit: 10 }).all(`%${entry}%`),
+        },
       }
     }
   )
