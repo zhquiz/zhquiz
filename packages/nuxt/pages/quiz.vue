@@ -4,28 +4,71 @@
       <div class="column is-4">
         <div class="field">
           <label class="label">Type</label>
-          <div class="control">
-            <b-checkbox v-model="type" native-value="hanzi">Hanzi</b-checkbox>
-            <b-checkbox v-model="type" native-value="vocab">Vocab</b-checkbox>
-            <b-checkbox v-model="type" native-value="sentence">
+          <b-field class="flex-wrap">
+            <b-checkbox-button
+              v-model="type"
+              native-value="hanzi"
+              type="is-success"
+            >
+              Hanzi
+            </b-checkbox-button>
+            <b-checkbox-button
+              v-model="type"
+              native-value="vocab"
+              type="is-success"
+            >
+              Vocab
+            </b-checkbox-button>
+            <b-checkbox-button
+              v-model="type"
+              native-value="sentence"
+              type="is-success"
+            >
               Sentence
-            </b-checkbox>
-            <b-checkbox v-model="type" native-value="extra">Extra</b-checkbox>
-          </div>
+            </b-checkbox-button>
+            <b-checkbox-button
+              v-model="type"
+              native-value="extra"
+              type="is-success"
+            >
+              Extra
+            </b-checkbox-button>
+          </b-field>
         </div>
       </div>
       <div class="column is-4">
         <div class="field">
           <label class="label">Learning stage</label>
-          <div class="control">
-            <b-checkbox v-model="stage" native-value="new">New</b-checkbox>
-            <b-checkbox v-model="stage" native-value="learning">
+          <b-field class="flex-wrap">
+            <b-checkbox-button
+              v-model="stage"
+              native-value="new"
+              type="is-success"
+            >
+              New
+            </b-checkbox-button>
+            <b-checkbox-button
+              v-model="stage"
+              native-value="leech"
+              type="is-success"
+            >
+              Leech
+            </b-checkbox-button>
+            <b-checkbox-button
+              v-model="stage"
+              native-value="learning"
+              type="is-success"
+            >
               Learning
-            </b-checkbox>
-            <b-checkbox v-model="stage" native-value="graduated">
+            </b-checkbox-button>
+            <b-checkbox-button
+              v-model="stage"
+              native-value="graduated"
+              type="is-success"
+            >
               Graduated
-            </b-checkbox>
-          </div>
+            </b-checkbox-button>
+          </b-field>
         </div>
       </div>
       <div class="column is-4">
@@ -42,17 +85,29 @@
       <div class="column is-6">
         <div class="field">
           <label class="label">Direction</label>
-          <div class="control">
-            <b-checkbox v-model="direction" native-value="se">
+          <b-field class="flex-wrap">
+            <b-checkbox-button
+              v-model="direction"
+              native-value="se"
+              type="is-success"
+            >
               Simplified-English
-            </b-checkbox>
-            <b-checkbox v-model="direction" native-value="te">
+            </b-checkbox-button>
+            <b-checkbox-button
+              v-model="direction"
+              native-value="te"
+              type="is-success"
+            >
               Traditional-English
-            </b-checkbox>
-            <b-checkbox v-model="direction" native-value="ec">
+            </b-checkbox-button>
+            <b-checkbox-button
+              v-model="direction"
+              native-value="ec"
+              type="is-success"
+            >
               English-Chinese
-            </b-checkbox>
-          </div>
+            </b-checkbox-button>
+          </b-field>
         </div>
       </div>
       <div class="column is-6">
@@ -71,7 +126,7 @@
       </div>
     </div>
 
-    <b-collapse class="card" animation="slide" open>
+    <b-collapse class="card" animation="slide" :open="isQuizDashboardReady">
       <div slot="trigger" slot-scope="props" class="card-header" role="button">
         <p class="card-header-title">Quiz</p>
         <a role="button" class="card-header-icon">
@@ -80,20 +135,22 @@
       </div>
       <div class="card-content">
         <div class="columns">
-          <div v-if="!isDue" class="column is-3">
-            <span class="column-label">Pending: </span>
-            <span>{{ data.length | format }}</span>
-          </div>
-          <div v-else-if="dueItems.length" class="column is-3">
-            <span class="column-label">Due: </span>
-            <span>{{ dueItems.length | format }}</span>
-          </div>
-          <div v-else-if="dueIn" class="column is-3">
-            <span class="column-label">Due in: </span>
-            <span>{{ dueIn | duration }}</span>
-          </div>
-          <div v-else class="column is-3">
-            <span>No items due</span>
+          <div class="column is-3">
+            <div v-if="!isDue">
+              <span class="column-label">Pending: </span>
+              <span>{{ data.length | format }}</span>
+            </div>
+            <div v-else-if="dueItems.length">
+              <span class="column-label">Due: </span>
+              <span>{{ dueItems.length | format }}</span>
+            </div>
+            <div v-else-if="dueIn">
+              <span class="column-label">Due in: </span>
+              <span>{{ dueIn | duration }}</span>
+            </div>
+            <div v-else>
+              <span>No items due</span>
+            </div>
           </div>
 
           <div class="column is-3">
@@ -415,13 +472,14 @@ import { shuffle } from '~/assets/util'
 })
 export default class QuizPage extends Vue {
   isLoading = false
+  isQuizDashboardReady = false
 
   selectedTags: string[] = []
   filteredTags: string[] = []
   allTags: string[] = []
 
   type = ['hanzi', 'vocab', 'sentence', 'extra']
-  stage = ['new', 'learning']
+  stage = ['new', 'leech', 'learning']
   direction = ['se']
   isDue = true
   dueIn: Date | null = null
@@ -487,15 +545,18 @@ export default class QuizPage extends Vue {
   }
 
   get leechItems() {
-    return this.data.filter((d) => d.srsLevel === 0)
+    return this.data.filter(
+      (d) => d.srsLevel === 0 || (d.stat.streak?.wrong || 0) >= 3
+    )
   }
 
   get quizCurrent() {
     return this.quizItems[this.quizIndex]
   }
 
-  created() {
-    this.onUserChange()
+  async created() {
+    await this.onUserChange()
+    this.isQuizDashboardReady = true
   }
 
   previewRender(md: string) {
@@ -571,7 +632,7 @@ export default class QuizPage extends Vue {
 
       this.data = []
       this.isLoading = false
-      this.load()
+      await this.load()
     }
   }
 
@@ -595,72 +656,79 @@ export default class QuizPage extends Vue {
       nextReview,
     }
 
-    const $and: any = [cond]
-    const $or: any = []
+    const $or: any[] = []
 
     if (this.stage.includes('new')) {
       $or.push({
-        ...cond,
         nextReview: { $exists: false },
       })
-    } else {
-      $or.push(cond)
     }
 
-    if (!this.stage.includes('learning') && !this.stage.includes('graduated')) {
-      $and.push({
-        srsLevel: { $exists: false },
-      })
-    } else if (!this.stage.includes('graduated')) {
-      $and.push({
-        srsLevel: { $lte: 2 },
-      })
-    } else if (!this.stage.includes('learning')) {
-      $and.push({
-        srsLevel: { $gt: 2 },
+    if (this.stage.includes('leech')) {
+      $or.push(
+        {
+          srsLevel: 0,
+        },
+        {
+          'stat.streak.wrong': { $gte: 3 },
+        }
+      )
+    }
+
+    if (this.stage.includes('learning')) {
+      $or.push({
+        $and: [{ srsLevel: { $gt: 0 } }, { srsLevel: { $lt: 3 } }],
       })
     }
 
-    $or.push({ $and })
+    if (this.stage.includes('graduated')) {
+      $or.push({
+        srsLevel: { $gte: 3 },
+      })
+    }
 
-    const { result } = await this.$axios.$post('/api/card/q', {
-      cond: { $or },
-      join: ['quiz'],
-      projection:
-        opts && opts._dueIn
-          ? {
-              nextReview: 1,
-            }
-          : {
-              _id: 1,
-              type: 1,
-              item: 1,
-              direction: 1,
-              tag: 1,
-              srsLevel: 1,
-              nextReview: 1,
-              stat: 1,
-            },
-      limit: opts && opts._dueIn ? 1 : null,
-      sort:
-        opts && opts._dueIn
-          ? {
-              nextReview: 1,
-            }
-          : undefined,
-      hasCount: false,
-    })
+    let data = []
+
+    if ($or.length > 0) {
+      const { result } = await this.$axios.$post('/api/card/q', {
+        cond: { $and: [cond, { $or }] },
+        join: ['quiz'],
+        projection:
+          opts && opts._dueIn
+            ? {
+                nextReview: 1,
+              }
+            : {
+                _id: 1,
+                type: 1,
+                item: 1,
+                direction: 1,
+                tag: 1,
+                srsLevel: 1,
+                nextReview: 1,
+                stat: 1,
+              },
+        limit: opts && opts._dueIn ? 1 : null,
+        sort:
+          opts && opts._dueIn
+            ? {
+                nextReview: 1,
+              }
+            : undefined,
+        hasCount: false,
+      })
+
+      data = result
+    }
 
     if (opts && opts._dueIn) {
-      return result
+      return data
     }
 
-    this.data = result
-    this.$set(this, 'data', this.data)
-
+    this.$set(this, 'data', data)
     this.getDueIn()
 
-    return result
+    return data
   }
 
   getFilteredTags(text: string) {

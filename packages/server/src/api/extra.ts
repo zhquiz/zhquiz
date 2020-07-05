@@ -1,36 +1,9 @@
 import { FastifyInstance } from 'fastify'
 
+import { zh } from '../db/local'
 import { DbExtraModel } from '../db/schema'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
-  f.patch(
-    '/warning',
-    {
-      schema: {
-        tags: ['extra'],
-        summary: 'Toggle avoid duplicate warning',
-        body: {
-          type: 'object',
-          required: ['warn'],
-          properties: {
-            warn: { type: 'boolean' },
-          },
-        },
-      },
-    },
-    async (req, reply) => {
-      const { warn } = req.body
-
-      const u = req.session.user
-      if (u) {
-        u.userContentWarning = warn
-        await u.save()
-      }
-
-      return reply.status(201).send()
-    }
-  )
-
   f.post(
     '/q',
     {
@@ -161,20 +134,49 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
             english: { type: 'string' },
           },
         },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              type: { type: 'string' },
+            },
+          },
+        },
       },
     },
     async (req, reply) => {
       const u = req.session.user
       if (u) {
         const { chinese, pinyin, english } = req.body
-        const r = await DbExtraModel.create({
+
+        if (zh.vocabMatch.get(chinese, chinese)) {
+          return {
+            type: 'vocab',
+          }
+        }
+
+        if (zh.sentenceMatch.get(chinese)) {
+          return {
+            type: 'sentence',
+          }
+        }
+
+        if (zh.hanziMatch.get(chinese)) {
+          return {
+            type: 'hanzi',
+          }
+        }
+
+        await DbExtraModel.create({
           userId: u._id,
           chinese,
           pinyin,
           english,
         })
 
-        return r.toJSON()
+        return {
+          type: 'extra',
+        }
       }
 
       return reply.status(400).send()
