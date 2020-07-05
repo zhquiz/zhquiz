@@ -114,6 +114,7 @@ export default (): Configuration => {
               'faQuestionCircle',
               'faFolderPlus',
               'faCog',
+              'faBookOpen',
             ],
             brands: ['faGithub', 'faGoogle'],
           },

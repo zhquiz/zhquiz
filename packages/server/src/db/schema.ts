@@ -18,7 +18,6 @@ export class DbUser {
   @prop({ required: true, unique: true }) email!: string
   @prop({ default: 1 }) levelMin!: number
   @prop({ default: 60 }) level!: number
-  @prop({ default: true }) userContentWarning?: boolean
 }
 
 export const DbUserModel = getModelForClass(DbUser, {

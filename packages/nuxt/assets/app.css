@@ -33,6 +33,14 @@
   flex-grow: 1;
 }
 
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.items-center {
+  align-items: center;
+}
+
 .w-full {
   width: 100%;
 }
