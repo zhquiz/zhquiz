@@ -16,7 +16,7 @@
     "@nuxt/typescript-runtime": "^0.4.10",
     "@nuxtjs/axios": "^5.11.0",
     "@nuxtjs/firebase": "^6.1.0",
-    "@patarapolw/make-html-frontend-functions": "^1.0.0-pre14",
+    "@patarapolw/make-html-frontend-functions": "^1.0.0-pre15",
     "@types/codemirror": "^0.0.96",
     "@types/dompurify": "^2.0.2",
     "@types/he": "^1.1.1",
@@ -56,7 +56,8 @@
     "yaml-loader": "^0.6.0"
   },
   "resolutions": {
-    "core-js": "2"
+    "core-js": "2",
+    "hyperpug": "1.4.1"
   },
   "engines": {
     "node": "12.x",

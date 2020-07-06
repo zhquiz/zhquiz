@@ -710,9 +710,7 @@ export default class QuizPage extends Vue {
 
     if (opts && opts._dueIn) {
       nextReview = { $exists: true }
-    } else if (this.isDue) {
-      nextReview = { $lt: { $toDate: new Date().toISOString() } }
-
+    } else {
       this.$axios.$patch('/api/user/', {
         set: {
           'settings.quiz.type': this.type,
@@ -759,8 +757,19 @@ export default class QuizPage extends Vue {
     let data = []
 
     if ($or.length > 0) {
+      const $and = [cond, { $or }]
+
+      if (this.isDue) {
+        $and.push({
+          $or: [
+            { nextReview: { $lt: { $toDate: new Date().toISOString() } } },
+            { nextReview: { $exists: false } },
+          ],
+        })
+      }
+
       const { result } = await this.$axios.$post('/api/card/q', {
-        cond: { $and: [cond, { $or }] },
+        cond: { $and },
         join: ['quiz'],
         projection:
           opts && opts._dueIn

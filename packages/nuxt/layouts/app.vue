@@ -19,7 +19,7 @@
           <span
             v-if="nav.character || nav.text"
             class="icon"
-            :class="{ 'font-hanzi': nav.character }"
+            :class="{ 'font-hanamin': nav.character }"
           >
             {{ nav.character || nav.text }}
           </span>
@@ -69,7 +69,7 @@
             <span
               v-if="nav.character || nav.text"
               class="icon"
-              :class="{ 'font-hanzi': nav.character }"
+              :class="{ 'font-chinese': nav.character }"
             >
               {{ nav.character || nav.text }}
             </span>

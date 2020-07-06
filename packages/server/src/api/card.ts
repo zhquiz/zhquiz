@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 
-import { zh } from '../db/local'
+import { zhVocab } from '../db/local'
 import { DbCardModel } from '../db/mongo'
 import { restoreDate } from '../util'
 
@@ -133,8 +133,19 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       const directions = ['se', 'ec']
 
       if (type === 'vocab') {
-        const r = zh.findTraditional.get(item)
-        if (r) {
+        const r = zhVocab.count({
+          $or: [
+            {
+              traditional: item,
+            },
+            {
+              simplified: item,
+              traditional: { $exists: true },
+            },
+          ],
+        })
+
+        if (r > 0) {
           directions.push('te')
         }
       }

@@ -1,11 +1,6 @@
 import { MakeHtml } from '@patarapolw/make-html-frontend-functions'
 import DOMPurify from 'dompurify'
 import hbs from 'handlebars'
-import he from 'he'
-
-hbs.registerHelper('speak', (s: string) => {
-  return `<x-speak-button data-s="${he.encode(s)}"></x-speak-button>`
-})
 
 const makeHtml = new MakeHtml()
 

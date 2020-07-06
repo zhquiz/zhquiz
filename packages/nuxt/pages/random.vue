@@ -4,7 +4,7 @@
       <div class="column is-6">
         <div class="item-display item-display-top">
           <div
-            class="font-hanzi clickable"
+            class="font-hanamin hanzi clickable"
             @contextmenu.prevent="(evt) => $refs.hanziContextmenu.open(evt)"
           >
             {{ hanzi.item }}
@@ -17,7 +17,7 @@
       <div class="column is-6">
         <div class="item-display item-display-top">
           <div
-            class="font-hanzi clickable"
+            class="font-chinese hanzi clickable"
             @contextmenu.prevent="(evt) => $refs.vocabContextmenu.open(evt)"
           >
             {{ vocab.item }}
@@ -30,7 +30,7 @@
 
     <div class="item-display item-display-bottom">
       <div
-        class="font-hanzi clickable text-center"
+        class="font-chinese hanzi clickable text-center"
         @contextmenu.prevent="(evt) => $refs.sentenceContextmenu.open(evt)"
       >
         {{ sentence.item }}
@@ -388,12 +388,12 @@ export default class RandomPage extends Vue {
   position: relative;
 }
 
-.item-display-top .font-hanzi {
+.item-display-top .hanzi {
   font-size: 50px;
   min-height: 60px;
 }
 
-.item-display-bottom .font-hanzi {
+.item-display-bottom .hanzi {
   font-size: 30px;
   min-width: 3em;
   min-height: 40px;

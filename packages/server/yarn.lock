@@ -285,6 +285,11 @@
   resolved "https://registry.yarnpkg.com/@types/json5/-/json5-0.0.29.tgz#ee28707ae94e11d2b827bcbe5270bcea7f3e71ee"
   integrity sha1-7ihweulOEdK4J7y+UnC86n8+ce4=
 
+"@types/lokijs@^1.5.3":
+  version "1.5.3"
+  resolved "https://registry.yarnpkg.com/@types/lokijs/-/lokijs-1.5.3.tgz#e45db0b35e53ec09a4c2ff4f253037abd56be151"
+  integrity sha512-ssiP6F7rpDqlaOzo+0Y/0dkVH2JiAjc+o7n6M4pFnfAMscf+7FthqS0cobvGJEJvxmzp4PWfMOfe0q3VETtrgQ==
+
 "@types/long@^4.0.0", "@types/long@^4.0.1":
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/@types/long/-/long-4.0.1.tgz#459c65fa1867dafe6a8f322c4c51695663cc55e9"
@@ -2468,6 +2473,11 @@ loglevel@^1.6.8:
   resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.6.8.tgz#8a25fb75d092230ecd4457270d80b54e28011171"
   integrity sha512-bsU7+gc9AJ2SqpzxwU3+1fedl8zAntbtC5XYlt3s2j1hJcn2PsXSmgN8TaLG/J1/2mod4+cE/3vNL70/c1RNCA==
 
+lokijs@^1.5.9:
+  version "1.5.9"
+  resolved "https://registry.yarnpkg.com/lokijs/-/lokijs-1.5.9.tgz#1ddfce84eb418a9907f5a17f026123c1099c73a1"
+  integrity sha512-Ye9jYrDnGMKumFLq048Y3x6hILRPQQevbGLnChhRR1hZlCiAoVIP9SQUqcL5KSvMXedXzfSIuR1JjO3XOeENmQ==
+
 long@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/long/-/long-4.0.0.tgz#9a7b71cfb7d361a194ea555241c92f7468d5bf28"
@@ -4172,3 +4182,8 @@ yn@3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/yn/-/yn-3.1.1.tgz#1e87401a09d767c1d5eab26a6e4c185182d2eb50"
   integrity sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
+
+zod@^1.7.1:
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-1.7.1.tgz#983e4ae8e2f032420960288ea7c54a5afc50c011"
+  integrity sha512-EqtwN5PJTgg/iOxMvjezNcha8xDcrcUr2V4oYZ8GMzxzFGfZV+LFI+ey2sBs2mGWSF8qZE8gHIquApWa7jiTYg==

@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 
-import { zh } from '../db/local'
+import { zhSentence, zhToken, zhVocab } from '../db/local'
 import { DbExtraModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
@@ -154,19 +154,29 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
       const { chinese, pinyin, english } = req.body
 
-      if (zh.vocabMatch.get(chinese, chinese)) {
+      if (
+        zhVocab.count({
+          $or: [{ simplified: chinese }, { traditional: chinese }],
+        }) > 0
+      ) {
         return {
           type: 'vocab',
         }
       }
 
-      if (zh.sentenceMatch.get(chinese)) {
+      if (zhSentence.count({ chinese }) > 0) {
         return {
           type: 'sentence',
         }
       }
 
-      if (zh.hanziMatch.get(chinese)) {
+      if (
+        zhToken.count({
+          entry: chinese,
+          // @ts-ignore
+          english: { $exists: true },
+        })
+      ) {
         return {
           type: 'hanzi',
         }
