@@ -88,4 +88,9 @@ export default class MarkdownEditor extends Vue {
 .vue-codemirror {
   border: 1px solid rgb(216, 216, 216);
 }
+
+.content {
+  max-height: 300px;
+  overflow: scroll;
+}
 </style>

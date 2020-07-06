@@ -8,7 +8,7 @@ hanzi:
       ```
     back: |
       ```pug parsed
-      p {{raw.pinyin}}
+      .inline-block {{raw.pinyin}}
       x-speak-button {{item}}
       ```
 
@@ -17,7 +17,7 @@ hanzi:
     front: |
       #### Hanzi English-Chinese
 
-      {{raw.english}}
+      {{mask raw.english item}}
     back: |
       ```pug parsed
       .hanzi-display {{item}}
@@ -35,23 +35,21 @@ vocab:
       ```
     back: |
       ```pug parsed
-      {{#each raw.vocab}}
-      h2.font-chinese.text-w-normal.inline-block.mr-4 {{traditional}}
+      {{#each raw.traditional}}
+      h2.font-chinese.text-w-normal.inline-block.mr-4 {{this}}
       {{/each}}
       x-speak-button {{item}}
-      ```
-
-      {{#each raw.vocab}}
-      - {{pinyin}}
-      {{/each}}
-
-      {{#each raw.vocab}}
-      - {{english}}
-      {{/each}}
-
-      ---
-
-      ```pug parsed
+      ul
+        {{#each raw.pinyin}}
+        li {{this}}
+        {{/each}}
+      {{#if raw.english}}
+      ul
+        {{#each raw.english}}
+        li {{this}}
+        {{/each}}
+      {{/if}}
+      {{#if raw.sentences.length}}
       ul
         {{#each raw.sentences}}
         li
@@ -60,35 +58,32 @@ vocab:
           ul
             li {{english}}
         {{/each}}
+      {{/if}}
       ```
   te:
     front: |
       #### Vocab Traditional-English
 
       ```pug parsed
-      {{#each raw.vocab}}
-      h2.font-chinese.text-w-normal.inline-block.mr-4 {{traditional}}
+      {{#each raw.traditional}}
+      h2.font-chinese.text-w-normal.inline-block.mr-4 {{this}}
       {{/each}}
       ```
     back: |
       ```pug parsed
-      h1.font-chinese.text-w-normal {{item}}
+      h1.font-chinese.text-w-normal.inline-block {{item}}
       x-speak-button {{item}}
-      ```
-
-      {{#each raw.vocab}}
-      - {{pinyin}}
-      {{/each}} 
-
-      ---
-
-      {{#each raw.vocab}}
-      - {{english}}
-      {{/each}} 
-
-      ---
-
-      ```pug parsed
+      ul
+        {{#each raw.pinyin}}
+        li {{this}}
+        {{/each}}
+      {{#if raw.english}}
+      ul
+        {{#each raw.english}}
+        li {{this}}
+        {{/each}}
+      {{/if}}
+      {{#if raw.sentences.length}}
       ul
         {{#each raw.sentences}}
         li
@@ -97,38 +92,39 @@ vocab:
           ul
             li {{english}}
         {{/each}}
+      {{/if}}
       ```
   ec:
     front: |
       #### Vocab English-Chinese
 
-      {{#each raw.vocab}}
-      - {{english}}
+      {{#each raw.english}}
+      - {{mask this ../item ../raw.pinyin ../raw.traditional}}
       {{/each}}  
     back: |
       ```pug parsed
       div
         h1.font-chinese.text-w-normal.inline-block {{item}}
         x-speak-button {{item}}
+      {{#if raw.traditional}}
       div
-        {{#each raw.vocab}}
-        h2.font-chinese.text-w-normal.inline-block.mr-4 {{traditional}}
+        {{#each raw.traditional}}
+        h2.font-chinese.text-w-normal.inline-block.mr-4 {{this}}
         {{/each}}
-      ```
-
-      {{#each raw.vocab}}
-      - {{pinyin}}
-      {{/each}} 
-
-      ---
-
-      {{#each raw.vocab}}
-      - {{english}}
-      {{/each}} 
-
-      ---
-
-      ```pug parsed
+      {{/if}}
+      {{#if raw.pinyin}}
+      ul
+        {{#each raw.pinyin}}
+        li {{this}}
+        {{/each}} 
+      {{/if}}
+      {{#if raw.english}}
+      ul
+        {{#each raw.english}}
+        li {{this}}
+        {{/each}} 
+      {{/if}}
+      {{#if raw.sentences.length}}
       ul
         {{#each raw.sentences}}
         li
@@ -137,6 +133,7 @@ vocab:
           ul
             li {{english}}
         {{/each}}
+      {{/if}}
       ```
 sentence:
   se:
@@ -150,15 +147,15 @@ sentence:
       ```pug parsed
       h2.font-chinese.text-w-normal {{item}}
       x-speak-button {{item}}
+      ul
+        {{#each raw}}
+        li {{pinyin}}
+        {{/each}}
+      ul
+        {{#each raw}}
+        li {{english}}
+        {{/each}}
       ```
-
-      {{#each raw}}
-      - {{pinyin}}
-      {{/each}}
-
-      {{#each raw}}
-      - {{english}}
-      {{/each}}
   ec:
     front: |
       #### Sentence English-Chinese

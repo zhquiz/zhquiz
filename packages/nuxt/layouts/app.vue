@@ -13,7 +13,6 @@
           :href="nav.href"
           :rel="nav.href ? 'noopener noreferrer' : undefined"
           :target="nav.href ? '_blank' : undefined"
-          tabindex="0"
         >
           <fontawesome v-if="nav.icon" :icon="nav.icon" />
           <span
@@ -31,7 +30,7 @@
 
       <div class="icon-nav">
         <b-tooltip label="Click to logout">
-          <a class="w-full" tabindex="0" @click="doLogout" @keypress="doLogout">
+          <a class="w-full" @click="doLogout" @keypress="doLogout">
             <figure class="image is-48x48">
               <img
                 class="is-rounded"
@@ -62,7 +61,6 @@
           :href="nav.href"
           :rel="nav.href ? 'noopener noreferrer' : undefined"
           :target="nav.href ? '_blank' : undefined"
-          tabindex="0"
         >
           <span class="prefix">
             <fontawesome v-if="nav.icon" :icon="nav.icon" />
@@ -214,12 +212,13 @@ export default class AppLayout extends Vue {
 
 .vertical-nav {
   display: none;
-  overflow: visible;
+  overflow: scroll;
   z-index: 10;
   display: flex;
   flex-direction: column;
   width: 300px;
   min-width: 300px;
+  max-height: 100vh;
   background-image: radial-gradient(
     circle at center right,
     rgb(255, 233, 162),
@@ -258,8 +257,8 @@ export default class AppLayout extends Vue {
   align-items: center;
 }
 
-.icon-nav a:active {
-  background-color: rgba(238, 238, 238, 0.295);
+.icon-nav a.active {
+  background-color: rgba(255, 255, 0, 0.5);
 }
 
 .icon-nav:last-child figure {
@@ -282,7 +281,7 @@ export default class AppLayout extends Vue {
 }
 
 main {
-  overflow: scroll;
+  max-height: 100vh;
   flex-grow: 1;
   padding: 1rem;
   background-color: rgb(250, 250, 250);

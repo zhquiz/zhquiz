@@ -170,6 +170,8 @@ class DbQuiz {
 
       if (dSrsLevel > 0) {
         this.nextReview = getNextReview(this.srsLevel)
+      } else {
+        this.nextReview = repeatReview()
       }
     }
   }

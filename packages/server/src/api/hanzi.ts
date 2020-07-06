@@ -65,6 +65,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
             type: 'object',
             properties: {
               result: { type: 'string' },
+              english: { type: 'string' },
               level: { type: 'integer' },
             },
           },
@@ -135,8 +136,11 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
       const [h, lv] = hs[Math.floor(Math.random() * hs.length)]
 
+      const r = zhToken.findOne({ entry: h })
+
       return {
         result: h,
+        english: r ? r.english : undefined,
         level: lv,
       }
     }

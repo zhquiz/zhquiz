@@ -139,6 +139,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
             type: 'object',
             properties: {
               result: { type: 'string' },
+              english: { type: 'string' },
               level: { type: 'integer' },
             },
           },
@@ -192,6 +193,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
       return {
         result: s.chinese,
+        english: s.english,
         level: s.level,
       }
     }
