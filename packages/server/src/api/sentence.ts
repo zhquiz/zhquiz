@@ -1,7 +1,8 @@
-import pinyin from 'chinese-to-pinyin'
+import makePinyin from 'chinese-to-pinyin'
 import { FastifyInstance } from 'fastify'
 
-import { zh } from '../db/local'
+import { zhSentence } from '../db/local'
+import { DbCardModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   f.post(
@@ -41,13 +42,17 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       const { entry } = req.body
 
       return {
-        result: zh.sentenceMatch.all(entry).map((el: any) => {
-          if (!el.pinyin) {
-            el.pinyin = pinyin(entry, { keepRest: true })
-          }
+        result: zhSentence
+          .find({
+            chinese: entry,
+          })
+          .map(({ chinese, pinyin, english }) => {
+            if (!pinyin) {
+              pinyin = makePinyin(entry, { keepRest: true })
+            }
 
-          return el
-        }),
+            return { chinese, pinyin, english }
+          }),
       }
     }
   )
@@ -95,13 +100,21 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       const { entry, offset = 0, limit = 10 } = req.body
 
       return {
-        result: zh
-          .sentenceQ({
-            offset,
-            limit,
+        result: zhSentence
+          .find({
+            chinese: { $contains: entry },
           })
-          .all(`%${entry}%`),
-        count: (zh.sentenceQCount.get(`%${entry}%`) || {}).count || 0,
+          .slice(offset, limit ? offset + limit : undefined)
+          .map(({ chinese, pinyin, english }) => {
+            if (!pinyin) {
+              pinyin = makePinyin(entry, { keepRest: true })
+            }
+
+            return { chinese, pinyin, english }
+          }),
+        count: zhSentence.count({
+          chinese: { $contains: entry },
+        }),
         offset,
         limit,
       }
@@ -132,9 +145,50 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         },
       },
     },
-    async (req) => {
+    async (req, reply) => {
+      const u = req.session.user
+      if (!u || !u._id) {
+        reply.status(401).send()
+        return
+      }
+
+      const reviewing: string[] = (
+        await DbCardModel.aggregate([
+          {
+            $match: {
+              userId: u._id,
+              type: 'sentence',
+            },
+          },
+          {
+            $lookup: {
+              from: 'quiz',
+              localField: '_id',
+              foreignField: 'cardId',
+              as: 'q',
+            },
+          },
+          {
+            $match: { 'q.nextReview': { $exists: true } },
+          },
+          {
+            $project: {
+              _id: 0,
+              item: 1,
+            },
+          },
+        ])
+      ).map((el) => el.item)
+
       const { levelMin, level } = req.body
-      const s = zh.sentenceLevel.get(level || 60, levelMin || 1) || {}
+      const ss = zhSentence.find({
+        $and: [
+          { level: { $lte: level || 60 } },
+          { level: { $gte: levelMin || 1 } },
+          { chinese: { $nin: reviewing } },
+        ],
+      })
+      const s = ss[Math.floor(Math.random() * ss.length)] || {}
 
       return {
         result: s.chinese,

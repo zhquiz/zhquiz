@@ -3,9 +3,14 @@ hanzi:
     front: |
       #### Hanzi Chinese-English
 
-      # {{item}}
+      ```pug parsed
+      h1.font-chinese.text-w-normal {{item}}
+      ```
     back: |
-      {{raw.pinyin}} {{{speak item}}}
+      ```pug parsed
+      p {{raw.pinyin}}
+      x-speak-button {{item}}
+      ```
 
       {{raw.english}}
   ec:
@@ -14,7 +19,10 @@ hanzi:
 
       {{raw.english}}
     back: |
-      # {{item}} {{{speak item}}}
+      ```pug parsed
+      .hanzi-display {{item}}
+      x-speak-button {{item}}
+      ```
 
       {{raw.pinyin}}
 vocab:
@@ -22,9 +30,16 @@ vocab:
     front: |
       #### Vocab Simplified-English
 
-      # {{item}}
+      ```pug parsed
+      h1.font-chinese.text-w-normal {{item}}
+      ```
     back: |
-      ## {{#each raw.vocab}} {{traditional}} {{/each}} {{{speak item}}}
+      ```pug parsed
+      {{#each raw.vocab}}
+      h2.font-chinese.text-w-normal.inline-block.mr-4 {{traditional}}
+      {{/each}}
+      x-speak-button {{item}}
+      ```
 
       {{#each raw.vocab}}
       - {{pinyin}}
@@ -36,17 +51,30 @@ vocab:
 
       ---
 
-      {{#each raw.sentences}}
-      - {{chinese}} {{{speak chinese}}}
-          - {{english}}
-      {{/each}}
+      ```pug parsed
+      ul
+        {{#each raw.sentences}}
+        li
+          span.font-chinese {{chinese}} 
+          x-speak-button {{chinese}}
+          ul
+            li {{english}}
+        {{/each}}
+      ```
   te:
     front: |
       #### Vocab Traditional-English
 
-      ## {{#each raw.vocab}} {{traditional}} {{/each}}
+      ```pug parsed
+      {{#each raw.vocab}}
+      h2.font-chinese.text-w-normal.inline-block.mr-4 {{traditional}}
+      {{/each}}
+      ```
     back: |
-      # {{item}} {{{speak item}}}
+      ```pug parsed
+      h1.font-chinese.text-w-normal {{item}}
+      x-speak-button {{item}}
+      ```
 
       {{#each raw.vocab}}
       - {{pinyin}}
@@ -60,10 +88,16 @@ vocab:
 
       ---
 
-      {{#each raw.sentences}}
-      - {{chinese}} {{{speak chinese}}}
-          - {{english}}
-      {{/each}}
+      ```pug parsed
+      ul
+        {{#each raw.sentences}}
+        li
+          span.font-chinese {{chinese}} 
+          x-speak-button {{chinese}}
+          ul
+            li {{english}}
+        {{/each}}
+      ```
   ec:
     front: |
       #### Vocab English-Chinese
@@ -72,9 +106,15 @@ vocab:
       - {{english}}
       {{/each}}  
     back: |
-      # {{item}} {{{speak item}}}
-
-      ## {{#each raw.vocab}} {{traditional}} {{/each}}
+      ```pug parsed
+      div
+        h1.font-chinese.text-w-normal.inline-block {{item}}
+        x-speak-button {{item}}
+      div
+        {{#each raw.vocab}}
+        h2.font-chinese.text-w-normal.inline-block.mr-4 {{traditional}}
+        {{/each}}
+      ```
 
       {{#each raw.vocab}}
       - {{pinyin}}
@@ -88,18 +128,29 @@ vocab:
 
       ---
 
-      {{#each raw.sentences}}
-      - {{chinese}} {{{speak chinese}}}
-          - {{english}}
-      {{/each}}
+      ```pug parsed
+      ul
+        {{#each raw.sentences}}
+        li
+          span.font-chinese {{chinese}} 
+          x-speak-button {{chinese}}
+          ul
+            li {{english}}
+        {{/each}}
+      ```
 sentence:
   se:
     front: |
       #### Sentence Chinese-English
 
-      ## {{item}}
+      ```pug parsed
+      h2.font-chinese.text-w-normal {{item}}
+      ```
     back: |
-      ## {{item}} {{{speak item}}}
+      ```pug parsed
+      h2.font-chinese.text-w-normal {{item}}
+      x-speak-button {{item}}
+      ```
 
       {{#each raw}}
       - {{pinyin}}
@@ -116,7 +167,10 @@ sentence:
       - {{english}}
       {{/each}}
     back: |
-      {{item}} {{{speak item}}}
+      ```pug parsed
+      .font-chinese {{item}}
+      x-speak-button {{item}}
+      ```
 
       {{#each raw}}
       - {{pinyin}}
@@ -126,9 +180,14 @@ extra:
     front: |
       #### Extra Chinese-English
 
-      ## {{item}}
+      ```pug parsed
+      h2.font-chinese.text-w-normal {{item}}
+      ```
     back: |
-      {{raw.pinyin}} {{{speak item}}}
+      ```pug parsed
+      span {{raw.pinyin}}
+      x-speak-button {{item}}
+      ```
 
       {{raw.english}}
   ec:
@@ -137,6 +196,9 @@ extra:
 
       {{raw.english}}
     back: |
-      ## {{item}} {{{speak item}}}
+      ```pug parsed
+      h2.font-chinese.text-w-normal {{item}}
+      x-speak-button {{item}}
+      ```
 
       {{raw.pinyin}}

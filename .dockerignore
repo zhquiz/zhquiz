@@ -11,4 +11,5 @@
 !/packages/server/package.json
 !/packages/server/yarn.lock
 
+/packages/server/assets/*.db
 **/node_modules

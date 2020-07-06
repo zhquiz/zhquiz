@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 
-import { zh } from '../db/local'
+import { hsk, zhToken } from '../db/local'
+import { DbCardModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   f.post(
@@ -25,7 +26,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
                 properties: {
                   sup: { type: 'string' },
                   sub: { type: 'string' },
-                  var: { type: 'string' },
+                  variants: { type: 'string' },
                   pinyin: { type: 'string' },
                   english: { type: 'string' },
                 },
@@ -37,9 +38,11 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     },
     async (req) => {
       const { entry } = req.body
+      const { sub, sup, variants, pinyin, english } =
+        zhToken.findOne({ entry }) || {}
 
       return {
-        result: zh.hanziMatch.get(entry),
+        result: { sub, sup, variants, pinyin, english },
       }
     }
   )
@@ -68,12 +71,18 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         },
       },
     },
-    async (req) => {
+    async (req, reply) => {
+      const u = req.session.user
+      if (!u || !u._id) {
+        reply.status(401).send()
+        return
+      }
+
       const { levelMin, level } = req.body
 
       const hsMap = new Map<string, number>()
 
-      Object.entries(zh.hsk)
+      Object.entries(hsk)
         .map(([lv, vs]) => ({ lv: parseInt(lv), vs }))
         .filter(({ lv }) => (level ? lv <= level : true))
         .filter(({ lv }) => (levelMin ? lv >= levelMin : true))
@@ -88,8 +97,43 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           })
         })
 
-      const hs = Array.from(hsMap)
-      const [h, lv] = hs[Math.floor(Math.random() * hs.length)] || []
+      const reviewing = new Set<string>(
+        (
+          await DbCardModel.aggregate([
+            {
+              $match: {
+                userId: u._id,
+                item: { $in: Array.from(hsMap.keys()) },
+                type: 'hanzi',
+              },
+            },
+            {
+              $lookup: {
+                from: 'quiz',
+                localField: '_id',
+                foreignField: 'cardId',
+                as: 'q',
+              },
+            },
+            {
+              $match: { 'q.nextReview': { $exists: true } },
+            },
+            {
+              $project: {
+                _id: 0,
+                item: 1,
+              },
+            },
+          ])
+        ).map((el) => el.item)
+      )
+
+      const hs = Array.from(hsMap).filter(([h]) => !reviewing.has(h))
+      if (hs.length === 0) {
+        return {}
+      }
+
+      const [h, lv] = hs[Math.floor(Math.random() * hs.length)]
 
       return {
         result: h,

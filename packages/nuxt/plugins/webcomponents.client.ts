@@ -1,3 +1,5 @@
+import he from 'he'
+
 import { speak } from '~/assets/speak'
 
 customElements.define(
@@ -6,7 +8,7 @@ customElements.define(
     constructor() {
       super()
 
-      const s = this.getAttribute('data-s')
+      const s = this.innerHTML.trim()
       if (s) {
         const shadow = this.attachShadow({ mode: 'open' })
         const aEl = document.createElement('a')
@@ -27,7 +29,7 @@ customElements.define(
 
           isSpeaking = true
           aEl.classList.add('active')
-          await speak(s)
+          await speak(he.decode(s))
           aEl.classList.remove('active')
           isSpeaking = false
         }

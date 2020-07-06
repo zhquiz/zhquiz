@@ -1,12 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC&family=Noto+Serif+TC&display=swap');
+
 @font-face {
-  font-family: 'Hanzi';
+  font-family: HanaMin;
   font-display: swap;
   src: url('~@/assets/fonts/HanaMinA.ttf') format('truetype'),
     url('~@/assets/fonts/HanaMinB.ttf') format('truetype');
 }
 
-.font-hanzi {
-  font-family: 'Hanzi', sans-serif;
+.font-hanamin {
+  font-family: 'HanaMin', 'Noto Serif TC', 'Noto Serif SC', sans-serif;
+}
+
+.font-chinese {
+  font-family: 'Noto Serif TC', 'Noto Serif SC', serif;
+}
+
+.hanzi-display {
+  font-family: 'HanaMin', 'Noto Serif TC', 'Noto Serif SC', sans-serif;
+  font-size: 150px;
+}
+
+.vocab-display {
+  font-family: 'Noto Serif TC', 'Noto Serif SC', serif;
+  font-size: 120px;
+}
+
+.text-w-normal {
+  font-weight: normal !important;
 }
 
 .text-center {
@@ -19,6 +39,10 @@
 
 .clickable:hover {
   color: blue;
+}
+
+.inline-block {
+  display: inline-block;
 }
 
 .flex {
@@ -43,6 +67,10 @@
 
 .w-full {
   width: 100%;
+}
+
+.mr-4 {
+  margin-right: 1rem;
 }
 
 x-speak-button {

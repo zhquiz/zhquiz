@@ -2,7 +2,7 @@ FROM node:12-alpine AS server
 WORKDIR /app
 RUN apk add python alpine-sdk
 COPY packages/server/package.json packages/server/yarn.lock ./
-RUN LDFLAGS='-static-libgcc -static-libstdc++' yarn --production --frozen-lockfile --build-from-source=better-sqlite3,nodejieba
+RUN LDFLAGS='-static-libgcc -static-libstdc++' yarn --production --frozen-lockfile --build-from-source=nodejieba
 
 FROM astefanutti/scratch-node:12
 WORKDIR /app

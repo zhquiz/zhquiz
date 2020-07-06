@@ -1,6 +1,8 @@
+import makePinyin from 'chinese-to-pinyin'
 import { FastifyInstance } from 'fastify'
 
-import { zh } from '../db/local'
+import { hsk, zhSentence, zhVocab } from '../db/local'
+import { DbCardModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   f.post(
@@ -47,14 +49,27 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       const { entry, offset = 0, limit = 10 } = req.body
 
       return {
-        result: zh
-          .vocabQ({
-            offset,
-            limit,
+        result: zhVocab
+          .find({
+            $or: [
+              { simplified: { $contains: entry } },
+              { traditional: { $contains: entry } },
+            ],
           })
-          .all(`%${entry}%`, `%${entry}%`),
-        count:
-          (zh.vocabQCount.get(`%${entry}%`, `%${entry}%`) || {}).count || 0,
+          .slice(offset, limit ? offset + limit : undefined)
+          .map(({ simplified, traditional, pinyin, english }) => {
+            if (!pinyin) {
+              pinyin = makePinyin(simplified, { keepRest: true })
+            }
+
+            return { simplified, traditional, pinyin, english }
+          }),
+        count: zhVocab.count({
+          $or: [
+            { simplified: { $contains: entry } },
+            { traditional: { $contains: entry } },
+          ],
+        }),
         offset,
         limit,
       }
@@ -117,8 +132,28 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
       return {
         result: {
-          vocab: zh.vocabMatch.all(entry, entry),
-          sentences: zh.sentenceQ({ offset: 0, limit: 10 }).all(`%${entry}%`),
+          vocab: zhVocab
+            .find({
+              $or: [{ simplified: entry }, { traditional: entry }],
+            })
+            .map(({ simplified, traditional, pinyin, english }) => {
+              if (!pinyin) {
+                pinyin = makePinyin(simplified, { keepRest: true })
+              }
+
+              return { simplified, traditional, pinyin, english }
+            }),
+          sentences: zhSentence
+            .find({
+              chinese: { $contains: entry },
+            })
+            .map(({ chinese, pinyin, english }) => {
+              if (!pinyin) {
+                pinyin = makePinyin(entry, { keepRest: true })
+              }
+
+              return { chinese, pinyin, english }
+            }),
         },
       }
     }
@@ -148,10 +183,16 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         },
       },
     },
-    async (req) => {
+    async (req, reply) => {
+      const u = req.session.user
+      if (!u || !u._id) {
+        reply.status(401).send()
+        return
+      }
+
       const { levelMin, level } = req.body
 
-      const vs = Object.entries(zh.hsk)
+      let vs = Object.entries(hsk)
         .map(([lv, vs]) => ({ lv: parseInt(lv), vs }))
         .filter(({ lv }) => (level ? lv <= level : true))
         .filter(({ lv }) => (level ? lv >= levelMin : true))
@@ -162,6 +203,42 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
             lv: number
           }[]
         )
+
+      const reviewing = new Set<string>(
+        (
+          await DbCardModel.aggregate([
+            {
+              $match: {
+                userId: u._id,
+                item: { $in: vs.map(({ v }) => v) },
+                type: 'vocab',
+              },
+            },
+            {
+              $lookup: {
+                from: 'quiz',
+                localField: '_id',
+                foreignField: 'cardId',
+                as: 'q',
+              },
+            },
+            {
+              $match: { 'q.nextReview': { $exists: true } },
+            },
+            {
+              $project: {
+                _id: 0,
+                item: 1,
+              },
+            },
+          ])
+        ).map((el) => el.item)
+      )
+
+      vs = vs.filter(({ v }) => !reviewing.has(v))
+      if (vs.length === 0) {
+        return {}
+      }
 
       const v = vs[Math.floor(Math.random() * vs.length)] || {}
 
@@ -190,7 +267,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       },
     },
     async () => {
-      return zh.hsk
+      return hsk
     }
   )
 
