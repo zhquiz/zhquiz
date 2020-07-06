@@ -545,9 +545,14 @@ export default class QuizPage extends Vue {
   }
 
   get leechItems() {
-    return this.data.filter(
-      (d) => d.srsLevel === 0 || (d.stat.streak?.wrong || 0) >= 3
-    )
+    return this.data.filter((d) => {
+      if (d.srsLevel === 0) return true
+
+      const { wrong } = (d.stat || {}).streak || {}
+      if (wrong) return wrong >= 3
+
+      return false
+    })
   }
 
   get quizCurrent() {

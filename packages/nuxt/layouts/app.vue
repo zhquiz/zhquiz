@@ -78,16 +78,18 @@
         </b-navbar-item>
       </template>
       <template slot="end">
-        <b-navbar-item tag="div" class="flex flex-row items-center">
+        <b-navbar-item tag="div" class="flex flex-row flex-wrap items-center">
           <div>Signed in as {{ user.email }}</div>
-          <div class="flex-grow" />
-          <button
-            class="button is-danger"
-            @click="doLogout"
-            @keypress="doLogout"
-          >
-            Logout
-          </button>
+          <div class="flex flex-row flex-grow">
+            <div class="flex-grow" />
+            <button
+              class="button is-danger"
+              @click="doLogout"
+              @keypress="doLogout"
+            >
+              Logout
+            </button>
+          </div>
         </b-navbar-item>
       </template>
     </b-navbar>

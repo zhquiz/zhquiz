@@ -174,5 +174,11 @@ export default (): Configuration => {
         })
       },
     },
+    // server:
+    //   process.env.NODE_ENV === 'development'
+    //     ? {
+    //         host: '0.0.0.0', // default: localhost
+    //       }
+    //     : undefined,
   }
 }
