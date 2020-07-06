@@ -60,9 +60,10 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     }
 
     const ticket = await admin.auth().verifyIdToken(m[1], true)
+    // console.log(ticket)
 
     if (!req.session.user && ticket.email) {
-      req.session.user = await DbUserModel.signIn(ticket.email)
+      req.session.user = await DbUserModel.signIn(ticket.email, ticket.name)
     }
   })
 

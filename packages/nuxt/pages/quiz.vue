@@ -559,8 +559,6 @@ export default class QuizPage extends Vue {
 
   get leechItems() {
     return this.data.filter((d) => {
-      if (d.srsLevel === 0) return true
-
       const { wrong } = (d.stat || {}).streak || {}
       if (wrong) return wrong >= 3
 
@@ -741,19 +739,14 @@ export default class QuizPage extends Vue {
     }
 
     if (this.stage.includes('leech')) {
-      $or.push(
-        {
-          srsLevel: 0,
-        },
-        {
-          'stat.streak.wrong': { $gte: 3 },
-        }
-      )
+      $or.push({
+        'stat.streak.wrong': { $gte: 3 },
+      })
     }
 
     if (this.stage.includes('learning')) {
       $or.push({
-        $and: [{ srsLevel: { $gt: 0 } }, { srsLevel: { $lt: 3 } }],
+        srsLevel: { $lt: 3 },
       })
     }
 

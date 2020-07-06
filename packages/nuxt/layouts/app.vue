@@ -36,10 +36,10 @@
               <img
                 class="is-rounded"
                 :src="getGravatarUrl(user.email)"
-                :alt="user.email"
+                :alt="userName"
               />
             </figure>
-            <span>{{ user.email }}</span>
+            <span>{{ userName }}</span>
           </a>
         </b-tooltip>
       </div>
@@ -79,7 +79,7 @@
       </template>
       <template slot="end">
         <b-navbar-item tag="div" class="flex flex-row flex-wrap items-center">
-          <div>Signed in as {{ user.email }}</div>
+          <div>Signed in as {{ userName }}</div>
           <div class="flex flex-row flex-grow">
             <div class="flex-grow" />
             <button
@@ -171,6 +171,14 @@ export default class AppLayout extends Vue {
 
   get user() {
     return this.$store.state.user
+  }
+
+  get userName() {
+    if (this.user) {
+      return this.user.displayName || this.user.name
+    }
+
+    return ''
   }
 
   created() {

@@ -50,5 +50,16 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     }
   )
 
+  f.delete('/', async (req, reply) => {
+    const u = req.session.user
+    if (u) {
+      await DbUserModel.purgeOne(u._id)
+
+      return reply.status(201).send()
+    }
+
+    return reply.status(400).send()
+  })
+
   next()
 }

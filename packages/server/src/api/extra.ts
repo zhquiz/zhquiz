@@ -42,40 +42,41 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     },
     async (req, reply) => {
       const u = req.session.user
-      if (u) {
-        const {
-          cond = {},
-          projection,
-          sort = { updatedAt: -1 },
-          offset = 0,
-          limit = 10,
-          hasCount = true,
-        } = req.body
-
-        const match = [{ $match: { userId: u._id } }, { $match: cond }]
-
-        const [rData, rCount = []] = await Promise.all([
-          DbExtraModel.aggregate([
-            ...match,
-            { $sort: sort },
-            { $skip: offset },
-            ...(limit ? [{ $limit: limit }] : []),
-            ...(projection ? [{ $project: projection }] : []),
-          ]),
-          hasCount
-            ? DbExtraModel.aggregate([...match, { $count: 'count' }])
-            : undefined,
-        ])
-
-        return {
-          result: rData,
-          offset,
-          limit,
-          count: hasCount ? (rCount[0] || {}).count || 0 : undefined,
-        }
+      if (!u || !u._id) {
+        reply.status(401).send()
+        return
       }
 
-      return reply.status(400).send()
+      const {
+        cond = {},
+        projection,
+        sort = { updatedAt: -1 },
+        offset = 0,
+        limit = 10,
+        hasCount = true,
+      } = req.body
+
+      const match = [{ $match: { userId: u._id } }, { $match: cond }]
+
+      const [rData, rCount = []] = await Promise.all([
+        DbExtraModel.aggregate([
+          ...match,
+          { $sort: sort },
+          { $skip: offset },
+          ...(limit ? [{ $limit: limit }] : []),
+          ...(projection ? [{ $project: projection }] : []),
+        ]),
+        hasCount
+          ? DbExtraModel.aggregate([...match, { $count: 'count' }])
+          : undefined,
+      ])
+
+      return {
+        result: rData,
+        offset,
+        limit,
+        count: hasCount ? (rCount[0] || {}).count || 0 : undefined,
+      }
     }
   )
 
@@ -146,40 +147,41 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     },
     async (req, reply) => {
       const u = req.session.user
-      if (u) {
-        const { chinese, pinyin, english } = req.body
+      if (!u || !u._id) {
+        reply.status(401).send()
+        return
+      }
 
-        if (zh.vocabMatch.get(chinese, chinese)) {
-          return {
-            type: 'vocab',
-          }
-        }
+      const { chinese, pinyin, english } = req.body
 
-        if (zh.sentenceMatch.get(chinese)) {
-          return {
-            type: 'sentence',
-          }
-        }
-
-        if (zh.hanziMatch.get(chinese)) {
-          return {
-            type: 'hanzi',
-          }
-        }
-
-        await DbExtraModel.create({
-          userId: u._id,
-          chinese,
-          pinyin,
-          english,
-        })
-
+      if (zh.vocabMatch.get(chinese, chinese)) {
         return {
-          type: 'extra',
+          type: 'vocab',
         }
       }
 
-      return reply.status(400).send()
+      if (zh.sentenceMatch.get(chinese)) {
+        return {
+          type: 'sentence',
+        }
+      }
+
+      if (zh.hanziMatch.get(chinese)) {
+        return {
+          type: 'hanzi',
+        }
+      }
+
+      await DbExtraModel.create({
+        userId: u._id,
+        chinese,
+        pinyin,
+        english,
+      })
+
+      return {
+        type: 'extra',
+      }
     }
   )
 
@@ -209,7 +211,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         }
       )
 
-      return reply.status(201).send()
+      reply.status(201).send()
     }
   )
 
@@ -229,15 +231,15 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       },
     },
     async (req, reply) => {
+      const u = req.session.user
+      if (!u) {
+        reply.status(401).send()
+        return
+      }
+
       const { ids } = req.body
-
-      await Promise.all(
-        (await DbExtraModel.find({ _id: { $in: ids } })).map((el) => {
-          return el.remove()
-        })
-      )
-
-      return reply.status(201).send()
+      await DbExtraModel.purgeMany(u._id, { _id: { $in: ids } })
+      reply.status(201).send()
     }
   )
 
