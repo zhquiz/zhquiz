@@ -1,462 +1,475 @@
 <template>
-  <section class="QuizPage">
-    <div class="columns">
-      <div class="column is-4">
-        <div class="field">
-          <label class="label">Type</label>
-          <b-field class="flex-wrap">
-            <b-checkbox-button
-              v-model="type"
-              native-value="hanzi"
-              type="is-success"
-            >
-              Hanzi
-            </b-checkbox-button>
-            <b-checkbox-button
-              v-model="type"
-              native-value="vocab"
-              type="is-success"
-            >
-              Vocab
-            </b-checkbox-button>
-            <b-checkbox-button
-              v-model="type"
-              native-value="sentence"
-              type="is-success"
-            >
-              Sentence
-            </b-checkbox-button>
-            <b-checkbox-button
-              v-model="type"
-              native-value="extra"
-              type="is-success"
-            >
-              Extra
-            </b-checkbox-button>
-          </b-field>
-        </div>
-      </div>
-      <div class="column is-4">
-        <div class="field">
-          <label class="label">Learning stage</label>
-          <b-field class="flex-wrap">
-            <b-checkbox-button
-              v-model="stage"
-              native-value="new"
-              type="is-success"
-            >
-              New
-            </b-checkbox-button>
-            <b-checkbox-button
-              v-model="stage"
-              native-value="leech"
-              type="is-success"
-            >
-              Leech
-            </b-checkbox-button>
-            <b-checkbox-button
-              v-model="stage"
-              native-value="learning"
-              type="is-success"
-            >
-              Learning
-            </b-checkbox-button>
-            <b-checkbox-button
-              v-model="stage"
-              native-value="graduated"
-              type="is-success"
-            >
-              Graduated
-            </b-checkbox-button>
-          </b-field>
-        </div>
-      </div>
-      <div class="column is-4">
-        <div class="field">
-          <label class="label">Due</label>
-          <div class="control">
-            <b-switch v-model="isDue">Due only</b-switch>
+  <div>
+    <!-- <b-loading v-if="!isInit" active /> -->
+    <section v-if="isInit" class="QuizPage">
+      <div class="columns">
+        <div class="column is-4">
+          <div class="field">
+            <label class="label">Type</label>
+            <b-field class="flex-wrap">
+              <b-checkbox-button
+                v-model="type"
+                native-value="hanzi"
+                type="is-success"
+              >
+                Hanzi
+              </b-checkbox-button>
+              <b-checkbox-button
+                v-model="type"
+                native-value="vocab"
+                type="is-success"
+              >
+                Vocab
+              </b-checkbox-button>
+              <b-checkbox-button
+                v-model="type"
+                native-value="sentence"
+                type="is-success"
+              >
+                Sentence
+              </b-checkbox-button>
+              <b-checkbox-button
+                v-model="type"
+                native-value="extra"
+                type="is-success"
+              >
+                Extra
+              </b-checkbox-button>
+            </b-field>
           </div>
         </div>
-      </div>
-    </div>
-
-    <div class="columns">
-      <div class="column is-6">
-        <div class="field">
-          <label class="label">Direction</label>
-          <b-field class="flex-wrap">
-            <b-checkbox-button
-              v-model="direction"
-              native-value="se"
-              type="is-success"
-            >
-              Simplified-English
-            </b-checkbox-button>
-            <b-checkbox-button
-              v-model="direction"
-              native-value="te"
-              type="is-success"
-            >
-              Traditional-English
-            </b-checkbox-button>
-            <b-checkbox-button
-              v-model="direction"
-              native-value="ec"
-              type="is-success"
-            >
-              English-Chinese
-            </b-checkbox-button>
-          </b-field>
+        <div class="column is-4">
+          <div class="field">
+            <label class="label">Learning stage</label>
+            <b-field class="flex-wrap">
+              <b-checkbox-button
+                v-model="stage"
+                native-value="new"
+                type="is-success"
+              >
+                New
+              </b-checkbox-button>
+              <b-checkbox-button
+                v-model="stage"
+                native-value="leech"
+                type="is-success"
+              >
+                Leech
+              </b-checkbox-button>
+              <b-checkbox-button
+                v-model="stage"
+                native-value="learning"
+                type="is-success"
+              >
+                Learning
+              </b-checkbox-button>
+              <b-checkbox-button
+                v-model="stage"
+                native-value="graduated"
+                type="is-success"
+              >
+                Graduated
+              </b-checkbox-button>
+            </b-field>
+          </div>
         </div>
-      </div>
-      <div class="column is-6">
-        <b-field label="Filter by tags">
-          <b-taginput
-            v-model="selectedTags"
-            icon="tag"
-            placeholder="Add a tag"
-            :data="filteredTags"
-            autocomplete
-            :allow-new="false"
-            open-on-focus
-            @typing="getFilteredTags"
-          />
-        </b-field>
-      </div>
-    </div>
-
-    <b-collapse class="card" animation="slide" :open="isQuizDashboardReady">
-      <div slot="trigger" slot-scope="props" class="card-header" role="button">
-        <p class="card-header-title">Quiz</p>
-        <a role="button" class="card-header-icon">
-          <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
-        </a>
-      </div>
-      <div class="card-content">
-        <div class="columns">
-          <div class="column is-3">
-            <div v-if="!isDue">
-              <span class="column-label">Pending: </span>
-              <span>{{ data.length | format }}</span>
-            </div>
-            <div v-else-if="dueItems.length">
-              <span class="column-label">Due: </span>
-              <span>{{ dueItems.length | format }}</span>
-            </div>
-            <div v-else-if="dueIn">
-              <span class="column-label">Due in: </span>
-              <span>{{ dueIn | duration }}</span>
-            </div>
-            <div v-else>
-              <span>No items due</span>
+        <div class="column is-4">
+          <div class="field">
+            <label class="label">Due</label>
+            <div class="control">
+              <b-switch v-model="isDue">Due only</b-switch>
             </div>
           </div>
-
-          <div class="column is-3">
-            <span class="column-label">New: </span>
-            <span>{{ newItems.length | format }}</span>
-          </div>
-          <div class="column is-3">
-            <span class="column-label">Leech: </span>
-            <span>{{ leechItems.length | format }}</span>
-          </div>
-          <div class="column is-3 flex flex-row">
-            <div class="flex-grow" />
-            <b-button
-              type="is-success"
-              :disabled="data.length === 0"
-              @click="startQuiz"
-            >
-              Start Quiz
-            </b-button>
-          </div>
         </div>
       </div>
-    </b-collapse>
 
-    <b-collapse class="card" animation="slide" :open.sync="isTableShown">
-      <div slot="trigger" slot-scope="props" class="card-header" role="button">
-        <p class="card-header-title">
-          {{ props.open ? 'Hide items' : 'Show items' }}
-        </p>
-        <a role="button" class="card-header-icon">
-          <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
-        </a>
-      </div>
-      <div class="card-content">
-        <b-table
-          :data="data"
-          paginated
-          :per-page="10"
-          checkable
-          @contextmenu="onTableContextmenu"
-        >
-          <template slot-scope="props">
-            <b-table-column
-              field="type"
-              label="Type"
-              width="100"
-              searchable
-              sortable
-            >
-              {{ props.row.type }}
-            </b-table-column>
-            <b-table-column field="item" label="Item" searchable sortable>
-              {{ props.row.item }}
-            </b-table-column>
-            <b-table-column
-              field="direction"
-              label="Direction"
-              searchable
-              sortable
-            >
-              <span v-if="props.row.direction === 'ec'">English-Chinese</span>
-              <span v-else-if="props.row.direction === 'te'">
-                Traditional-English
-              </span>
-              <span v-else-if="props.row.type === 'vocab'">
+      <div class="columns">
+        <div class="column is-6">
+          <div class="field">
+            <label class="label">Direction</label>
+            <b-field class="flex-wrap">
+              <b-checkbox-button
+                v-model="direction"
+                native-value="se"
+                type="is-success"
+              >
                 Simplified-English
-              </span>
-              <span v-else>Chinese-English</span>
-            </b-table-column>
-            <b-table-column field="tag" label="Tag" searchable>
-              <b-tag v-for="t in props.row.tag || []" :key="t">{{ t }}</b-tag>
-            </b-table-column>
-            <b-table-column
-              field="srsLevel"
-              label="SRS Level"
-              searchable
-              sortable
-            >
-              {{ props.row.srsLevel }}
-            </b-table-column>
-            <b-table-column
-              field="nextReview"
-              label="Next Review"
-              searchable
-              sortable
-            >
-              {{ props.row.nextReview | formatDate }}
-            </b-table-column>
-          </template>
-        </b-table>
+              </b-checkbox-button>
+              <b-checkbox-button
+                v-model="direction"
+                native-value="te"
+                type="is-success"
+              >
+                Traditional-English
+              </b-checkbox-button>
+              <b-checkbox-button
+                v-model="direction"
+                native-value="ec"
+                type="is-success"
+              >
+                English-Chinese
+              </b-checkbox-button>
+            </b-field>
+          </div>
+        </div>
+        <div class="column is-6">
+          <b-field label="Filter by tags">
+            <b-taginput
+              v-model="selectedTags"
+              icon="tag"
+              placeholder="Add a tag"
+              :data="filteredTags"
+              autocomplete
+              :allow-new="false"
+              open-on-focus
+              @typing="getFilteredTags"
+            />
+          </b-field>
+        </div>
       </div>
-    </b-collapse>
 
-    <b-modal :active.sync="isEditTagModal" @close="onEditTagModelClose">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-header-title">Edit tags</div>
+      <b-collapse class="card" animation="slide" :open="isQuizDashboardReady">
+        <div
+          slot="trigger"
+          slot-scope="props"
+          class="card-header"
+          role="button"
+        >
+          <p class="card-header-title">Quiz</p>
+          <a role="button" class="card-header-icon">
+            <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
+          </a>
         </div>
         <div class="card-content">
-          <b-taginput
-            v-model="selectedRow.tag"
-            icon="tag"
-            placeholder="Add a tag"
-            :data="filteredTags"
-            autocomplete
-            :allow-new="true"
-            open-on-focus
-            @typing="getFilteredTags"
-          />
-          <div class="field taginput-field">
-            <b-button @click="isEditTagModal = false">Close</b-button>
+          <div class="columns">
+            <div class="column is-3">
+              <div v-if="!isDue">
+                <span class="column-label">Pending: </span>
+                <span>{{ data.length | format }}</span>
+              </div>
+              <div v-else-if="dueItems.length">
+                <span class="column-label">Due: </span>
+                <span>{{ dueItems.length | format }}</span>
+              </div>
+              <div v-else-if="dueIn">
+                <span class="column-label">Due in: </span>
+                <span>{{ dueIn | duration }}</span>
+              </div>
+              <div v-else>
+                <span>No items due</span>
+              </div>
+            </div>
+
+            <div class="column is-3">
+              <span class="column-label">New: </span>
+              <span>{{ newItems.length | format }}</span>
+            </div>
+            <div class="column is-3">
+              <span class="column-label">Leech: </span>
+              <span>{{ leechItems.length | format }}</span>
+            </div>
+            <div class="column is-3 flex flex-row">
+              <div class="flex-grow" />
+              <b-button
+                type="is-success"
+                :disabled="data.length === 0"
+                @click="startQuiz"
+              >
+                Start Quiz
+              </b-button>
+            </div>
           </div>
         </div>
-      </div>
-    </b-modal>
+      </b-collapse>
 
-    <b-modal class="quiz-modal" :active.sync="isQuizModal" @close="endQuiz">
-      <div class="card">
-        <div v-if="quizCurrent" class="card-content">
-          <div
-            v-show="!isQuizShownAnswer"
-            ref="quizFront"
-            class="content"
-            v-html="quizFront"
-          />
-          <div
-            v-show="isQuizShownAnswer"
-            ref="quizBack"
-            class="content"
-            v-html="quizBack"
-          />
+      <b-collapse class="card" animation="slide" :open.sync="isTableShown">
+        <div
+          slot="trigger"
+          slot-scope="props"
+          class="card-header"
+          role="button"
+        >
+          <p class="card-header-title">
+            {{ props.open ? 'Hide items' : 'Show items' }}
+          </p>
+          <a role="button" class="card-header-icon">
+            <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
+          </a>
         </div>
+        <div class="card-content">
+          <b-table
+            :data="data"
+            paginated
+            :per-page="10"
+            checkable
+            @contextmenu="onTableContextmenu"
+          >
+            <template slot-scope="props">
+              <b-table-column
+                field="type"
+                label="Type"
+                width="100"
+                searchable
+                sortable
+              >
+                {{ props.row.type }}
+              </b-table-column>
+              <b-table-column field="item" label="Item" searchable sortable>
+                {{ props.row.item }}
+              </b-table-column>
+              <b-table-column
+                field="direction"
+                label="Direction"
+                searchable
+                sortable
+              >
+                <span v-if="props.row.direction === 'ec'">English-Chinese</span>
+                <span v-else-if="props.row.direction === 'te'">
+                  Traditional-English
+                </span>
+                <span v-else-if="props.row.type === 'vocab'">
+                  Simplified-English
+                </span>
+                <span v-else>Chinese-English</span>
+              </b-table-column>
+              <b-table-column field="tag" label="Tag" searchable>
+                <b-tag v-for="t in props.row.tag || []" :key="t">{{ t }}</b-tag>
+              </b-table-column>
+              <b-table-column
+                field="srsLevel"
+                label="SRS Level"
+                searchable
+                sortable
+              >
+                {{ props.row.srsLevel }}
+              </b-table-column>
+              <b-table-column
+                field="nextReview"
+                label="Next Review"
+                searchable
+                sortable
+              >
+                {{ props.row.nextReview | formatDate }}
+              </b-table-column>
+            </template>
+          </b-table>
+        </div>
+      </b-collapse>
 
-        <div class="buttons-area">
-          <div v-if="!quizCurrent" class="buttons">
-            <button
-              class="button is-warning"
-              @click="endQuiz"
-              @keypress="endQuiz"
-            >
-              End quiz
-            </button>
+      <b-modal :active.sync="isEditTagModal" @close="onEditTagModelClose">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-title">Edit tags</div>
           </div>
-          <div v-else-if="!isQuizShownAnswer" class="buttons">
-            <button
-              class="button is-warning"
-              @click="isQuizShownAnswer = true"
-              @keypress="isQuizShownAnswer = true"
-            >
-              Show answer
-            </button>
+          <div class="card-content">
+            <b-taginput
+              v-model="selectedRow.tag"
+              icon="tag"
+              placeholder="Add a tag"
+              :data="filteredTags"
+              autocomplete
+              :allow-new="true"
+              open-on-focus
+              @typing="getFilteredTags"
+            />
+            <div class="field taginput-field">
+              <b-button @click="isEditTagModal = false">Close</b-button>
+            </div>
           </div>
-          <div v-else class="buttons-panel">
+        </div>
+      </b-modal>
+
+      <b-modal class="quiz-modal" :active.sync="isQuizModal" @close="endQuiz">
+        <div class="card">
+          <div v-if="quizCurrent" class="card-content">
+            <div
+              v-show="!isQuizShownAnswer"
+              ref="quizFront"
+              class="content"
+              v-html="quizFront"
+            />
+            <div
+              v-show="isQuizShownAnswer"
+              ref="quizBack"
+              class="content"
+              v-html="quizBack"
+            />
+          </div>
+
+          <div class="buttons-area">
+            <div v-if="!quizCurrent" class="buttons">
+              <button
+                class="button is-warning"
+                @click="endQuiz"
+                @keypress="endQuiz"
+              >
+                End quiz
+              </button>
+            </div>
+            <div v-else-if="!isQuizShownAnswer" class="buttons">
+              <button
+                class="button is-warning"
+                @click="isQuizShownAnswer = true"
+                @keypress="isQuizShownAnswer = true"
+              >
+                Show answer
+              </button>
+            </div>
+            <div v-else class="buttons-panel">
+              <div class="buttons">
+                <button
+                  class="button is-success"
+                  @click="markRight"
+                  @keypress="markRight"
+                >
+                  Right
+                </button>
+                <button
+                  class="button is-danger"
+                  @click="markWrong"
+                  @keypress="markWrong"
+                >
+                  Wrong
+                </button>
+                <button
+                  class="button is-warning"
+                  @click="markRepeat"
+                  @keypress="markRepeat"
+                >
+                  Repeat
+                </button>
+              </div>
+
+              <div class="buttons">
+                <button
+                  class="button is-warning"
+                  @click="isQuizShownAnswer = false"
+                  @keypress="isQuizShownAnswer = false"
+                >
+                  Hide answer
+                </button>
+                <button
+                  class="button is-info"
+                  @click="
+                    editItem = quizCurrent
+                    isEditModal = true
+                  "
+                  @keypress="
+                    editItem = quizCurrent
+                    isEditModal = true
+                  "
+                >
+                  Edit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </b-modal>
+
+      <b-modal class="edit-modal" :active.sync="isEditModal">
+        <div class="card">
+          <div class="card-content">
+            <b-tabs type="is-boxed" @change="onEditTabChange">
+              <b-tab-item label="front">
+                <MarkdownEditor
+                  ref="mde0"
+                  v-model="editItem.front"
+                  :renderer="previewRender"
+                />
+                <MarkdownEditor
+                  ref="mde1"
+                  v-model="editItem.back"
+                  :renderer="previewRender"
+                />
+                <MarkdownEditor
+                  ref="mde2"
+                  v-model="editItem.mnemonic"
+                  :renderer="previewRender"
+                />
+              </b-tab-item>
+            </b-tabs>
+          </div>
+
+          <div class="card-footer">
+            <div class="flex-grow" />
             <div class="buttons">
               <button
                 class="button is-success"
-                @click="markRight"
-                @keypress="markRight"
+                @click="doEditSave"
+                @keypress="doEditSave"
               >
-                Right
+                Save
               </button>
               <button
                 class="button is-danger"
-                @click="markWrong"
-                @keypress="markWrong"
+                @click="doEditLoad"
+                @keypress="doEditLoad"
               >
-                Wrong
+                Reset
               </button>
               <button
-                class="button is-warning"
-                @click="markRepeat"
-                @keypress="markRepeat"
+                class="button"
+                @click="isEditModal = false"
+                @keypress="isEditModal = false"
               >
-                Repeat
-              </button>
-            </div>
-
-            <div class="buttons">
-              <button
-                class="button is-warning"
-                @click="isQuizShownAnswer = false"
-                @keypress="isQuizShownAnswer = false"
-              >
-                Hide answer
-              </button>
-              <button
-                class="button is-info"
-                @click="
-                  editItem = quizCurrent
-                  isEditModal = true
-                "
-                @keypress="
-                  editItem = quizCurrent
-                  isEditModal = true
-                "
-              >
-                Edit
+                Close
               </button>
             </div>
           </div>
         </div>
-      </div>
-    </b-modal>
+      </b-modal>
 
-    <b-modal class="edit-modal" :active.sync="isEditModal">
-      <div class="card">
-        <div class="card-content">
-          <b-tabs type="is-boxed" @change="onEditTabChange">
-            <b-tab-item label="front">
-              <MarkdownEditor
-                ref="mde0"
-                v-model="editItem.front"
-                :renderer="previewRender"
-              />
-              <MarkdownEditor
-                ref="mde1"
-                v-model="editItem.back"
-                :renderer="previewRender"
-              />
-              <MarkdownEditor
-                ref="mde2"
-                v-model="editItem.mnemonic"
-                :renderer="previewRender"
-              />
-            </b-tab-item>
-          </b-tabs>
-        </div>
+      <b-loading :active="isLoading" />
 
-        <div class="card-footer">
-          <div class="flex-grow" />
-          <div class="buttons">
-            <button
-              class="button is-success"
-              @click="doEditSave"
-              @keypress="doEditSave"
+      <client-only>
+        <vue-context ref="contextmenu" lazy>
+          <li>
+            <a
+              role="button"
+              @click.prevent="speak(selectedRow.item)"
+              @keypress.prevent="speak(selectedRow.item)"
             >
-              Save
-            </button>
-            <button
-              class="button is-danger"
-              @click="doEditLoad"
-              @keypress="doEditLoad"
+              Speak
+            </a>
+          </li>
+          <li>
+            <a
+              role="button"
+              @click.prevent="isEditTagModal = true"
+              @keypress.prevent="isEditTagModal = true"
             >
-              Reset
-            </button>
-            <button
-              class="button"
-              @click="isEditModal = false"
-              @keypress="isEditModal = false"
+              Edit tags
+            </a>
+          </li>
+          <li>
+            <a
+              role="button"
+              @click.prevent="
+                editItem = selectedRow
+                isEditModal = true
+              "
+              @keypress.prevent="
+                editItem = selectedRow
+                isEditModal = true
+              "
             >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </b-modal>
-
-    <b-loading :active="isLoading" />
-
-    <client-only>
-      <vue-context ref="contextmenu" lazy>
-        <li>
-          <a
-            role="button"
-            @click.prevent="speak(selectedRow.item)"
-            @keypress.prevent="speak(selectedRow.item)"
-          >
-            Speak
-          </a>
-        </li>
-        <li>
-          <a
-            role="button"
-            @click.prevent="isEditTagModal = true"
-            @keypress.prevent="isEditTagModal = true"
-          >
-            Edit tags
-          </a>
-        </li>
-        <li>
-          <a
-            role="button"
-            @click.prevent="
-              editItem = selectedRow
-              isEditModal = true
-            "
-            @keypress.prevent="
-              editItem = selectedRow
-              isEditModal = true
-            "
-          >
-            Edit item
-          </a>
-        </li>
-        <li>
-          <a
-            role="button"
-            @click.prevent="removeItem"
-            @keypress.prevent="removeItem"
-          >
-            Remove item
-          </a>
-        </li>
-      </vue-context>
-    </client-only>
-  </section>
+              Edit item
+            </a>
+          </li>
+          <li>
+            <a
+              role="button"
+              @click.prevent="removeItem"
+              @keypress.prevent="removeItem"
+            >
+              Remove item
+            </a>
+          </li>
+        </vue-context>
+      </client-only>
+    </section>
+  </div>
 </template>
 
 <script lang="ts">
@@ -472,6 +485,7 @@ import { shuffle } from '~/assets/util'
 })
 export default class QuizPage extends Vue {
   isLoading = false
+  isInit = false
   isQuizDashboardReady = false
 
   selectedTags: string[] = []
@@ -482,8 +496,8 @@ export default class QuizPage extends Vue {
   stage = ['new', 'leech', 'learning']
   direction = ['se']
   isDue = true
-  dueIn: Date | null = null
 
+  dueIn: Date | null = null
   data: any[] = []
   isTableShown = false
 
@@ -632,11 +646,60 @@ export default class QuizPage extends Vue {
   @Watch('email')
   async onUserChange() {
     if (this.email) {
-      const { allTags } = await this.$axios.$get('/api/user/')
-      this.allTags = allTags || []
+      await Promise.all([
+        (async () => {
+          const {
+            settings: {
+              quiz: { type, stage, direction, isDue } = {} as any,
+            } = {},
+          } = await this.$axios.$get('/api/user/')
+
+          if (type) {
+            this.$set(this, 'type', type)
+          }
+
+          if (stage) {
+            this.$set(this, 'stage', stage)
+          }
+
+          if (direction) {
+            this.$set(this, 'direction', direction)
+          }
+
+          if (typeof isDue !== 'undefined') {
+            this.$set(this, 'isDue', isDue)
+          }
+          // eslint-disable-next-line no-console
+        })().catch(console.error),
+        (async () => {
+          const { result } = await this.$axios.$post('/api/card/q', {
+            projection: {
+              tag: 1,
+              _id: 0,
+            },
+            limit: null,
+            hasCount: false,
+          })
+
+          this.allTags = Array.from(
+            new Set<string>(
+              (result as any[]).reduce(
+                (prev, { tag = [] }: { tag: string[] }) => {
+                  return [...prev, ...tag]
+                },
+                [] as string[]
+              )
+            )
+          ).sort()
+
+          // eslint-disable-next-line no-console
+        })().catch(console.error),
+      ])
+
+      this.isInit = true
+      this.isLoading = false
 
       this.data = []
-      this.isLoading = false
       await this.load()
     }
   }
@@ -652,6 +715,15 @@ export default class QuizPage extends Vue {
       nextReview = { $exists: true }
     } else if (this.isDue) {
       nextReview = { $lt: { $toDate: new Date().toISOString() } }
+
+      this.$axios.$patch('/api/user/', {
+        set: {
+          'settings.quiz.type': this.type,
+          'settings.quiz.stage': this.stage,
+          'settings.quiz.direction': this.direction,
+          'settings.quiz.isDue': this.isDue,
+        },
+      })
     }
 
     const cond: any = {
