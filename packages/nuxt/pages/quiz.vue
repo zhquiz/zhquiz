@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- <b-loading v-if="!isInit" active /> -->
     <section v-if="isInit" class="QuizPage">
       <div class="columns">
         <div class="column is-4">
