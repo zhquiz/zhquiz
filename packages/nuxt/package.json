@@ -1,5 +1,11 @@
 {
   "name": "@zhquiz/nuxt",
+  "description": "Hanzi, Vocab and Sentences quizzing system",
+  "author": {
+    "email": "polv@polv.cc",
+    "name": "Pacharapol Withayasakpunt",
+    "url": "https://www.polv.cc"
+  },
   "private": true,
   "scripts": {
     "dev": "nuxt-ts",
@@ -39,6 +45,7 @@
     "@nuxtjs/eslint-config-typescript": "^2.0.0",
     "@nuxtjs/eslint-module": "^2.0.0",
     "@nuxtjs/fontawesome": "^1.1.2",
+    "@nuxtjs/pwa": "^3.0.0-beta.20",
     "babel-eslint": "^10.1.0",
     "eslint": "^7.2.0",
     "eslint-config-prettier": "^6.11.0",

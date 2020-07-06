@@ -1,6 +1,6 @@
 dev:
   command: |
-    concurrently \
+    npx concurrently \
       'cd packages/server && yarn dev'\
       'cd packages/nuxt && yarn dev'
 build:
