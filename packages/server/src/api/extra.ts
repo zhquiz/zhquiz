@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 
 import { zh } from '../db/local'
-import { DbExtraModel } from '../db/schema'
+import { DbExtraModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   f.post(

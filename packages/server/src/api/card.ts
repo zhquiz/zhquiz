@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 
 import { zh } from '../db/local'
-import { DbCardModel } from '../db/schema'
+import { DbCardModel } from '../db/mongo'
 import { restoreDate } from '../util'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
@@ -141,7 +141,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
               item,
               type,
               direction,
-            } as any)
+            })
           )
         )
 

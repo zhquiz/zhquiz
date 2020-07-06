@@ -2458,6 +2458,11 @@ lodash@^4.17.14, lodash@^4.17.15:
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
   integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
 
+log-buffer@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/log-buffer/-/log-buffer-0.0.3.tgz#8303058d4da031bb8c23b6e34e5c4f7a0778b390"
+  integrity sha1-gwMFjU2gMbuMI7bjTlxPegd4s5A=
+
 loglevel@^1.6.8:
   version "1.6.8"
   resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.6.8.tgz#8a25fb75d092230ecd4457270d80b54e28011171"

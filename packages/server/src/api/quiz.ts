@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 
-import { DbCardModel, DbQuizModel } from '../db/schema'
+import { DbCardModel, DbQuizModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   f.get(
@@ -60,7 +60,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
       let quiz = await DbQuizModel.findOne({ cardId: id })
       if (!quiz) {
-        quiz = await DbQuizModel.create({ cardId: id } as any)
+        quiz = await DbQuizModel.create({ cardId: id })
       }
 
       quiz.markRight()
@@ -90,7 +90,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
       let quiz = await DbQuizModel.findOne({ cardId: id })
       if (!quiz) {
-        quiz = await DbQuizModel.create({ cardId: id } as any)
+        quiz = await DbQuizModel.create({ cardId: id })
       }
 
       quiz.markWrong()
@@ -120,7 +120,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
       let quiz = await DbQuizModel.findOne({ cardId: id })
       if (!quiz) {
-        quiz = await DbQuizModel.create({ cardId: id } as any)
+        quiz = await DbQuizModel.create({ cardId: id })
       }
 
       quiz.markRepeat()
