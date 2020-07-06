@@ -1629,6 +1629,40 @@
     mustache "^2.3.0"
     stack-trace "0.0.10"
 
+"@patarapolw/eqdict@^1.0.5":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@patarapolw/eqdict/-/eqdict-1.0.6.tgz#22ddf44bfffc53972fe307aea98eebccd3e22ef5"
+  integrity sha512-3PUKImt76k7Jd3bxCvk17t9MssmCjond6vmXjsDlZz4MULumRohFRMh0K+W8gSZiWnWAYweIEi1NSGjVHaeBaQ==
+
+"@patarapolw/highlightjs-vue@^1.0.0-dev4":
+  version "1.0.0-dev4"
+  resolved "https://registry.yarnpkg.com/@patarapolw/highlightjs-vue/-/highlightjs-vue-1.0.0-dev4.tgz#938c2cb037e2129601c0d9644eb5262eacde2013"
+  integrity sha512-p1LgqMO/uwk99u8PZ5AZPs/ITGa3qJzfjuEiof3IB5qEaguRW/0oLw88WC3l2V9BlaYjfDUmHEtiL2TZqW82pQ==
+
+"@patarapolw/make-html-frontend-functions@^1.0.0-pre14":
+  version "1.0.0-pre14"
+  resolved "https://registry.yarnpkg.com/@patarapolw/make-html-frontend-functions/-/make-html-frontend-functions-1.0.0-pre14.tgz#0d6f132e611986c4be21062779820122d385ef31"
+  integrity sha512-e6CR3GawGKlmgzGzz7rGOzWvZq98Z1mo4FRkoRT8RfpYuEjMuvz1m1YNGPiFX02xsQBsNU2xdTT5gke0wXNUmg==
+  dependencies:
+    "@patarapolw/highlightjs-vue" "^1.0.0-dev4"
+    "@patarapolw/markdown-it-imsize" "^2.0.1-dev3"
+    dompurify "^2.0.11"
+    he "^1.2.0"
+    highlight.js "~10.0"
+    hyperpug "^1.3.2"
+    js-yaml "^3.14.0"
+    markdown-it "^11.0.0"
+    markdown-it-container "^3.0.0"
+    markdown-it-emoji "^1.4.0"
+    markdown-it-external-links "^0.0.6"
+    stylis "3"
+    vhtml "^2.2.0"
+
+"@patarapolw/markdown-it-imsize@^2.0.1-dev3":
+  version "2.0.1-dev3"
+  resolved "https://registry.yarnpkg.com/@patarapolw/markdown-it-imsize/-/markdown-it-imsize-2.0.1-dev3.tgz#b79d5c002d344086a7abae1260fd192529bd1134"
+  integrity sha512-79FT44wD1vukfF+QJg5FMghCS/ZDy8qUR3cHoLpT1i9H0vg8w260thuVP1TZxc6RRw10RFi1MXBdhB5HEWZcOw==
+
 "@protobufjs/aspromise@^1.1.1", "@protobufjs/aspromise@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@protobufjs/aspromise/-/aspromise-1.1.2.tgz#9b8b0cc663d669a7d8f6f5d0893a14d348f30fbf"
@@ -4114,7 +4148,7 @@ domhandler@^2.3.0:
   dependencies:
     domelementtype "1"
 
-dompurify@^2.0.12:
+dompurify@^2.0.11, dompurify@^2.0.12:
   version "2.0.12"
   resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-2.0.12.tgz#284a2b041e1c60b8e72d7b4d2fadad36141254ae"
   integrity sha512-Fl8KseK1imyhErHypFPA8qpq9gPzlsJ/EukA6yk9o0gX23p1TzC+rh9LqNg1qvErRTc0UNMYlKxEGSfSh43NDg==
@@ -5604,6 +5638,11 @@ hex-color-regex@^1.1.0:
   resolved "https://registry.yarnpkg.com/hex-color-regex/-/hex-color-regex-1.1.0.tgz#4c06fccb4602fe2602b3c93df82d7e7dbf1a8a8e"
   integrity sha512-l9sfDFsuqtOqKDsQdqrMRk0U85RZc0RtOR9yPI7mRVOa4FsR/BVnZ0shmQRM96Ji99kYZP/7hn1cedc1+ApsTQ==
 
+highlight.js@~10.0:
+  version "10.0.3"
+  resolved "https://registry.yarnpkg.com/highlight.js/-/highlight.js-10.0.3.tgz#5effcc58420f113f279a0badb8ac50c4be06e63b"
+  integrity sha512-9FG7SSzv9yOY5CGGxfI6NDm7xLYtMOjKtPBxw7Zff3t5UcRcUNTGEeS8lNjhceL34KeetLMoGMFTGoaa83HwyQ==
+
 hmac-drbg@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/hmac-drbg/-/hmac-drbg-1.0.1.tgz#d2745701025a6c775a6c545793ed502fc0c649a1"
@@ -5775,6 +5814,14 @@ human-signals@^1.1.1:
   resolved "https://registry.yarnpkg.com/human-signals/-/human-signals-1.1.1.tgz#c5b1cd14f50aeae09ab6c59fe63ba3395fe4dfa3"
   integrity sha512-SEQu7vl8KjNL2eoGBLF3+wAjpsNfA9XMlXAYj/3EdaNfAlxKthD1xjEQfGOUhllCGGJVNY34bRr6lPINhNjyZw==
 
+hyperpug@^1.3.2:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/hyperpug/-/hyperpug-1.3.2.tgz#2d64a111ead96502e5c6b0415722e3828e22d793"
+  integrity sha512-01dd1nZvRWk1IC5A8bh9LeZY2qmMhNSuj6axqZjvXa0muUXjtXWraZ12ZwFlN2KOvjhRUs93ypE8je8zbzcimQ==
+  dependencies:
+    he "^1.2.0"
+    indent-utils "^1.0.2"
+
 iconv-lite@0.4.24, iconv-lite@^0.4.24, iconv-lite@~0.4.13:
   version "0.4.24"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.24.tgz#2022b4b25fbddc21d2f524974a474aafe733908b"
@@ -5858,6 +5905,13 @@ indent-string@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/indent-string/-/indent-string-4.0.0.tgz#624f8f4497d619b2d9768531d58f4122854d7251"
   integrity sha512-EdDDZu4A2OyIK7Lr/2zG+w5jmbuk1DVBnEwREQvBzspBJkCEbRa8GxU1lghYcaGJCnRWibjDXlq779X1/y5xwg==
+
+indent-utils@^1.0.2:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/indent-utils/-/indent-utils-1.0.7.tgz#41c6eea253155d47f21622c21ae8c90ed6605f97"
+  integrity sha512-ioAGFfPy0Uf3BFjSKKkn3U+Xl1+mMDwMKnmoBm7IN0xSIXJG7ueQGYrv3Ml2W7i44IL37YzwHhay3LQfHdOn8g==
+  dependencies:
+    "@patarapolw/eqdict" "^1.0.5"
 
 indexes-of@^1.0.1:
   version "1.0.1"
@@ -6318,7 +6372,7 @@ jiti@^0.1.11:
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz#19203fb59991df98e3a287050d4647cdeaf32499"
   integrity sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==
 
-js-yaml@^3.13.1:
+js-yaml@^3.13.1, js-yaml@^3.14.0:
   version "3.14.0"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.14.0.tgz#a7a34170f26a21bb162424d8adacb4113a69e482"
   integrity sha512-/4IbIeHcD9VMHFqDR/gQ7EdZdLimOvW2DdcxFjdyyZ9NsbS+ccrXqVWDtab/lRl5AlUqmpBx8EhPaWR+OtY17A==
@@ -6788,10 +6842,20 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
+markdown-it-container@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/markdown-it-container/-/markdown-it-container-3.0.0.tgz#1d19b06040a020f9a827577bb7dbf67aa5de9a5b"
+  integrity sha512-y6oKTq4BB9OQuY/KLfk/O3ysFhB3IMYoIWhGJEidXt1NQFocFK2sA2t0NYZAMyMShAGL6x5OPIbrmXPIqaN9rw==
+
 markdown-it-emoji@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/markdown-it-emoji/-/markdown-it-emoji-1.4.0.tgz#9bee0e9a990a963ba96df6980c4fddb05dfb4dcc"
   integrity sha1-m+4OmpkKljupbfaYDE/dsF37Tcw=
+
+markdown-it-external-links@^0.0.6:
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/markdown-it-external-links/-/markdown-it-external-links-0.0.6.tgz#9503258fce4c81010ea15fe71769d63a1346d801"
+  integrity sha1-lQMlj85MgQEOoV/nF2nWOhNG2AE=
 
 markdown-it@^11.0.0:
   version "11.0.0"
@@ -9570,6 +9634,11 @@ stylehacks@^4.0.0:
     postcss "^7.0.0"
     postcss-selector-parser "^3.0.0"
 
+stylis@3:
+  version "3.5.4"
+  resolved "https://registry.yarnpkg.com/stylis/-/stylis-3.5.4.tgz#f665f25f5e299cf3d64654ab949a57c768b73fbe"
+  integrity sha512-8/3pSmthWM7lsPBKv7NXkzn2Uc9W7NotcwGNpJaa3k7WMM1XDCA4MgT5k/8BIexd5ydZdboXtU90XH9Ec4Bv/Q==
+
 supports-color@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-2.0.0.tgz#535d045ce6b6363fa40117084629995e9df324c7"
@@ -10139,6 +10208,11 @@ vendors@^1.0.0:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/vendors/-/vendors-1.0.4.tgz#e2b800a53e7a29b93506c3cf41100d16c4c4ad8e"
   integrity sha512-/juG65kTL4Cy2su4P8HjtkTxk6VmJDiOPBufWniqQ6wknac6jNiXS9vU+hO3wgusiyqWlzTbVHi0dyJqRONg3w==
+
+vhtml@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/vhtml/-/vhtml-2.2.0.tgz#369e6823ed6c32cbb9f6e33395bae7c65faa014c"
+  integrity sha512-TPXrXrxBOslRUVnlVkiAqhoXneiertIg86bdvzionrUYhEuiROvyPZNiiP6GIIJ2Q7oPNVyEtIx8gMAZZE9lCQ==
 
 vm-browserify@^1.0.1:
   version "1.1.2"
