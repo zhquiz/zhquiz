@@ -68,14 +68,7 @@ export default (): Configuration => {
      */
     buildModules: [
       '@nuxt/typescript-build',
-      [
-        '@nuxtjs/pwa',
-        {
-          meta: {
-            name: 'ZhQuiz',
-          },
-        },
-      ],
+      '@nuxtjs/pwa',
       [
         '@nuxtjs/fontawesome',
         {
@@ -145,6 +138,11 @@ export default (): Configuration => {
     ],
     proxy: {
       '/api/': 'http://localhost:8080',
+    },
+    pwa: {
+      meta: {
+        name: 'ZhQuiz',
+      },
     },
     /*
      ** Build configuration
