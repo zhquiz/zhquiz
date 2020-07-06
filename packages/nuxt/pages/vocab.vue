@@ -353,14 +353,16 @@ export default class VocabPage extends Vue {
   @Watch('current')
   async loadContent() {
     if (typeof this.current === 'string') {
-      const { vocab, sentences } = (
-        await this.$axios.$post('/api/vocab/match', { entry: this.current })
+      const { vocabs, sentences } = (
+        await this.$axios.$post('/api/vocab/match', {
+          entry: this.current,
+        })
       ).result
 
-      if (vocab.length > 0) {
+      if (vocabs.length > 0) {
         this.entries = [
           ...this.entries.slice(0, this.i),
-          ...vocab,
+          ...vocabs,
           ...this.entries.slice(this.i + 1),
         ]
       }

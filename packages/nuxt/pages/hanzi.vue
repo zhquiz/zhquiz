@@ -475,7 +475,7 @@ export default class HanziPage extends Vue {
     ).result
     this.sub = r.sub
     this.sup = r.sup
-    this.variants = r.var
+    this.variants = r.variants
   }
 
   async loadVocab() {

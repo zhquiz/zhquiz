@@ -293,11 +293,13 @@
               class="content"
               v-html="quizBack"
             />
+            <b-loading :active="!isQuizItemReady" :is-full-page="false" />
           </div>
 
           <div class="buttons-area">
             <div v-if="!quizCurrent" class="buttons">
               <button
+                ref="btnEndQuiz"
                 class="button is-warning"
                 @click="endQuiz"
                 @keypress="endQuiz"
@@ -307,6 +309,7 @@
             </div>
             <div v-else-if="!isQuizShownAnswer" class="buttons">
               <button
+                ref="btnShowAnswer"
                 class="button is-warning"
                 @click="isQuizShownAnswer = true"
                 @keypress="isQuizShownAnswer = true"
@@ -317,6 +320,7 @@
             <div v-else class="buttons-panel">
               <div class="buttons">
                 <button
+                  ref="btnMarkRight"
                   class="button is-success"
                   @click="markRight"
                   @keypress="markRight"
@@ -324,6 +328,7 @@
                   Right
                 </button>
                 <button
+                  ref="btnMarkWrong"
                   class="button is-danger"
                   @click="markWrong"
                   @keypress="markWrong"
@@ -331,6 +336,7 @@
                   Wrong
                 </button>
                 <button
+                  ref="btnMarkRepeat"
                   class="button is-warning"
                   @click="markRepeat"
                   @keypress="markRepeat"
@@ -341,6 +347,7 @@
 
               <div class="buttons">
                 <button
+                  ref="btnHideAnswer"
                   class="button is-warning"
                   @click="isQuizShownAnswer = false"
                   @keypress="isQuizShownAnswer = false"
@@ -348,6 +355,7 @@
                   Hide answer
                 </button>
                 <button
+                  ref="btnEditModal"
                   class="button is-info"
                   @click="
                     editItem = quizCurrent
@@ -370,17 +378,21 @@
         <div class="card">
           <div class="card-content">
             <b-tabs type="is-boxed" @change="onEditTabChange">
-              <b-tab-item label="front">
+              <b-tab-item label="Front">
                 <MarkdownEditor
                   ref="mde0"
                   v-model="editItem.front"
                   :renderer="previewRender"
                 />
+              </b-tab-item>
+              <b-tab-item label="Back">
                 <MarkdownEditor
                   ref="mde1"
                   v-model="editItem.back"
                   :renderer="previewRender"
                 />
+              </b-tab-item>
+              <b-tab-item label="Mnemonic">
                 <MarkdownEditor
                   ref="mde2"
                   v-model="editItem.mnemonic"
@@ -507,6 +519,7 @@ export default class QuizPage extends Vue {
   quizItems: any[] = []
   quizIndex = 0
   isQuizShownAnswer = false
+  isQuizItemReady = false
 
   quizFront = ''
   quizBack = ''
@@ -573,6 +586,10 @@ export default class QuizPage extends Vue {
   async created() {
     await this.onUserChange()
     this.isQuizDashboardReady = true
+  }
+
+  beforeDestroy() {
+    window.removeEventListener('keydown', this.onQuizKeypress.bind(this))
   }
 
   previewRender(md: string) {
@@ -852,10 +869,12 @@ export default class QuizPage extends Vue {
     this.quizIndex = -1
     await this.initNextQuizItem()
 
+    window.addEventListener('keydown', this.onQuizKeypress.bind(this))
     this.isQuizModal = true
   }
 
   endQuiz() {
+    window.removeEventListener('keydown', this.onQuizKeypress.bind(this))
     this.isQuizModal = false
     this.load()
   }
@@ -867,6 +886,15 @@ export default class QuizPage extends Vue {
     this.quizFront = this.getQuizFront()
     this.quizBack = this.getQuizBack()
 
+    Array(2)
+      .fill(null)
+      .map((_, i) => {
+        const it = this.quizItems[this.quizIndex + i + 1]
+        if (it) {
+          this.cacheQuizItem(it, true)
+        }
+      })
+
     if (this.quizCurrent) {
       await this.cacheQuizItem(this.quizCurrent)
 
@@ -875,16 +903,40 @@ export default class QuizPage extends Vue {
     }
   }
 
-  async cacheQuizItem(target: any) {
-    const { type, item, _id } = target
+  async cacheQuizItem(target: any, isFuture?: boolean) {
+    const { type, item, _id, direction } = target
     let data = this.quizData.filter((d) => {
       return d.item === item && d.type === type
     })[0]
 
     if (!data) {
+      if (!isFuture && direction !== 'se') {
+        this.isQuizItemReady = false
+      }
+
       const { result } = await this.$axios.$post(`/api/${type}/match`, {
         entry: item,
       })
+
+      if (type === 'vocab') {
+        const { vocabs } = result
+        const simplified = vocabs[0].simplified
+        const u = (k: string) => {
+          const arr = (vocabs as any[])
+            .map((v) => (v as any)[k] as string)
+            .filter((t) => t)
+            .filter((t, i, arr) => arr.indexOf(t) === i)
+          return arr.length > 0 ? arr : undefined
+        }
+
+        Object.assign(result, {
+          simplified,
+          traditional: u('traditional'),
+          pinyin: u('pinyin')!,
+          english: u('english'),
+        })
+      }
+
       data = {
         type,
         item,
@@ -902,26 +954,41 @@ export default class QuizPage extends Vue {
       })
       data.cards.push(card)
     }
+
+    this.$set(this, 'quizData', this.quizData)
+    this.isQuizItemReady = true
   }
 
   async markRight() {
+    this.isQuizItemReady = false
+
     await this.$axios.$patch('/api/quiz/right', undefined, {
       params: { id: this.quizCurrent._id },
     })
+
+    this.isQuizItemReady = true
     this.initNextQuizItem()
   }
 
   async markWrong() {
+    this.isQuizItemReady = false
+
     await this.$axios.$patch('/api/quiz/wrong', undefined, {
       params: { id: this.quizCurrent._id },
     })
+
+    this.isQuizItemReady = true
     this.initNextQuizItem()
   }
 
   async markRepeat() {
+    this.isQuizItemReady = false
+
     await this.$axios.$patch('/api/quiz/repeat', undefined, {
       params: { id: this.quizCurrent._id },
     })
+
+    this.isQuizItemReady = true
     this.initNextQuizItem()
   }
 
@@ -996,6 +1063,41 @@ export default class QuizPage extends Vue {
     const it = (await this.load({ _dueIn: true }))[0]
     this.dueIn = it ? it.nextReview : null
   }
+
+  onQuizKeypress(evt: KeyboardEvent) {
+    if (!this.isQuizModal) {
+      return
+    }
+
+    const click = (el: any) => {
+      if (el.click) {
+        el.click()
+      }
+
+      if (el.classList?.add) {
+        el.classList.add('active')
+      }
+    }
+
+    if (!this.quizCurrent) {
+      if (evt.key === ' ') click(this.$refs.btnEndQuiz)
+    } else if (!this.isQuizShownAnswer) {
+      if (evt.key === ' ') click(this.$refs.btnShowAnswer)
+    } else {
+      // eslint-disable-next-line no-lonely-if
+      if (evt.key === '1') {
+        click(this.$refs.btnMarkRight)
+      } else if (evt.key === '2') {
+        click(this.$refs.btnMarkWrong)
+      } else if (evt.key === '3') {
+        click(this.$refs.btnMarkRepeat)
+      } else if (evt.key === 'q') {
+        click(this.$refs.btnHideAnswer)
+      } else if (evt.key === 'e') {
+        click(this.$refs.btnEditModal)
+      }
+    }
+  }
 }
 </script>
 
@@ -1019,11 +1121,12 @@ export default class QuizPage extends Vue {
 }
 
 .quiz-modal .buttons-area {
-  min-height: 100px;
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: center;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .buttons-area .buttons {
@@ -1031,9 +1134,15 @@ export default class QuizPage extends Vue {
 }
 
 .quiz-modal .card-content {
-  min-height: 100px;
+  min-height: 7.5rem;
   max-height: calc(100vh - 300px);
   overflow: scroll;
+  padding-bottom: 0;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: 1.5rem;
+  margin-right: 1.5rem;
+  border-bottom: 1px solid hsla(0, 0%, 50%, 0.25);
 }
 
 .buttons-panel {

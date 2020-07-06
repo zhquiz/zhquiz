@@ -8,7 +8,7 @@
 }
 
 .font-hanamin {
-  font-family: 'HanaMin', 'Noto Serif TC', 'Noto Serif SC', sans-serif;
+  font-family: 'Noto Serif TC', 'Noto Serif SC', 'HanaMin', sans-serif;
 }
 
 .font-chinese {
@@ -16,7 +16,7 @@
 }
 
 .hanzi-display {
-  font-family: 'HanaMin', 'Noto Serif TC', 'Noto Serif SC', sans-serif;
+  font-family: 'Noto Serif TC', 'Noto Serif SC', 'HanaMin', sans-serif;
   font-size: 150px;
 }
 
@@ -71,6 +71,25 @@
 
 .mr-4 {
   margin-right: 1rem;
+}
+
+button.button:focus, button.button:active, button.button.active {
+  filter: saturate(75%);
+}
+
+span.gray-box {
+  display: inline-block;
+  text-align: center;
+  min-width: 1em;
+  height: 1.5em;
+  color: lightgray;
+  background-color: lightgray;
+  margin-bottom: -0.3em;
+}
+
+.content ul + ul {
+  padding-top: 1rem;
+  border-top: 1px solid lightgray;
 }
 
 x-speak-button {

@@ -96,11 +96,10 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
               result: {
                 type: 'object',
                 properties: {
-                  vocab: {
+                  vocabs: {
                     type: 'array',
                     items: {
                       type: 'object',
-                      required: ['simplified', 'pinyin', 'english'],
                       properties: {
                         simplified: { type: 'string' },
                         traditional: { type: 'string' },
@@ -132,7 +131,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
       return {
         result: {
-          vocab: zhVocab
+          vocabs: zhVocab
             .find({
               $or: [{ simplified: entry }, { traditional: entry }],
             })
@@ -177,6 +176,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
             type: 'object',
             properties: {
               result: { type: 'string' },
+              english: { type: 'string' },
               level: { type: 'integer' },
             },
           },
@@ -242,8 +242,16 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
       const v = vs[Math.floor(Math.random() * vs.length)] || {}
 
+      const r =
+        zhVocab.findOne({
+          simplified: v.v,
+          // @ts-ignore
+          english: { $exists: true },
+        }) || ({} as any)
+
       return {
         result: v.v,
+        english: r.english,
         level: v.lv,
       }
     }
