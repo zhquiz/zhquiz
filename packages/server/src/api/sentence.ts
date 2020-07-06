@@ -134,7 +134,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     },
     async (req) => {
       const { levelMin, level } = req.body
-      const s = zh.sentenceLevel.get(level || 60, levelMin || 1) || ({} as any)
+      const s = zh.sentenceLevel.get(level || 60, levelMin || 1) || {}
 
       return {
         result: s.chinese,

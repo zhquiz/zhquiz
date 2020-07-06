@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 
-import { DbUserModel } from '../db/schema'
+import { DbUserModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   f.get(

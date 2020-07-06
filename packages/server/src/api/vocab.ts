@@ -163,7 +163,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           }[]
         )
 
-      const v = vs[Math.floor(Math.random() * vs.length)] || ({} as any)
+      const v = vs[Math.floor(Math.random() * vs.length)] || {}
 
       return {
         result: v.v,

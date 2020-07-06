@@ -16,8 +16,18 @@ setGlobalOptions({ options: { allowMixed: Severity.ALLOW } })
 
 export class DbUser {
   @prop({ required: true, unique: true }) email!: string
-  @prop({ default: 1 }) levelMin!: number
-  @prop({ default: 60 }) level!: number
+  @prop({ default: 1 }) levelMin?: number
+  @prop({ default: 60 }) level?: number
+  @prop() settings?: Record<string, any>
+
+  static async signIn(email: string) {
+    let user = await DbUserModel.findOne({ email })
+    if (!user) {
+      user = await DbUserModel.create({ email })
+    }
+
+    return user
+  }
 }
 
 export const DbUserModel = getModelForClass(DbUser, {
@@ -34,10 +44,10 @@ export class DbCard {
   @prop({ required: true }) type!: string
   @prop({ required: true }) item!: string
   @prop({ required: true }) direction!: string
-  @prop({ default: '' }) front!: string
-  @prop({ default: '' }) back!: string
+  @prop({ default: '' }) front?: string
+  @prop({ default: '' }) back?: string
   @prop({ default: '' }) mnemonic?: string
-  @prop({ default: () => [] }) tag!: string[]
+  @prop({ default: () => [] }) tag?: string[]
 }
 
 export const DbCardModel = getModelForClass(DbCard, {
@@ -45,9 +55,9 @@ export const DbCardModel = getModelForClass(DbCard, {
 })
 
 class DbQuiz {
-  @prop({ default: () => repeatReview() }) nextReview!: Date
-  @prop({ default: 0 }) srsLevel!: number
-  @prop({ default: () => ({}) }) stat!: {
+  @prop({ default: () => repeatReview() }) nextReview?: Date
+  @prop({ default: 0 }) srsLevel?: number
+  @prop({ default: () => ({}) }) stat?: {
     streak?: {
       right?: number
       wrong?: number
@@ -74,6 +84,8 @@ class DbQuiz {
 
   private _updateSrsLevel(dSrsLevel: number) {
     return () => {
+      this.stat = this.stat || {}
+
       if (dSrsLevel > 0) {
         dotProp.set(
           this.stat,
@@ -113,6 +125,8 @@ class DbQuiz {
           )
         }
       }
+
+      this.srsLevel = this.srsLevel || 0
 
       this.srsLevel += dSrsLevel
 
