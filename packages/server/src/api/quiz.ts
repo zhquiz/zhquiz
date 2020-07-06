@@ -66,7 +66,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       quiz.markRight()
       await quiz.save()
 
-      return reply.status(201).send()
+      reply.status(201).send()
     }
   )
 
@@ -96,7 +96,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       quiz.markWrong()
       await quiz.save()
 
-      return reply.status(201).send()
+      reply.status(201).send()
     }
   )
 
@@ -126,7 +126,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       quiz.markRepeat()
       await quiz.save()
 
-      return reply.status(201).send()
+      reply.status(201).send()
     }
   )
 

@@ -45,7 +45,7 @@ export default (): Configuration => {
     /*
      ** Global CSS
      */
-    css: ['~/assets/app.css'],
+    css: ['~/assets/app.css', '~/assets/buefy-mod.css'],
     /*
      ** Plugins to load before mounting the App
      ** https://nuxtjs.org/guide/plugins
