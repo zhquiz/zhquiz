@@ -24,7 +24,7 @@ export default (): Configuration => {
         {
           hid: 'description',
           name: 'description',
-          content: 'Hanzi, Vocab and Sentences quizzing system',
+          content: process.env.npm_package_description || '',
         },
         {
           hid: 'keywords',
@@ -32,30 +32,7 @@ export default (): Configuration => {
           content: 'chinese,mandarin,srs,quiz',
         },
       ],
-      link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        {
-          rel: 'apple-touch-icon',
-          sizes: '180x180',
-          href: '/apple-touch-icon.png',
-        },
-        {
-          rel: 'icon',
-          type: 'image/png',
-          sizes: '32x32',
-          href: '/favicon-32x32.png',
-        },
-        {
-          rel: 'icon',
-          type: 'image/png',
-          sizes: '16x16',
-          href: '/favicon-16x16.png',
-        },
-        {
-          rel: 'manifest',
-          href: '/site.webmanifest',
-        },
-      ],
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
       script: [
         {
           async: true,
@@ -91,6 +68,14 @@ export default (): Configuration => {
      */
     buildModules: [
       '@nuxt/typescript-build',
+      [
+        '@nuxtjs/pwa',
+        {
+          meta: {
+            name: 'ZhQuiz',
+          },
+        },
+      ],
       [
         '@nuxtjs/fontawesome',
         {
