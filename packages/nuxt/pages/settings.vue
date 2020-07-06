@@ -1,23 +1,23 @@
 <template>
-  <section class="SettingsPage container">
-    <b-field label="Level Range">
-      <b-slider v-model="lv" :min="1" :max="60" ticks lazy />
-    </b-field>
-    <div class="level-label">{{ lv[0] }} - {{ lv[1] }}</div>
+  <div>
+    <section v-if="isInit" class="SettingsPage container">
+      <b-field label="Level Range">
+        <b-slider v-model="lv" :min="1" :max="60" ticks lazy />
+      </b-field>
+      <div class="level-label">{{ lv[0] }} - {{ lv[1] }}</div>
 
-    <b-field>
-      <button
-        class="button is-success"
-        :disabled="!user"
-        @click="doSave"
-        @keypress="doSave"
-      >
-        Save
-      </button>
-    </b-field>
-
-    <b-loading :active="isLoading" />
-  </section>
+      <b-field>
+        <button
+          class="button is-success"
+          :disabled="!user"
+          @click="doSave"
+          @keypress="doSave"
+        >
+          Save
+        </button>
+      </b-field>
+    </section>
+  </div>
 </template>
 
 <script lang="ts">
@@ -29,7 +29,7 @@ import { Component, Vue, Watch } from 'nuxt-property-decorator'
 })
 export default class SettingsPage extends Vue {
   lv = [1, 60]
-  isLoading = false
+  isInit = false
 
   get user() {
     const u = this.$store.state.user as User | null
@@ -43,17 +43,15 @@ export default class SettingsPage extends Vue {
   @Watch('user')
   async onUserChanged() {
     if (this.user) {
-      this.isLoading = true
+      this.isInit = false
       const { levelMin, level } = await this.$axios.$get('/api/user/')
       this.lv = [levelMin || 1, level || 60]
-      this.isLoading = false
+      this.isInit = true
     }
   }
 
   async doSave() {
     if (this.user) {
-      this.isLoading = true
-
       await this.$axios.$patch('/api/user/', {
         set: {
           levelMin: this.lv[0],
@@ -61,8 +59,6 @@ export default class SettingsPage extends Vue {
         },
       })
       this.$buefy.snackbar.open('Saved')
-
-      this.isLoading = false
     }
   }
 }

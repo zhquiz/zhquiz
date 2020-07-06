@@ -1,116 +1,119 @@
 <template>
-  <section class="LevelPage container">
-    <div class="field">
-      <label class="label">Filter</label>
-      <b-field>
-        <b-radio-button
-          v-model="whatToShow"
-          native-value="all"
-          type="is-success"
-        >
-          Show all
-        </b-radio-button>
-        <b-radio-button
-          v-model="whatToShow"
-          native-value="all-quiz"
-          type="is-info"
-        >
-          All quiz
-        </b-radio-button>
-        <b-radio-button
-          v-model="whatToShow"
-          native-value="learning"
-          type="is-warning"
-        >
-          Learning
-        </b-radio-button>
-      </b-field>
-    </div>
+  <div>
+    <b-loading v-if="isLoading" active />
+    <section v-if="isInit" class="LevelPage container">
+      <div class="field">
+        <label class="label">Filter</label>
+        <b-field>
+          <b-radio-button
+            v-model="whatToShow"
+            native-value="all"
+            type="is-success"
+          >
+            Show all
+          </b-radio-button>
+          <b-radio-button
+            v-model="whatToShow"
+            native-value="all-quiz"
+            type="is-info"
+          >
+            All quiz
+          </b-radio-button>
+          <b-radio-button
+            v-model="whatToShow"
+            native-value="learning"
+            type="is-warning"
+          >
+            Learning
+          </b-radio-button>
+        </b-field>
+      </div>
 
-    <b-table :key="whatToShow" :data="shownData">
-      <template slot-scope="props">
-        <b-table-column field="level" label="Level" width="40">
-          {{ props.row.level }}
-        </b-table-column>
+      <b-table :key="whatToShow" :data="shownData">
+        <template slot-scope="props">
+          <b-table-column field="level" label="Level" width="40">
+            {{ props.row.level }}
+          </b-table-column>
 
-        <b-table-column field="item" label="Item">
-          <div>
-            <span
-              v-for="t in props.row.item"
-              :key="t"
-              class="tag clickable"
-              :class="getTagClass(t)"
-              @contextmenu.prevent="
-                (evt) => {
-                  selected = t
-                  $refs.contextmenu.open(evt)
-                }
-              "
+          <b-table-column field="item" label="Item">
+            <div>
+              <span
+                v-for="t in props.row.item"
+                :key="t"
+                class="tag clickable"
+                :class="getTagClass(t)"
+                @contextmenu.prevent="
+                  (evt) => {
+                    selected = t
+                    $refs.contextmenu.open(evt)
+                  }
+                "
+              >
+                {{ t }}
+              </span>
+            </div>
+          </b-table-column>
+        </template>
+      </b-table>
+
+      <client-only>
+        <vue-context ref="contextmenu" lazy>
+          <li>
+            <a
+              role="button"
+              @click.prevent="speak(selected)"
+              @keypress.prevent="speak(selected)"
             >
-              {{ t }}
-            </span>
-          </div>
-        </b-table-column>
-      </template>
-    </b-table>
-
-    <client-only>
-      <vue-context ref="contextmenu" lazy>
-        <li>
-          <a
-            role="button"
-            @click.prevent="speak(selected)"
-            @keypress.prevent="speak(selected)"
-          >
-            Speak
-          </a>
-        </li>
-        <li v-if="!vocabIds[selected] || !vocabIds[selected].length">
-          <a
-            role="button"
-            @click.prevent="addToQuiz(selected)"
-            @keypress.prevent="addToQuiz(selected)"
-          >
-            Add to quiz
-          </a>
-        </li>
-        <li v-else>
-          <a
-            role="button"
-            @click.prevent="removeFromQuiz(selected)"
-            @keypress.prevent="removeFromQuiz(selected)"
-          >
-            Remove from quiz
-          </a>
-        </li>
-        <li>
-          <nuxt-link
-            :to="{ path: '/vocab', query: { q: selected } }"
-            target="_blank"
-          >
-            Search for vocab
-          </nuxt-link>
-        </li>
-        <li>
-          <nuxt-link
-            :to="{ path: '/hanzi', query: { q: selected } }"
-            target="_blank"
-          >
-            Search for Hanzi
-          </nuxt-link>
-        </li>
-        <li>
-          <a
-            :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selected}*`"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in MDBG
-          </a>
-        </li>
-      </vue-context>
-    </client-only>
-  </section>
+              Speak
+            </a>
+          </li>
+          <li v-if="!vocabIds[selected] || !vocabIds[selected].length">
+            <a
+              role="button"
+              @click.prevent="addToQuiz(selected)"
+              @keypress.prevent="addToQuiz(selected)"
+            >
+              Add to quiz
+            </a>
+          </li>
+          <li v-else>
+            <a
+              role="button"
+              @click.prevent="removeFromQuiz(selected)"
+              @keypress.prevent="removeFromQuiz(selected)"
+            >
+              Remove from quiz
+            </a>
+          </li>
+          <li>
+            <nuxt-link
+              :to="{ path: '/vocab', query: { q: selected } }"
+              target="_blank"
+            >
+              Search for vocab
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link
+              :to="{ path: '/hanzi', query: { q: selected } }"
+              target="_blank"
+            >
+              Search for Hanzi
+            </nuxt-link>
+          </li>
+          <li>
+            <a
+              :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selected}*`"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open in MDBG
+            </a>
+          </li>
+        </vue-context>
+      </client-only>
+    </section>
+  </div>
 </template>
 
 <script lang="ts">
@@ -122,6 +125,9 @@ import { speak } from '~/assets/speak'
   layout: 'app',
 })
 export default class LevelPage extends Vue {
+  isInit = false
+  isLoading = true
+
   data = [] as any[]
   selected = ''
 
@@ -164,6 +170,8 @@ export default class LevelPage extends Vue {
 
   async created() {
     await this.onUserChange()
+
+    this.isLoading = true
     const data = await this.$axios.$post('/api/vocab/all')
 
     this.$set(
@@ -173,6 +181,8 @@ export default class LevelPage extends Vue {
         return { level: parseInt(lv), item: vs }
       })
     )
+
+    this.isLoading = false
   }
 
   getTagClass(item: string) {
@@ -197,6 +207,16 @@ export default class LevelPage extends Vue {
   @Watch('email')
   async onUserChange() {
     if (this.email) {
+      const {
+        settings: { level: { whatToShow } = {} as any } = {},
+      } = await this.$axios.$get('/api/user/')
+
+      if (whatToShow) {
+        this.$set(this, 'whatToShow', whatToShow)
+      }
+
+      this.isInit = true
+
       const { result } = await this.$axios.$post('/api/card/q', {
         cond: {
           type: 'vocab',
@@ -222,6 +242,15 @@ export default class LevelPage extends Vue {
 
       this.$set(this, 'vocabSrsLevel', this.vocabSrsLevel)
     }
+  }
+
+  @Watch('whatToShow')
+  onWhatToShowChanged() {
+    this.$axios.$patch('/api/user/', {
+      set: {
+        'settings.level.whatToShow': this.whatToShow,
+      },
+    })
   }
 
   @Watch('selected')
