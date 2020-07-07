@@ -105,7 +105,7 @@ import { getGravatarUrl } from '~/assets/gravatar'
 
 @Component
 export default class AppLayout extends Vue {
-  level = ''
+  level = ' '
 
   readonly getGravatarUrl = getGravatarUrl
 
@@ -267,6 +267,7 @@ export default class AppLayout extends Vue {
 }
 
 .main-nav {
+  z-index: 1000;
   display: flex;
   background-image: radial-gradient(
     circle at center right,
@@ -275,7 +276,11 @@ export default class AppLayout extends Vue {
   );
 }
 
-.main-nav .prefix {
+.main-nav >>> .navbar-start:not(.is-active) :not(button) {
+  background-color: white;
+}
+
+.main-nav >>> .prefix {
   width: 2em;
   display: inline-block;
 }

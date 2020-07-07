@@ -61,6 +61,10 @@
   flex-wrap: wrap;
 }
 
+.flex-wrap > * {
+  margin-bottom: 0.25rem;
+}
+
 .items-center {
   align-items: center;
 }
