@@ -2,6 +2,7 @@ import fs from 'fs'
 
 import yaml from 'js-yaml'
 import Loki, { Collection } from 'lokijs'
+import { runes } from 'runes2'
 import * as z from 'zod'
 
 export const hsk = yaml.safeLoad(
@@ -25,7 +26,7 @@ const zDistinctString = z
   .refine((s) => s && new Set(s).size === s.length)
 
 export const zToken = z.object({
-  entry: z.string(),
+  entry: z.string().refine((s) => runes(s).length === 1),
   sub: zDistinctString.optional(),
   sup: zDistinctString.optional(),
   variants: zDistinctString.optional(),
@@ -43,6 +44,7 @@ export const zVocab = z.object({
   traditional: z.string().optional(),
   pinyin: z.string().optional(),
   english: z.string(),
+  frequency: z.number().optional(),
 })
 
 export let zhVocab: Collection<z.infer<typeof zVocab>>
