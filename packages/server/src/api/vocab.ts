@@ -56,6 +56,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
               { traditional: { $contains: entry } },
             ],
           })
+          .sort(({ frequency: f1 = 0 }, { frequency: f2 = 0 }) => f2 - f1)
           .slice(offset, limit ? offset + limit : undefined)
           .map(({ simplified, traditional, pinyin, english }) => {
             if (!pinyin) {
