@@ -13,12 +13,12 @@ export const srsMap = [
 
 export function getNextReview(srsLevel: number): Date {
   let toAdd = srsMap[srsLevel]
-  toAdd = toAdd === undefined ? durationOf(10, 'minute') : toAdd
+  toAdd = toAdd === undefined ? durationOf(4, 'hour') : toAdd
   return dayjs().add(toAdd, 'hour').toDate()
 }
 
 export function repeatReview(): Date {
-  return dayjs().add(10, 'minute').toDate()
+  return dayjs().add(4, 'hour').toDate()
 }
 
 type DurationUnit = 'minute' | 'hour' | 'day' | 'week'

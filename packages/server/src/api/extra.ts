@@ -1,36 +1,9 @@
 import { FastifyInstance } from 'fastify'
 
-import { DbExtraModel } from '../db/schema'
+import { zhSentence, zhToken, zhVocab } from '../db/local'
+import { DbExtraModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
-  f.patch(
-    '/warning',
-    {
-      schema: {
-        tags: ['extra'],
-        summary: 'Toggle avoid duplicate warning',
-        body: {
-          type: 'object',
-          required: ['warn'],
-          properties: {
-            warn: { type: 'boolean' },
-          },
-        },
-      },
-    },
-    async (req, reply) => {
-      const { warn } = req.body
-
-      const u = req.session.user
-      if (u) {
-        u.userContentWarning = warn
-        await u.save()
-      }
-
-      return reply.status(201).send()
-    }
-  )
-
   f.post(
     '/q',
     {
@@ -69,40 +42,41 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     },
     async (req, reply) => {
       const u = req.session.user
-      if (u) {
-        const {
-          cond = {},
-          projection,
-          sort = { updatedAt: -1 },
-          offset = 0,
-          limit = 10,
-          hasCount = true,
-        } = req.body
-
-        const match = [{ $match: { userId: u._id } }, { $match: cond }]
-
-        const [rData, rCount = []] = await Promise.all([
-          DbExtraModel.aggregate([
-            ...match,
-            { $sort: sort },
-            { $skip: offset },
-            ...(limit ? [{ $limit: limit }] : []),
-            ...(projection ? [{ $project: projection }] : []),
-          ]),
-          hasCount
-            ? DbExtraModel.aggregate([...match, { $count: 'count' }])
-            : undefined,
-        ])
-
-        return {
-          result: rData,
-          offset,
-          limit,
-          count: hasCount ? (rCount[0] || {}).count || 0 : undefined,
-        }
+      if (!u || !u._id) {
+        reply.status(401).send()
+        return
       }
 
-      return reply.status(400).send()
+      const {
+        cond = {},
+        projection,
+        sort = { updatedAt: -1 },
+        offset = 0,
+        limit = 10,
+        hasCount = true,
+      } = req.body
+
+      const match = [{ $match: { userId: u._id } }, { $match: cond }]
+
+      const [rData, rCount = []] = await Promise.all([
+        DbExtraModel.aggregate([
+          ...match,
+          { $sort: sort },
+          { $skip: offset },
+          ...(limit ? [{ $limit: limit }] : []),
+          ...(projection ? [{ $project: projection }] : []),
+        ]),
+        hasCount
+          ? DbExtraModel.aggregate([...match, { $count: 'count' }])
+          : undefined,
+      ])
+
+      return {
+        result: rData,
+        offset,
+        limit,
+        count: hasCount ? (rCount[0] || {}).count || 0 : undefined,
+      }
     }
   )
 
@@ -161,23 +135,63 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
             english: { type: 'string' },
           },
         },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              type: { type: 'string' },
+            },
+          },
+        },
       },
     },
     async (req, reply) => {
       const u = req.session.user
-      if (u) {
-        const { chinese, pinyin, english } = req.body
-        const r = await DbExtraModel.create({
-          userId: u._id,
-          chinese,
-          pinyin,
-          english,
-        })
-
-        return r.toJSON()
+      if (!u || !u._id) {
+        reply.status(401).send()
+        return
       }
 
-      return reply.status(400).send()
+      const { chinese, pinyin, english } = req.body
+
+      if (
+        zhVocab.count({
+          $or: [{ simplified: chinese }, { traditional: chinese }],
+        }) > 0
+      ) {
+        return {
+          type: 'vocab',
+        }
+      }
+
+      if (zhSentence.count({ chinese }) > 0) {
+        return {
+          type: 'sentence',
+        }
+      }
+
+      if (
+        zhToken.count({
+          entry: chinese,
+          // @ts-ignore
+          english: { $exists: true },
+        })
+      ) {
+        return {
+          type: 'hanzi',
+        }
+      }
+
+      await DbExtraModel.create({
+        userId: u._id,
+        chinese,
+        pinyin,
+        english,
+      })
+
+      return {
+        type: 'extra',
+      }
     }
   )
 
@@ -207,7 +221,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         }
       )
 
-      return reply.status(201).send()
+      reply.status(201).send()
     }
   )
 
@@ -227,15 +241,15 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       },
     },
     async (req, reply) => {
+      const u = req.session.user
+      if (!u) {
+        reply.status(401).send()
+        return
+      }
+
       const { ids } = req.body
-
-      await Promise.all(
-        (await DbExtraModel.find({ _id: { $in: ids } })).map((el) => {
-          return el.remove()
-        })
-      )
-
-      return reply.status(201).send()
+      await DbExtraModel.purgeMany(u._id, { _id: { $in: ids } })
+      reply.status(201).send()
     }
   )
 

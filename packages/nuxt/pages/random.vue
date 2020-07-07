@@ -3,12 +3,14 @@
     <div class="columns w-full">
       <div class="column is-6">
         <div class="item-display item-display-top">
-          <div
-            class="font-hanzi clickable"
-            @contextmenu.prevent="(evt) => $refs.hanziContextmenu.open(evt)"
-          >
-            {{ hanzi.item }}
-          </div>
+          <b-tooltip :label="hanzi.english">
+            <div
+              class="font-hanamin hanzi clickable"
+              @contextmenu.prevent="(evt) => $refs.hanziContextmenu.open(evt)"
+            >
+              {{ hanzi.item }}
+            </div>
+          </b-tooltip>
           <b-loading :active="!hanzi.item" :is-full-page="false"></b-loading>
         </div>
         <center>Hanzi of the day</center>
@@ -16,12 +18,14 @@
 
       <div class="column is-6">
         <div class="item-display item-display-top">
-          <div
-            class="font-hanzi clickable"
-            @contextmenu.prevent="(evt) => $refs.vocabContextmenu.open(evt)"
-          >
-            {{ vocab.item }}
-          </div>
+          <b-tooltip :label="vocab.english">
+            <div
+              class="font-chinese hanzi clickable"
+              @contextmenu.prevent="(evt) => $refs.vocabContextmenu.open(evt)"
+            >
+              {{ vocab.item }}
+            </div>
+          </b-tooltip>
           <b-loading :active="!vocab.item" :is-full-page="false"></b-loading>
         </div>
         <center>Vocab of the day</center>
@@ -29,12 +33,14 @@
     </div>
 
     <div class="item-display item-display-bottom">
-      <div
-        class="font-hanzi clickable text-center"
-        @contextmenu.prevent="(evt) => $refs.sentenceContextmenu.open(evt)"
-      >
-        {{ sentence.item }}
-      </div>
+      <b-tooltip :label="sentence.english">
+        <div
+          class="font-chinese hanzi clickable text-center"
+          @contextmenu.prevent="(evt) => $refs.sentenceContextmenu.open(evt)"
+        >
+          {{ sentence.item }}
+        </div>
+      </b-tooltip>
       <b-loading :active="!sentence.item" :is-full-page="false" />
     </div>
     <center>Sentence of the day</center>
@@ -247,18 +253,21 @@ export default class RandomPage extends Vue {
   hanzi = {
     type: 'hanzi',
     item: null,
+    english: null,
     id: [],
   }
 
   vocab = {
     type: 'vocab',
     item: null,
+    english: null,
     id: [],
   }
 
   sentence = {
     type: 'sentence',
     item: null,
+    english: null,
     id: [],
   }
 
@@ -283,12 +292,16 @@ export default class RandomPage extends Vue {
   @Watch('level')
   async loadHanzi() {
     if (this.level) {
-      this.hanzi.item = (
-        await this.$axios.$post('/api/hanzi/random', {
+      const { result, english = null } = await this.$axios.$post(
+        '/api/hanzi/random',
+        {
           levelMin: this.levelMin,
           level: this.level,
-        })
-      ).result
+        }
+      )
+
+      this.hanzi.item = result
+      this.hanzi.english = english
       await this.getQuizStatus(this.hanzi)
     }
   }
@@ -296,12 +309,16 @@ export default class RandomPage extends Vue {
   @Watch('level')
   async loadVocab() {
     if (this.level) {
-      this.vocab.item = (
-        await this.$axios.$post('/api/vocab/random', {
+      const { result, english = null } = await this.$axios.$post(
+        '/api/vocab/random',
+        {
           levelMin: this.levelMin,
           level: this.level,
-        })
-      ).result
+        }
+      )
+
+      this.vocab.item = result
+      this.vocab.english = english
       await this.getQuizStatus(this.vocab)
     }
   }
@@ -309,12 +326,16 @@ export default class RandomPage extends Vue {
   @Watch('level')
   async loadSentence() {
     if (this.level) {
-      this.sentence.item = (
-        await this.$axios.$post('/api/sentence/random', {
+      const { result, english = null } = await this.$axios.$post(
+        '/api/sentence/random',
+        {
           levelMin: this.levelMin,
           level: this.level,
-        })
-      ).result
+        }
+      )
+      this.sentence.item = result
+      this.sentence.english = english
+
       await this.getQuizStatus(this.sentence)
     }
   }
@@ -388,12 +409,12 @@ export default class RandomPage extends Vue {
   position: relative;
 }
 
-.item-display-top .font-hanzi {
+.item-display-top .hanzi {
   font-size: 50px;
   min-height: 60px;
 }
 
-.item-display-bottom .font-hanzi {
+.item-display-bottom .hanzi {
   font-size: 30px;
   min-width: 3em;
   min-height: 40px;

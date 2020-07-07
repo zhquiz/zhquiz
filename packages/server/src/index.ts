@@ -5,6 +5,7 @@ import helmet from 'fastify-helmet'
 import fStatic from 'fastify-static'
 import mongoose from 'mongoose'
 
+import { zhInit } from './db/local'
 import apiRouter from './api'
 
 async function main() {
@@ -14,6 +15,8 @@ async function main() {
     useCreateIndex: true,
     useFindAndModify: false,
   })
+
+  await zhInit()
 
   const app = fastify({
     logger:

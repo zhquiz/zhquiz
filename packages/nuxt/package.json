@@ -1,5 +1,11 @@
 {
-  "name": "@zhquiz/nuxt",
+  "name": "zhquiz",
+  "description": "Hanzi, Vocab and Sentences quizzing system",
+  "author": {
+    "email": "polv@polv.cc",
+    "name": "Pacharapol Withayasakpunt",
+    "url": "https://www.polv.cc"
+  },
   "private": true,
   "scripts": {
     "dev": "nuxt-ts",
@@ -10,10 +16,10 @@
     "@nuxt/typescript-runtime": "^0.4.10",
     "@nuxtjs/axios": "^5.11.0",
     "@nuxtjs/firebase": "^6.1.0",
+    "@patarapolw/make-html-frontend-functions": "^1.0.0-pre15",
     "@types/codemirror": "^0.0.96",
     "@types/dompurify": "^2.0.2",
     "@types/he": "^1.1.1",
-    "@types/markdown-it": "^10.0.1",
     "@types/spark-md5": "^3.0.2",
     "@types/xregexp": "^4.3.0",
     "codemirror": "^5.55.0",
@@ -22,8 +28,6 @@
     "firebase": "^7.15.5",
     "handlebars": "^4.7.6",
     "he": "^1.2.0",
-    "markdown-it": "^11.0.0",
-    "markdown-it-emoji": "^1.4.0",
     "nuxt": "^2.13.0",
     "nuxt-buefy": "^0.3.31",
     "spark-md5": "^3.0.1",
@@ -39,6 +43,7 @@
     "@nuxtjs/eslint-config-typescript": "^2.0.0",
     "@nuxtjs/eslint-module": "^2.0.0",
     "@nuxtjs/fontawesome": "^1.1.2",
+    "@nuxtjs/pwa": "^3.0.0-beta.20",
     "babel-eslint": "^10.1.0",
     "eslint": "^7.2.0",
     "eslint-config-prettier": "^6.11.0",
@@ -51,7 +56,8 @@
     "yaml-loader": "^0.6.0"
   },
   "resolutions": {
-    "core-js": "2"
+    "core-js": "2",
+    "hyperpug": "1.4.1"
   },
   "engines": {
     "node": "12.x",

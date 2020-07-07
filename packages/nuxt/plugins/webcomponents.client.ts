@@ -1,35 +1,33 @@
+import he from 'he'
+
 import { speak } from '~/assets/speak'
 
 customElements.define(
   'x-speak-button',
   class extends HTMLElement {
+    isSpeaking = false
+    aEl: HTMLAnchorElement | null = null
+
+    get s() {
+      return this.innerHTML.trim()
+    }
+
     constructor() {
       super()
 
-      const s = this.getAttribute('data-s')
-      if (s) {
+      if (this.s) {
         const shadow = this.attachShadow({ mode: 'open' })
-        const aEl = document.createElement('a')
-        aEl.setAttribute('role', 'button')
-        aEl.className = 'x-speak-button'
+        this.aEl = document.createElement('a')
+        this.aEl.setAttribute('role', 'button')
+        this.aEl.className = 'x-speak-button'
 
         const imgEl = document.createElement('img')
         imgEl.src = '/svg/volume-up-solid.svg'
 
-        aEl.appendChild(imgEl)
+        this.aEl.appendChild(imgEl)
 
-        let isSpeaking = false
-
-        aEl.onclick = async () => {
-          if (isSpeaking) {
-            return
-          }
-
-          isSpeaking = true
-          aEl.classList.add('active')
-          await speak(s)
-          aEl.classList.remove('active')
-          isSpeaking = false
+        this.aEl.onclick = () => {
+          this.click()
         }
 
         const style = document.createElement('style')
@@ -58,8 +56,20 @@ customElements.define(
         `
 
         shadow.appendChild(style)
-        shadow.appendChild(aEl)
+        shadow.appendChild(this.aEl)
       }
+    }
+
+    async click() {
+      if (!this.s || !this.aEl || this.isSpeaking) {
+        return
+      }
+
+      this.isSpeaking = true
+      this.aEl.classList.add('active')
+      await speak(he.decode(this.s))
+      this.aEl.classList.remove('active')
+      this.isSpeaking = false
     }
   }
 )

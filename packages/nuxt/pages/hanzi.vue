@@ -16,7 +16,7 @@
     <div class="columns">
       <div class="column is-6 entry-display">
         <div
-          class="font-hanzi clickable"
+          class="hanzi-display clickable"
           @contextmenu.prevent="
             (evt) => {
               selectedHanzi = current
@@ -70,7 +70,7 @@
             <span
               v-for="h in sub"
               :key="h"
-              class="font-hanzi clickable"
+              class="font-hanamin clickable"
               @contextmenu.prevent="
                 (evt) => {
                   selectedHanzi = h
@@ -100,7 +100,7 @@
             <span
               v-for="h in sup"
               :key="h"
-              class="font-hanzi clickable"
+              class="font-hanamin clickable"
               @contextmenu.prevent="
                 (evt) => {
                   selectedHanzi = h
@@ -130,7 +130,7 @@
             <span
               v-for="h in variants"
               :key="h"
-              class="font-hanzi clickable"
+              class="font-hanamin clickable"
               @contextmenu.prevent="
                 (evt) => {
                   selectedHanzi = h
@@ -475,7 +475,7 @@ export default class HanziPage extends Vue {
     ).result
     this.sub = r.sub
     this.sup = r.sup
-    this.variants = r.var
+    this.variants = r.variants
   }
 
   async loadVocab() {
@@ -571,11 +571,6 @@ export default class HanziPage extends Vue {
   align-items: center;
 }
 
-.entry-display .font-hanzi {
-  font-size: 150px;
-  min-height: 200px;
-}
-
 .card {
   margin-bottom: 1rem;
 }
@@ -585,7 +580,7 @@ export default class HanziPage extends Vue {
   overflow: scroll;
 }
 
-.card-content .font-hanzi {
+.card-content .font-hanamin {
   font-size: 50px;
   display: inline-block;
 }

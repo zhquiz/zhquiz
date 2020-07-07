@@ -4,7 +4,7 @@ import swagger from 'fastify-oas'
 import fSession from 'fastify-session'
 import admin from 'firebase-admin'
 
-import { signIn } from '../db'
+import { DbUserModel } from '../db/mongo'
 
 import cardRouter from './card'
 import extraRouter from './extra'
@@ -60,9 +60,10 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     }
 
     const ticket = await admin.auth().verifyIdToken(m[1], true)
+    // console.log(ticket)
 
     if (!req.session.user && ticket.email) {
-      req.session.user = await signIn(ticket.email)
+      req.session.user = await DbUserModel.signIn(ticket.email, ticket.name)
     }
   })
 

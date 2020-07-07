@@ -15,7 +15,7 @@
 
     <div class="columns">
       <div class="column is-6 entry-display">
-        <div class="font-hanzi">
+        <div class="vocab-display">
           <div
             class="clickable text-center"
             @contextmenu.prevent="
@@ -27,7 +27,6 @@
           >
             {{ simplified }}
           </div>
-          <b-loading :active="isQLoading" :is-full-page="false" />
         </div>
 
         <div class="buttons has-addons">
@@ -98,7 +97,7 @@
 
           <div class="card-content">
             <div
-              class="font-hanzi clickable"
+              class="font-chinese clickable"
               @contextmenu.prevent="
                 (evt) => {
                   selectedVocab = current.traditional
@@ -297,7 +296,6 @@ import { speak } from '~/assets/speak'
 export default class VocabPage extends Vue {
   entries: string[] = []
   i: number = 0
-  isQLoading = false
 
   sentences: any[] = []
 
@@ -338,8 +336,6 @@ export default class VocabPage extends Vue {
   @Watch('q')
   async onQChange(q: string) {
     if (q) {
-      this.isQLoading = true
-
       let qs = (await this.$axios.$post('/api/lib/jieba', { entry: q }))
         .result as string[]
       qs = qs.filter((h) => XRegExp('\\p{Han}+').test(h))
@@ -352,20 +348,21 @@ export default class VocabPage extends Vue {
     }
 
     this.i = 0
-    this.isQLoading = false
   }
 
   @Watch('current')
   async loadContent() {
     if (typeof this.current === 'string') {
-      const { vocab, sentences } = (
-        await this.$axios.$post('/api/vocab/match', { entry: this.current })
+      const { vocabs, sentences } = (
+        await this.$axios.$post('/api/vocab/match', {
+          entry: this.current,
+        })
       ).result
 
-      if (vocab.length > 0) {
+      if (vocabs.length > 0) {
         this.entries = [
           ...this.entries.slice(0, this.i),
-          ...vocab,
+          ...vocabs,
           ...this.entries.slice(this.i + 1),
         ]
       }
@@ -442,17 +439,11 @@ export default class VocabPage extends Vue {
   align-items: center;
 }
 
-.entry-display .font-hanzi {
-  font-size: 120px;
-  min-height: 200px;
-  position: relative;
-}
-
 .card {
   margin-bottom: 1rem;
 }
 
-.card .font-hanzi {
+.card .font-chinese {
   font-size: 60px;
   height: 80px;
 }
