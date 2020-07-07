@@ -1,50 +1,52 @@
 <template>
-  <section class="ExtraPage container">
-    <nav class="new-item-panel">
-      <div class="w-full flex-grow">
-        <b-field label="Chinese">
-          <b-input v-model="newItem.chinese" />
-        </b-field>
-      </div>
+  <section>
+    <div class="ExtraPage container">
+      <nav class="new-item-panel">
+        <div class="w-full flex-grow">
+          <b-field label="Chinese">
+            <b-input v-model="newItem.chinese" />
+          </b-field>
+        </div>
 
-      <div class="w-full flex-grow">
-        <b-field label="Pinyin">
-          <b-input v-model="newItem.pinyin" />
-        </b-field>
-      </div>
+        <div class="w-full flex-grow">
+          <b-field label="Pinyin">
+            <b-input v-model="newItem.pinyin" />
+          </b-field>
+        </div>
 
-      <div class="w-full flex-grow">
-        <b-field label="English">
-          <b-input v-model="newItem.english" />
-        </b-field>
-      </div>
+        <div class="w-full flex-grow">
+          <b-field label="English">
+            <b-input v-model="newItem.english" />
+          </b-field>
+        </div>
 
-      <div class="tablet:w-full">
-        <button
-          class="button is-success w-full"
-          :disabled="!newItem.chinese || !newItem.english"
-          @click="addNewItem"
-          @keypress="addNewItem"
-        >
-          Add
-        </button>
-      </div>
-    </nav>
+        <div class="tablet:w-full">
+          <button
+            class="button is-success w-full"
+            :disabled="!newItem.chinese || !newItem.english"
+            @click="addNewItem"
+            @keypress="addNewItem"
+          >
+            Add
+          </button>
+        </div>
+      </nav>
 
-    <b-table
-      :data="data"
-      :columns="dataHeader"
-      checkable
-      paginated
-      backend-pagination
-      :total="count"
-      :per-page="perPage"
-      :current-page.sync="page"
-      backend-sorting
-      :default-sort="[sort.key, sort.type]"
-      @contextmenu="onTableContextmenu"
-      @sort="onSort"
-    />
+      <b-table
+        :data="data"
+        :columns="dataHeader"
+        checkable
+        paginated
+        backend-pagination
+        :total="count"
+        :per-page="perPage"
+        :current-page.sync="page"
+        backend-sorting
+        :default-sort="[sort.key, sort.type]"
+        @contextmenu="onTableContextmenu"
+        @sort="onSort"
+      />
+    </div>
 
     <client-only>
       <vue-context ref="contextmenu" lazy>

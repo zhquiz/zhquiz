@@ -1,83 +1,90 @@
 <template>
-  <div v-show="isInit" class="SettingsPage">
-    <form class="container" @submit.prevent="doSave">
-      <div class="flex flex-row items-center">
-        <b-field label="Level Range" class="flex-grow">
-          <b-slider v-model="lv" :min="lvRange[0]" :max="lvRange[1]" lazy>
-            <b-slider-tick :value="lvRange[0]">{{ lvRange[0] }}</b-slider-tick>
-            <template
-              v-for="val in Array(lvRange[1] / 10)
-                .fill(10)
-                .map((el, i) => el * (i + 1))"
-            >
-              <b-slider-tick :key="val" :value="val">{{ val }}</b-slider-tick>
-            </template>
-          </b-slider>
-        </b-field>
-        <div class="label-level">{{ lv[0] }} - {{ lv[1] }}</div>
-      </div>
+  <section>
+    <div v-show="isInit" class="SettingsPage">
+      <form class="container" @submit.prevent="doSave">
+        <div class="flex flex-row items-center">
+          <b-field label="Level Range" class="flex-grow">
+            <b-slider v-model="lv" :min="lvRange[0]" :max="lvRange[1]" lazy>
+              <b-slider-tick :value="lvRange[0]">{{
+                lvRange[0]
+              }}</b-slider-tick>
+              <template
+                v-for="val in Array(lvRange[1] / 10)
+                  .fill(10)
+                  .map((el, i) => el * (i + 1))"
+              >
+                <b-slider-tick :key="val" :value="val">{{ val }}</b-slider-tick>
+              </template>
+            </b-slider>
+          </b-field>
+          <div class="label-level">{{ lv[0] }} - {{ lv[1] }}</div>
+        </div>
 
-      <div class="flex flex-row">
-        <button
-          class="button is-success"
-          :disabled="!user"
-          type="submit"
-          aria-label="save"
-        >
-          Save
-        </button>
-      </div>
-    </form>
-
-    <div class="container w-full danger-zone">
-      <h3 class="title is-4 is-danger">Danger Zone</h3>
-
-      <form
-        class="flex flex-row items-center"
-        @submit.prevent="isDeleteAccountModal = true"
-      >
-        <p class="flex">Delete my account</p>
-        <div class="flex-grow" />
-        <button class="button is-danger" aria-label="delete-account">
-          Delete
-        </button>
+        <div class="flex flex-row">
+          <button
+            class="button is-success"
+            :disabled="!user"
+            type="submit"
+            aria-label="save"
+          >
+            Save
+          </button>
+        </div>
       </form>
-    </div>
 
-    <b-modal :active.sync="isDeleteAccountModal" :width="500">
-      <form class="card delete-account-form" @submit.prevent="doDeleteAccount">
-        <div class="card-content">
-          <div class="flex flex-row items-center">
-            <div class="icon has-text-danger">
-              <fontawesome icon="exclamation-circle" />
-            </div>
+      <div class="container w-full danger-zone">
+        <h3 class="title is-4 is-danger">Danger Zone</h3>
 
-            <div class="flex-grow content">
-              <div>Type your <b>email</b> to delete your account.</div>
+        <form
+          class="flex flex-row items-center"
+          @submit.prevent="isDeleteAccountModal = true"
+        >
+          <p class="flex">Delete my account</p>
+          <div class="flex-grow" />
+          <button class="button is-danger" aria-label="delete-account">
+            Delete
+          </button>
+        </form>
+      </div>
 
-              <input
-                v-model="deleteAccountEmail"
-                class="input control"
-                type="email"
-                aria-label="delete-account-email"
-              />
+      <b-modal :active.sync="isDeleteAccountModal" :width="500">
+        <form
+          class="card delete-account-form"
+          @submit.prevent="doDeleteAccount"
+        >
+          <div class="card-content">
+            <div class="flex flex-row items-center">
+              <div class="icon has-text-danger">
+                <fontawesome icon="exclamation-circle" />
+              </div>
 
-              <div class="flex flex-row items-center">
-                <div class="flex-grow" />
-                <button
-                  type="submit"
-                  class="button is-danger"
-                  :disabled="deleteAccountEmail !== email"
-                >
-                  Delete
-                </button>
+              <div class="flex-grow content">
+                <div>Type your <b>email</b> to delete your account.</div>
+
+                <input
+                  v-model="deleteAccountEmail"
+                  class="input control"
+                  type="email"
+                  aria-label="delete-account-email"
+                />
+
+                <div class="flex flex-row items-center">
+                  <div class="flex-grow" />
+                  <button
+                    type="submit"
+                    class="button is-danger"
+                    :disabled="deleteAccountEmail !== email"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </form>
-    </b-modal>
-  </div>
+        </form>
+      </b-modal>
+    </div>
+  </section>
 </template>
 
 <script lang="ts">

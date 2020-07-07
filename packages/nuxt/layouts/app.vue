@@ -92,9 +92,7 @@
       </template>
     </b-navbar>
 
-    <main v-if="isReady">
-      <nuxt />
-    </main>
+    <nuxt v-if="isReady" class="main" />
   </section>
 </template>
 
@@ -267,7 +265,7 @@ export default class AppLayout extends Vue {
 }
 
 .main-nav {
-  z-index: 1000;
+  z-index: 20;
   display: flex;
   background-image: radial-gradient(
     circle at center right,
@@ -285,7 +283,7 @@ export default class AppLayout extends Vue {
   display: inline-block;
 }
 
-main {
+.main {
   max-height: 100vh;
   overflow: scroll;
   flex-grow: 1;
