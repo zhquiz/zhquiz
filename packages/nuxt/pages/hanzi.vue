@@ -1,226 +1,237 @@
 <template>
-  <section class="HanziPage container">
-    <form class="field" @submit.prevent="q = q0">
-      <div class="control">
-        <input
-          v-model="q0"
-          class="input"
-          type="search"
-          name="q"
-          placeholder="Type here to search."
-          aria-label="search"
-        />
-      </div>
-    </form>
-
-    <div class="columns">
-      <div class="column is-6 entry-display">
-        <div
-          class="hanzi-display clickable"
-          @contextmenu.prevent="
-            (evt) => {
-              selectedHanzi = current
-              $refs.hanziContextmenu.open(evt)
-            }
-          "
-        >
-          {{ current }}
+  <section>
+    <div class="HanziPage container">
+      <form class="field" @submit.prevent="q = q0">
+        <div class="control">
+          <input
+            v-model="q0"
+            class="input"
+            type="search"
+            name="q"
+            placeholder="Type here to search."
+            aria-label="search"
+          />
         </div>
+      </form>
 
-        <div class="buttons has-addons">
-          <button class="button" :disabled="i < 1" @click="i--" @keypress="i--">
-            Previous
-          </button>
-          <button
-            class="button"
-            :disabled="i > entries.length - 2"
-            @click="i++"
-            @keypress="i++"
+      <div class="columns">
+        <div class="column is-6 entry-display">
+          <div
+            class="hanzi-display clickable"
+            @contextmenu.prevent="
+              (evt) => {
+                selectedHanzi = current
+                $refs.hanziContextmenu.open(evt)
+              }
+            "
           >
-            Next
-          </button>
+            {{ current }}
+          </div>
 
-          <b-dropdown hoverable aria-role="list">
-            <button slot="trigger" class="button">
-              <fontawesome icon="caret-down" />
+          <div class="buttons has-addons">
+            <button
+              class="button"
+              :disabled="i < 1"
+              @click="i--"
+              @keypress="i--"
+            >
+              Previous
+            </button>
+            <button
+              class="button"
+              :disabled="i > entries.length - 2"
+              @click="i++"
+              @keypress="i++"
+            >
+              Next
             </button>
 
-            <b-dropdown-item aria-role="listitem">
-              Search in MDBG
-            </b-dropdown-item>
-          </b-dropdown>
+            <b-dropdown hoverable aria-role="list">
+              <button slot="trigger" class="button">
+                <fontawesome icon="caret-down" />
+              </button>
+
+              <b-dropdown-item aria-role="listitem">
+                Search in MDBG
+              </b-dropdown-item>
+            </b-dropdown>
+          </div>
         </div>
-      </div>
 
-      <div class="column is-6">
-        <b-collapse class="card" animation="slide" :open="!!sub">
-          <div
-            slot="trigger"
-            slot-scope="props"
-            class="card-header"
-            role="button"
-          >
-            <h2 class="card-header-title">Subcompositions</h2>
-            <a role="button" class="card-header-icon">
-              <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
-            </a>
-          </div>
-
-          <div class="card-content">
-            <span
-              v-for="h in sub"
-              :key="h"
-              class="font-hanamin clickable"
-              @contextmenu.prevent="
-                (evt) => {
-                  selectedHanzi = h
-                  $refs.hanziContextmenu.open(evt)
-                }
-              "
+        <div class="column is-6">
+          <b-collapse class="card" animation="slide" :open="!!sub">
+            <div
+              slot="trigger"
+              slot-scope="props"
+              class="card-header"
+              role="button"
             >
-              {{ h }}
-            </span>
-          </div>
-        </b-collapse>
-
-        <b-collapse class="card" animation="slide" :open="!!sup">
-          <div
-            slot="trigger"
-            slot-scope="props"
-            class="card-header"
-            role="button"
-          >
-            <h2 class="card-header-title">Supercompositions</h2>
-            <a role="button" class="card-header-icon">
-              <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
-            </a>
-          </div>
-
-          <div class="card-content">
-            <span
-              v-for="h in sup"
-              :key="h"
-              class="font-hanamin clickable"
-              @contextmenu.prevent="
-                (evt) => {
-                  selectedHanzi = h
-                  $refs.hanziContextmenu.open(evt)
-                }
-              "
-            >
-              {{ h }}
-            </span>
-          </div>
-        </b-collapse>
-
-        <b-collapse class="card" animation="slide" :open="!!variants">
-          <div
-            slot="trigger"
-            slot-scope="props"
-            class="card-header"
-            role="button"
-          >
-            <h2 class="card-header-title">Variants</h2>
-            <a role="button" class="card-header-icon">
-              <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
-            </a>
-          </div>
-
-          <div class="card-content">
-            <span
-              v-for="h in variants"
-              :key="h"
-              class="font-hanamin clickable"
-              @contextmenu.prevent="
-                (evt) => {
-                  selectedHanzi = h
-                  $refs.hanziContextmenu.open(evt)
-                }
-              "
-            >
-              {{ h }}
-            </span>
-          </div>
-        </b-collapse>
-
-        <b-collapse class="card" animation="slide" :open="vocabs.length > 0">
-          <div
-            slot="trigger"
-            slot-scope="props"
-            class="card-header"
-            role="button"
-          >
-            <h2 class="card-header-title">Vocabularies</h2>
-            <a role="button" class="card-header-icon">
-              <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
-            </a>
-          </div>
-
-          <div class="card-content">
-            <div v-for="(v, i) in vocabs" :key="i" class="long-item">
-              <span
-                class="clickable"
-                @contextmenu.prevent="
-                  (evt) => {
-                    selectedVocab = v.simplified
-                    $refs.vocabContextmenu.open(evt)
-                  }
-                "
-              >
-                {{ v.simplified }}
-              </span>
-
-              <span
-                v-if="v.traditional"
-                class="clickable"
-                @contextmenu.prevent="
-                  (evt) => {
-                    selectedVocab = v.traditional
-                    $refs.vocabContextmenu.open(evt)
-                  }
-                "
-              >
-                {{ v.traditional }}
-              </span>
-
-              <span class="pinyin">[{{ v.pinyin }}]</span>
-
-              <span>{{ v.english }}</span>
+              <h2 class="card-header-title">Subcompositions</h2>
+              <a role="button" class="card-header-icon">
+                <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
+              </a>
             </div>
-          </div>
-        </b-collapse>
 
-        <b-collapse class="card" animation="slide" :open="sentences.length > 0">
-          <div
-            slot="trigger"
-            slot-scope="props"
-            class="card-header"
-            role="button"
-          >
-            <h2 class="card-header-title">Sentences</h2>
-            <a role="button" class="card-header-icon">
-              <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
-            </a>
-          </div>
-
-          <div class="card-content">
-            <div v-for="(s, i) in sentences" :key="i" class="long-item">
+            <div class="card-content">
               <span
-                class="clickable"
+                v-for="h in sub"
+                :key="h"
+                class="font-hanamin clickable"
                 @contextmenu.prevent="
                   (evt) => {
-                    selectedSentence = s.chinese
-                    $refs.sentenceContextmenu.open(evt)
+                    selectedHanzi = h
+                    $refs.hanziContextmenu.open(evt)
                   }
                 "
               >
-                {{ s.chinese }}
+                {{ h }}
               </span>
-
-              <span>{{ s.english }}</span>
             </div>
-          </div>
-        </b-collapse>
+          </b-collapse>
+
+          <b-collapse class="card" animation="slide" :open="!!sup">
+            <div
+              slot="trigger"
+              slot-scope="props"
+              class="card-header"
+              role="button"
+            >
+              <h2 class="card-header-title">Supercompositions</h2>
+              <a role="button" class="card-header-icon">
+                <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
+              </a>
+            </div>
+
+            <div class="card-content">
+              <span
+                v-for="h in sup"
+                :key="h"
+                class="font-hanamin clickable"
+                @contextmenu.prevent="
+                  (evt) => {
+                    selectedHanzi = h
+                    $refs.hanziContextmenu.open(evt)
+                  }
+                "
+              >
+                {{ h }}
+              </span>
+            </div>
+          </b-collapse>
+
+          <b-collapse class="card" animation="slide" :open="!!variants">
+            <div
+              slot="trigger"
+              slot-scope="props"
+              class="card-header"
+              role="button"
+            >
+              <h2 class="card-header-title">Variants</h2>
+              <a role="button" class="card-header-icon">
+                <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
+              </a>
+            </div>
+
+            <div class="card-content">
+              <span
+                v-for="h in variants"
+                :key="h"
+                class="font-hanamin clickable"
+                @contextmenu.prevent="
+                  (evt) => {
+                    selectedHanzi = h
+                    $refs.hanziContextmenu.open(evt)
+                  }
+                "
+              >
+                {{ h }}
+              </span>
+            </div>
+          </b-collapse>
+
+          <b-collapse class="card" animation="slide" :open="vocabs.length > 0">
+            <div
+              slot="trigger"
+              slot-scope="props"
+              class="card-header"
+              role="button"
+            >
+              <h2 class="card-header-title">Vocabularies</h2>
+              <a role="button" class="card-header-icon">
+                <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
+              </a>
+            </div>
+
+            <div class="card-content">
+              <div v-for="(v, i) in vocabs" :key="i" class="long-item">
+                <span
+                  class="clickable"
+                  @contextmenu.prevent="
+                    (evt) => {
+                      selectedVocab = v.simplified
+                      $refs.vocabContextmenu.open(evt)
+                    }
+                  "
+                >
+                  {{ v.simplified }}
+                </span>
+
+                <span
+                  v-if="v.traditional"
+                  class="clickable"
+                  @contextmenu.prevent="
+                    (evt) => {
+                      selectedVocab = v.traditional
+                      $refs.vocabContextmenu.open(evt)
+                    }
+                  "
+                >
+                  {{ v.traditional }}
+                </span>
+
+                <span class="pinyin">[{{ v.pinyin }}]</span>
+
+                <span>{{ v.english }}</span>
+              </div>
+            </div>
+          </b-collapse>
+
+          <b-collapse
+            class="card"
+            animation="slide"
+            :open="sentences.length > 0"
+          >
+            <div
+              slot="trigger"
+              slot-scope="props"
+              class="card-header"
+              role="button"
+            >
+              <h2 class="card-header-title">Sentences</h2>
+              <a role="button" class="card-header-icon">
+                <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
+              </a>
+            </div>
+
+            <div class="card-content">
+              <div v-for="(s, i) in sentences" :key="i" class="long-item">
+                <span
+                  class="clickable"
+                  @contextmenu.prevent="
+                    (evt) => {
+                      selectedSentence = s.chinese
+                      $refs.sentenceContextmenu.open(evt)
+                    }
+                  "
+                >
+                  {{ s.chinese }}
+                </span>
+
+                <span>{{ s.english }}</span>
+              </div>
+            </div>
+          </b-collapse>
+        </div>
       </div>
     </div>
 
@@ -569,6 +580,11 @@ export default class HanziPage extends Vue {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.entry-display .clickable {
+  min-height: 1.5em;
+  display: block;
 }
 
 .card {

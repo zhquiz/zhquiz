@@ -1,49 +1,51 @@
 <template>
-  <section class="RandomPage">
-    <div class="columns w-full">
-      <div class="column is-6">
-        <div class="item-display item-display-top">
-          <b-tooltip :label="hanzi.english">
-            <div
-              class="font-hanamin hanzi clickable"
-              @contextmenu.prevent="(evt) => $refs.hanziContextmenu.open(evt)"
-            >
-              {{ hanzi.item }}
-            </div>
-          </b-tooltip>
-          <b-loading :active="!hanzi.item" :is-full-page="false"></b-loading>
+  <section class="desktop:overflow-visible">
+    <div class="RandomPage">
+      <div class="columns w-full">
+        <div class="column is-6">
+          <div class="item-display item-display-top">
+            <b-tooltip :label="hanzi.english">
+              <div
+                class="font-hanamin hanzi clickable"
+                @contextmenu.prevent="(evt) => $refs.hanziContextmenu.open(evt)"
+              >
+                {{ hanzi.item }}
+              </div>
+            </b-tooltip>
+            <b-loading :active="!hanzi.item" :is-full-page="false"></b-loading>
+          </div>
+          <center>Hanzi of the day</center>
         </div>
-        <center>Hanzi of the day</center>
+
+        <div class="column is-6">
+          <div class="item-display item-display-top">
+            <b-tooltip :label="vocab.english">
+              <div
+                class="font-chinese hanzi clickable"
+                @contextmenu.prevent="(evt) => $refs.vocabContextmenu.open(evt)"
+              >
+                {{ vocab.item }}
+              </div>
+            </b-tooltip>
+            <b-loading :active="!vocab.item" :is-full-page="false"></b-loading>
+          </div>
+          <center>Vocab of the day</center>
+        </div>
       </div>
 
-      <div class="column is-6">
-        <div class="item-display item-display-top">
-          <b-tooltip :label="vocab.english">
-            <div
-              class="font-chinese hanzi clickable"
-              @contextmenu.prevent="(evt) => $refs.vocabContextmenu.open(evt)"
-            >
-              {{ vocab.item }}
-            </div>
-          </b-tooltip>
-          <b-loading :active="!vocab.item" :is-full-page="false"></b-loading>
-        </div>
-        <center>Vocab of the day</center>
+      <div class="item-display item-display-bottom">
+        <b-tooltip :label="sentence.english">
+          <div
+            class="font-chinese hanzi clickable text-center"
+            @contextmenu.prevent="(evt) => $refs.sentenceContextmenu.open(evt)"
+          >
+            {{ sentence.item }}
+          </div>
+        </b-tooltip>
+        <b-loading :active="!sentence.item" :is-full-page="false" />
       </div>
+      <center>Sentence of the day</center>
     </div>
-
-    <div class="item-display item-display-bottom">
-      <b-tooltip :label="sentence.english">
-        <div
-          class="font-chinese hanzi clickable text-center"
-          @contextmenu.prevent="(evt) => $refs.sentenceContextmenu.open(evt)"
-        >
-          {{ sentence.item }}
-        </div>
-      </b-tooltip>
-      <b-loading :active="!sentence.item" :is-full-page="false" />
-    </div>
-    <center>Sentence of the day</center>
 
     <client-only>
       <vue-context ref="hanziContextmenu" lazy>
@@ -244,6 +246,8 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
+import { doMapKeypress } from '../assets/keypress'
+
 import { speak } from '~/assets/speak'
 
 @Component({
@@ -274,10 +278,33 @@ export default class RandomPage extends Vue {
   levelMin = 0
   level = 0
 
-  speak = speak
-
   created() {
     this.onUserChanged()
+  }
+
+  mounted() {
+    window.onkeypress = this.onKeypress.bind(this)
+  }
+
+  beforeDestroy() {
+    window.onkeypress = null
+  }
+
+  onKeypress(evt: KeyboardEvent) {
+    doMapKeypress(evt, {
+      '1': () => this.loadHanzi(),
+      '2': () => this.loadVocab(),
+      '3': () => this.loadSentence(),
+      q: () => this.speak(this.hanzi.item),
+      w: () => this.speak(this.vocab.item),
+      e: () => this.speak(this.sentence.item),
+    })
+  }
+
+  async speak(s?: string | null) {
+    if (s) {
+      speak(s)
+    }
   }
 
   @Watch('$store.state.user')
@@ -418,5 +445,11 @@ export default class RandomPage extends Vue {
   font-size: 30px;
   min-width: 3em;
   min-height: 40px;
+}
+
+@media screen and (min-width: 1025px) {
+  .desktop\:overflow-visible {
+    overflow: visible;
+  }
 }
 </style>

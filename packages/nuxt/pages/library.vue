@@ -1,7 +1,9 @@
 <template>
-  <div class="content">
-    <h2>Coming soon</h2>
-  </div>
+  <section>
+    <div class="LibraryPage content">
+      <h2>Coming soon</h2>
+    </div>
+  </section>
 </template>
 
 <script lang="ts">
