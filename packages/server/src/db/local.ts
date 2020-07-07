@@ -47,7 +47,7 @@ export const zVocab = z.object({
 
 export let zhVocab: Collection<z.infer<typeof zVocab>>
 
-export async function initZh(filename = 'assets/zh.loki') {
+export async function zhInit(filename = 'assets/zh.loki') {
   return new Promise((resolve) => {
     zh = new Loki(filename, {
       autoload: true,

@@ -104,6 +104,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           .find({
             chinese: { $contains: entry },
           })
+          .sort(() => 0.5 - Math.random())
           .slice(offset, limit ? offset + limit : undefined)
           .map(({ chinese, pinyin, english }) => {
             if (!pinyin) {
