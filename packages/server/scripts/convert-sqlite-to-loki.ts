@@ -1,5 +1,7 @@
+import fs from 'fs'
+
 import sqlite3 from 'better-sqlite3'
-import { runes } from 'runes2'
+import XRegExp from 'xregexp'
 
 import {
   zh,
@@ -13,9 +15,15 @@ import {
 } from '../src/db/local'
 
 async function main() {
-  require('log-buffer')
+  // require('log-buffer')
+  const reHan1 = XRegExp('^\\p{Han}$')
+  const reHan = XRegExp('\\p{Han}', 'g')
 
   const db = sqlite3('assets/zh.db', { readonly: true })
+  const simpChars = new Set(
+    fs.readFileSync('assets/hsk.yaml', 'utf8').match(reHan)
+  )
+  // console.log(simpChars)
 
   const olRegex = /^\s*\d+\.\s*/g
   const cleanOl = (s?: string) => {
@@ -46,6 +54,10 @@ async function main() {
   )
     .all()
     .map(({ chinese, pinyin, english, frequency, level }) => {
+      // console.log(
+      //   Array.from<string>(chinese.match(reHan)).every((c) => simpChars.has(c))
+      // )
+
       zhSentence.insertOne(
         zSentence.parse({
           chinese: cleanOl(chinese),
@@ -53,6 +65,12 @@ async function main() {
           english: cleanOl(english),
           frequency: frequency || undefined,
           level: level || undefined,
+          type:
+            (Array.from<string>(chinese.match(reHan)).every((c) =>
+              simpChars.has(c)
+            )
+              ? 'simplified'
+              : 'traditional') + (/a-z/i.test(chinese) ? '-english' : ''),
         })
       )
     })
@@ -76,7 +94,7 @@ async function main() {
         pinyin,
         english,
       }) => {
-        if (runes(entry).length === 1) {
+        if (reHan1.test(entry)) {
           zhToken.insertOne(
             zToken.parse({
               entry,
@@ -90,8 +108,6 @@ async function main() {
               english: addSpaceToSlash(english),
             })
           )
-        } else if (entry.length < 5) {
-          console.log(entry, runes(entry), entry.length)
         }
       }
     )
