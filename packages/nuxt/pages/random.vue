@@ -246,6 +246,8 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
+import { doMapKeypress } from '../assets/keypress'
+
 import { speak } from '~/assets/speak'
 
 @Component({
@@ -276,10 +278,33 @@ export default class RandomPage extends Vue {
   levelMin = 0
   level = 0
 
-  speak = speak
-
   created() {
     this.onUserChanged()
+  }
+
+  mounted() {
+    window.onkeypress = this.onKeypress.bind(this)
+  }
+
+  beforeDestroy() {
+    window.onkeypress = null
+  }
+
+  onKeypress(evt: KeyboardEvent) {
+    doMapKeypress(evt, {
+      '1': () => this.loadHanzi(),
+      '2': () => this.loadVocab(),
+      '3': () => this.loadSentence(),
+      q: () => this.speak(this.hanzi.item),
+      w: () => this.speak(this.vocab.item),
+      e: () => this.speak(this.sentence.item),
+    })
+  }
+
+  async speak(s?: string | null) {
+    if (s) {
+      speak(s)
+    }
   }
 
   @Watch('$store.state.user')

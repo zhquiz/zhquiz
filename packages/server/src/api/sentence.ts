@@ -5,6 +5,16 @@ import { zhSentence } from '../db/local'
 import { DbCardModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
+  const isSimp = (s = '') => {
+    const arr = [
+      'simplified',
+      'simplified-english',
+      'traditional',
+      'traditional-english',
+    ]
+    return -(arr.reverse().indexOf(s) + 1) / arr.length
+  }
+
   f.post(
     '/match',
     {
@@ -45,6 +55,9 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         result: zhSentence
           .find({
             chinese: entry,
+          })
+          .sort(({ type: t1 }, { type: t2 }) => {
+            return isSimp(t1) - isSimp(t2) + 0.5 - Math.random()
           })
           .map(({ chinese, pinyin, english }) => {
             if (!pinyin) {
@@ -104,7 +117,9 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           .find({
             chinese: { $contains: entry },
           })
-          .sort(() => 0.5 - Math.random())
+          .sort(({ type: t1 }, { type: t2 }) => {
+            return isSimp(t1) - isSimp(t2) + 0.5 - Math.random()
+          })
           .slice(offset, limit ? offset + limit : undefined)
           .map(({ chinese, pinyin, english }) => {
             if (!pinyin) {
@@ -183,14 +198,23 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       ).map((el) => el.item)
 
       const { levelMin, level } = req.body
-      const ss = zhSentence.find({
-        $and: [
-          { level: { $lte: level || 60 } },
-          { level: { $gte: levelMin || 1 } },
-          { chinese: { $nin: reviewing } },
-        ],
-      })
-      const s = ss[Math.floor(Math.random() * ss.length)] || {}
+      const getSentence = (type: any) => {
+        const ss = zhSentence.find({
+          $and: [
+            { level: { $lte: level || 60 } },
+            { level: { $gte: levelMin || 1 } },
+            { chinese: { $nin: reviewing } },
+            { type },
+          ],
+        })
+        return ss[Math.floor(Math.random() * ss.length)]
+      }
+
+      const s =
+        getSentence('simplified') ||
+        getSentence('traditional') ||
+        getSentence({ $nin: ['simplified', 'traditional'] }) ||
+        {}
 
       return {
         result: s.chinese,

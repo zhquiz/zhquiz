@@ -2,7 +2,7 @@ import fs from 'fs'
 
 import yaml from 'js-yaml'
 import Loki, { Collection } from 'lokijs'
-import { runes } from 'runes2'
+import XRegExp from 'xregexp'
 import * as z from 'zod'
 
 export const hsk = yaml.safeLoad(
@@ -17,6 +17,7 @@ export const zSentence = z.object({
   english: z.string().optional(),
   frequency: z.number().optional(),
   level: z.number().optional(),
+  type: z.string().optional(),
 })
 
 export let zhSentence: Collection<z.infer<typeof zSentence>>
@@ -25,8 +26,10 @@ const zDistinctString = z
   .string()
   .refine((s) => s && new Set(s).size === s.length)
 
+const reHan1 = XRegExp('^\\p{Han}$')
+
 export const zToken = z.object({
-  entry: z.string().refine((s) => runes(s).length === 1),
+  entry: z.string().refine((s) => reHan1.test(s)),
   sub: zDistinctString.optional(),
   sup: zDistinctString.optional(),
   variants: zDistinctString.optional(),

@@ -487,6 +487,7 @@
 import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
 import cardDefault from '~/assets/card-default.yaml'
+import { doClick, doMapKeypress } from '~/assets/keypress'
 import { markdownToHtml } from '~/assets/make-html'
 import { speak } from '~/assets/speak'
 import { shuffle } from '~/assets/util'
@@ -1087,39 +1088,13 @@ export default class QuizPage extends Vue {
       return
     }
 
-    const click = async (el: any) => {
-      if (!el) return
-
-      if (el.classList?.add) {
-        el.classList.add('active')
-      }
-
-      if (el.click) {
-        const r = el.click()
-        if (r instanceof Promise) {
-          await r
-          if (el.classList?.remove) {
-            el.classList.remove('active')
-          }
-        }
-      }
-    }
-
-    const mapKey = (map: Record<string, (() => any) | string>) => {
-      let action = map[evt.key]
-      while (typeof action === 'string') {
-        action = map[action]
-      }
-      if (typeof action === 'function') action()
-    }
-
     if (!this.quizCurrent) {
-      mapKey({
-        ' ': () => click(this.$refs.btnEndQuiz),
+      doMapKeypress(evt, {
+        ' ': this.$refs.btnEndQuiz as HTMLButtonElement,
       })
     } else if (!this.isQuizShownAnswer) {
-      mapKey({
-        ' ': () => click(this.$refs.btnShowAnswer),
+      doMapKeypress(evt, {
+        ' ': this.$refs.btnShowAnswer as HTMLButtonElement,
       })
     } else {
       const speakItemN = (n: number) => {
@@ -1131,16 +1106,16 @@ export default class QuizPage extends Vue {
           return
         }
 
-        click(quizContent.querySelector(`.speak-item-${n}`))
+        doClick(quizContent.querySelector(`.speak-item-${n}`))
       }
 
-      mapKey({
-        '1': () => click(this.$refs.btnMarkRight),
-        '2': () => click(this.$refs.btnMarkWrong),
-        '3': () => click(this.$refs.btnMarkRepeat),
-        q: () => click(this.$refs.btnHideAnswer),
+      doMapKeypress(evt, {
+        '1': this.$refs.btnMarkRight as HTMLButtonElement,
+        '2': this.$refs.btnMarkWrong as HTMLButtonElement,
+        '3': this.$refs.btnMarkRepeat as HTMLButtonElement,
+        q: this.$refs.btnHideAnswer as HTMLButtonElement,
         ' ': 'q',
-        e: () => click(this.$refs.btnEditModal),
+        e: this.$refs.btnEditModal as HTMLButtonElement,
         s: () => speakItemN(-1),
         d: () => speakItemN(0),
         f: () => speakItemN(1),

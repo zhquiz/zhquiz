@@ -5,6 +5,16 @@ import { hsk, zhSentence, zhVocab } from '../db/local'
 import { DbCardModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
+  const isSimp = (s = '') => {
+    const arr = [
+      'simplified',
+      'simplified-english',
+      'traditional',
+      'traditional-english',
+    ]
+    return -(arr.reverse().indexOf(s) + 1) / arr.length
+  }
+
   f.post(
     '/q',
     {
@@ -147,7 +157,9 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
             .find({
               chinese: { $contains: entry },
             })
-            .sort(() => 0.5 - Math.random())
+            .sort(({ type: t1 }, { type: t2 }) => {
+              return isSimp(t1) - isSimp(t2) + 0.5 - Math.random()
+            })
             .slice(0, 10)
             .map(({ chinese, pinyin, english }) => {
               if (!pinyin) {
