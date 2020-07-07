@@ -1,49 +1,51 @@
 <template>
-  <section class="RandomPage">
-    <div class="columns w-full">
-      <div class="column is-6">
-        <div class="item-display item-display-top">
-          <b-tooltip :label="hanzi.english">
-            <div
-              class="font-hanamin hanzi clickable"
-              @contextmenu.prevent="(evt) => $refs.hanziContextmenu.open(evt)"
-            >
-              {{ hanzi.item }}
-            </div>
-          </b-tooltip>
-          <b-loading :active="!hanzi.item" :is-full-page="false"></b-loading>
+  <section style="overflow: visible;">
+    <div class="RandomPage">
+      <div class="columns w-full">
+        <div class="column is-6">
+          <div class="item-display item-display-top">
+            <b-tooltip :label="hanzi.english">
+              <div
+                class="font-hanamin hanzi clickable"
+                @contextmenu.prevent="(evt) => $refs.hanziContextmenu.open(evt)"
+              >
+                {{ hanzi.item }}
+              </div>
+            </b-tooltip>
+            <b-loading :active="!hanzi.item" :is-full-page="false"></b-loading>
+          </div>
+          <center>Hanzi of the day</center>
         </div>
-        <center>Hanzi of the day</center>
+
+        <div class="column is-6">
+          <div class="item-display item-display-top">
+            <b-tooltip :label="vocab.english">
+              <div
+                class="font-chinese hanzi clickable"
+                @contextmenu.prevent="(evt) => $refs.vocabContextmenu.open(evt)"
+              >
+                {{ vocab.item }}
+              </div>
+            </b-tooltip>
+            <b-loading :active="!vocab.item" :is-full-page="false"></b-loading>
+          </div>
+          <center>Vocab of the day</center>
+        </div>
       </div>
 
-      <div class="column is-6">
-        <div class="item-display item-display-top">
-          <b-tooltip :label="vocab.english">
-            <div
-              class="font-chinese hanzi clickable"
-              @contextmenu.prevent="(evt) => $refs.vocabContextmenu.open(evt)"
-            >
-              {{ vocab.item }}
-            </div>
-          </b-tooltip>
-          <b-loading :active="!vocab.item" :is-full-page="false"></b-loading>
-        </div>
-        <center>Vocab of the day</center>
+      <div class="item-display item-display-bottom">
+        <b-tooltip :label="sentence.english">
+          <div
+            class="font-chinese hanzi clickable text-center"
+            @contextmenu.prevent="(evt) => $refs.sentenceContextmenu.open(evt)"
+          >
+            {{ sentence.item }}
+          </div>
+        </b-tooltip>
+        <b-loading :active="!sentence.item" :is-full-page="false" />
       </div>
+      <center>Sentence of the day</center>
     </div>
-
-    <div class="item-display item-display-bottom">
-      <b-tooltip :label="sentence.english">
-        <div
-          class="font-chinese hanzi clickable text-center"
-          @contextmenu.prevent="(evt) => $refs.sentenceContextmenu.open(evt)"
-        >
-          {{ sentence.item }}
-        </div>
-      </b-tooltip>
-      <b-loading :active="!sentence.item" :is-full-page="false" />
-    </div>
-    <center>Sentence of the day</center>
 
     <client-only>
       <vue-context ref="hanziContextmenu" lazy>

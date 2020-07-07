@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <section v-if="isInit" class="QuizPage">
+  <section>
+    <div v-if="isInit" class="QuizPage">
       <div class="columns">
         <div class="column is-4">
           <div class="field">
@@ -479,8 +479,8 @@
           </li>
         </vue-context>
       </client-only>
-    </section>
-  </div>
+    </div>
+  </section>
 </template>
 
 <script lang="ts">
