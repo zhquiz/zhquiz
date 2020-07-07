@@ -1,5 +1,5 @@
 <template>
-  <section style="overflow: visible;">
+  <section class="desktop:overflow-visible">
     <div class="RandomPage">
       <div class="columns w-full">
         <div class="column is-6">
@@ -445,5 +445,11 @@ export default class RandomPage extends Vue {
   font-size: 30px;
   min-width: 3em;
   min-height: 40px;
+}
+
+@media screen and (min-width: 1025px) {
+  .desktop\:overflow-visible {
+    overflow: visible;
+  }
 }
 </style>
