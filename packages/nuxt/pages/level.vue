@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <section>
     <b-loading v-if="isLoading" active />
-    <section v-if="isInit" class="LevelPage container">
+    <div v-if="isInit" class="LevelPage container">
       <div class="field">
         <label class="label">Filter</label>
         <b-field>
@@ -112,8 +112,8 @@
           </li>
         </vue-context>
       </client-only>
-    </section>
-  </div>
+    </div>
+  </section>
 </template>
 
 <script lang="ts">
