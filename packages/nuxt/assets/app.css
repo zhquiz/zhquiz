@@ -78,7 +78,7 @@
 }
 
 button.button:focus, button.button:active, button.button.active {
-  filter: saturate(75%);
+  filter: grayscale(50%) saturate(75%);
 }
 
 span.gray-box {

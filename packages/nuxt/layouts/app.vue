@@ -287,6 +287,7 @@ export default class AppLayout extends Vue {
 
 main {
   max-height: 100vh;
+  overflow: scroll;
   flex-grow: 1;
   padding: 1rem;
   background-color: rgb(250, 250, 250);

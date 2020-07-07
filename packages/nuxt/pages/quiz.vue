@@ -491,6 +491,19 @@ import { markdownToHtml } from '~/assets/make-html'
 import { speak } from '~/assets/speak'
 import { shuffle } from '~/assets/util'
 
+interface IQuizData {
+  type: string
+  item: string
+  raw: any
+  cards: {
+    _id: string
+    direction: string
+    front: string
+    back: string
+    mnemonic: string
+  }[]
+}
+
 @Component({
   layout: 'app',
 })
@@ -524,18 +537,8 @@ export default class QuizPage extends Vue {
   quizFront = ''
   quizBack = ''
   quizMnemonic = ''
-  quizData: {
-    type: string
-    item: string
-    raw: any
-    cards: {
-      _id: string
-      direction: string
-      front: string
-      back: string
-      mnemonic: string
-    }[]
-  }[] = []
+  quizData: IQuizData[] = []
+  quizCurrentData: any = null
 
   isEditModal = false
   editItem = {
@@ -589,7 +592,7 @@ export default class QuizPage extends Vue {
   }
 
   beforeDestroy() {
-    window.removeEventListener('keydown', this.onQuizKeypress.bind(this))
+    window.onkeypress = null
   }
 
   previewRender(md: string) {
@@ -610,10 +613,12 @@ export default class QuizPage extends Vue {
 
     if (this.quizCurrent) {
       const { type, item, direction } = this.quizCurrent
-      const { raw, cards = [] } =
+      const { raw = null, cards = [] } =
         this.quizData.filter((d) => {
           return d.type === type && d.item === item
         })[0] || {}
+
+      this.quizCurrentData = raw
 
       const { front } =
         cards.filter((c) => {
@@ -624,7 +629,7 @@ export default class QuizPage extends Vue {
 
       return markdownToHtml(template, {
         ...this.quizCurrent,
-        raw,
+        raw: this.quizCurrentData,
       })
     }
 
@@ -636,10 +641,12 @@ export default class QuizPage extends Vue {
 
     if (this.quizCurrent) {
       const { type, item, direction } = this.quizCurrent
-      const { raw, cards = [] } =
+      const { raw = null, cards = [] } =
         this.quizData.filter((d) => {
           return d.type === type && d.item === item
         })[0] || {}
+
+      this.quizCurrentData = raw
 
       const { back } =
         cards.filter((c) => {
@@ -650,7 +657,7 @@ export default class QuizPage extends Vue {
 
       return markdownToHtml(template, {
         ...this.quizCurrent,
-        raw,
+        raw: this.quizCurrentData,
       })
     }
 
@@ -869,12 +876,12 @@ export default class QuizPage extends Vue {
     this.quizIndex = -1
     await this.initNextQuizItem()
 
-    window.addEventListener('keydown', this.onQuizKeypress.bind(this))
+    window.onkeypress = this.onQuizKeypress.bind(this)
     this.isQuizModal = true
   }
 
   endQuiz() {
-    window.removeEventListener('keydown', this.onQuizKeypress.bind(this))
+    window.onkeypress = null
     this.isQuizModal = false
     this.load()
   }
@@ -1069,33 +1076,82 @@ export default class QuizPage extends Vue {
       return
     }
 
-    const click = (el: any) => {
-      if (el.click) {
-        el.click()
-      }
+    if (this.isEditModal || this.isEditTagModal) {
+      return
+    }
+
+    if (
+      evt.target instanceof HTMLTextAreaElement ||
+      evt.target instanceof HTMLInputElement
+    ) {
+      return
+    }
+
+    const click = async (el: any) => {
+      if (!el) return
 
       if (el.classList?.add) {
         el.classList.add('active')
       }
+
+      if (el.click) {
+        const r = el.click()
+        if (r instanceof Promise) {
+          await r
+          if (el.classList?.remove) {
+            el.classList.remove('active')
+          }
+        }
+      }
+    }
+
+    const mapKey = (map: Record<string, (() => any) | string>) => {
+      let action = map[evt.key]
+      while (typeof action === 'string') {
+        action = map[action]
+      }
+      if (typeof action === 'function') action()
     }
 
     if (!this.quizCurrent) {
-      if (evt.key === ' ') click(this.$refs.btnEndQuiz)
+      mapKey({
+        ' ': () => click(this.$refs.btnEndQuiz),
+      })
     } else if (!this.isQuizShownAnswer) {
-      if (evt.key === ' ') click(this.$refs.btnShowAnswer)
+      mapKey({
+        ' ': () => click(this.$refs.btnShowAnswer),
+      })
     } else {
-      // eslint-disable-next-line no-lonely-if
-      if (evt.key === '1') {
-        click(this.$refs.btnMarkRight)
-      } else if (evt.key === '2') {
-        click(this.$refs.btnMarkWrong)
-      } else if (evt.key === '3') {
-        click(this.$refs.btnMarkRepeat)
-      } else if (evt.key === 'q') {
-        click(this.$refs.btnHideAnswer)
-      } else if (evt.key === 'e') {
-        click(this.$refs.btnEditModal)
+      const speakItemN = (n: number) => {
+        const quizContent = (this.isQuizShownAnswer
+          ? this.$refs.quizBack
+          : this.$refs.quizFront) as HTMLDivElement | null
+
+        if (!quizContent) {
+          return
+        }
+
+        click(quizContent.querySelector(`.speak-item-${n}`))
       }
+
+      mapKey({
+        '1': () => click(this.$refs.btnMarkRight),
+        '2': () => click(this.$refs.btnMarkWrong),
+        '3': () => click(this.$refs.btnMarkRepeat),
+        q: () => click(this.$refs.btnHideAnswer),
+        ' ': 'q',
+        e: () => click(this.$refs.btnEditModal),
+        s: () => speakItemN(-1),
+        d: () => speakItemN(0),
+        f: () => speakItemN(1),
+        g: () => speakItemN(2),
+        h: () => speakItemN(3),
+        j: () => speakItemN(4),
+        k: () => speakItemN(5),
+        l: () => speakItemN(6),
+        ';': () => speakItemN(7),
+        "'": () => speakItemN(8),
+      })
     }
   }
 }

@@ -2,34 +2,38 @@ import { MakeHtml } from '@patarapolw/make-html-frontend-functions'
 import DOMPurify from 'dompurify'
 import hbs from 'handlebars'
 
+hbs.registerHelper('join', function (ctx, w) {
+  if (Array.isArray(ctx) && typeof w === 'string') {
+    return new hbs.SafeString(ctx.join(hbs.escapeExpression(w)))
+  }
+
+  return new hbs.SafeString(hbs.escapeExpression(ctx))
+})
+
 hbs.registerHelper('mask', function (ctx, ...ws) {
   let base = hbs.escapeExpression(ctx)
+
+  const doReplace = (w: string) => {
+    base = base.replace(
+      new RegExp(
+        `(^| |[^a-z])(${hbs
+          .escapeExpression(w)
+          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+          .replace(/\d/g, '\\d?')
+          .replace(/\s+/g, '\\s*')})($| |[^a-z])`,
+        'gi'
+      ),
+      '$1<span class="gray-box">$2</span>$3'
+    )
+  }
 
   ws.map((w) => {
     if (Array.isArray(w)) {
       w.map((w0) => {
-        base = base.replace(
-          new RegExp(
-            hbs
-              .escapeExpression(w0)
-              .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-              .replace(/\d/g, '\\d?'),
-            'gi'
-          ),
-          '<span class="gray-box">$&</span>'
-        )
+        doReplace(w0)
       })
     } else if (typeof w === 'string') {
-      base = base.replace(
-        new RegExp(
-          hbs
-            .escapeExpression(w)
-            .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            .replace(/\d/g, '\\d'),
-          'gi'
-        ),
-        '<span class="gray-box">$&</span>'
-      )
+      doReplace(w)
     }
   })
 
