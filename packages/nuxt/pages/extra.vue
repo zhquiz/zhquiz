@@ -1,16 +1,5 @@
 <template>
   <section class="ExtraPage container">
-    <b-message
-      v-if="userContentWarning"
-      type="is-warning"
-      title="Avoid duplicate contents."
-      has-icon
-      @close="onUserContentWarningClose"
-    >
-      <p>You should not add user content as a duplicate to the dictionary.</p>
-      <p>If so, go to respective section</p>
-    </b-message>
-
     <nav class="new-item-panel">
       <div class="w-full flex-grow">
         <b-field label="Chinese">
@@ -150,8 +139,6 @@ export default class ExtraPage extends Vue {
     type: 'desc',
   }
 
-  userContentWarning = false
-
   newItem: any = {}
   selectedRow: any = {}
   cardIds: any = {}
@@ -165,16 +152,9 @@ export default class ExtraPage extends Vue {
   @Watch('$store.state.user')
   async onUserChange() {
     if (this.$store.state.user) {
-      const { userContentWarning } = await this.$axios.$get('/api/user/', {
-        params: {
-          select: 'userContentWarning',
-        },
-      })
-      this.userContentWarning = userContentWarning !== false
       await this.load()
     } else {
       this.$set(this, 'data', [])
-      this.userContentWarning = false
     }
   }
 
@@ -192,18 +172,17 @@ export default class ExtraPage extends Vue {
     this.count = count
   }
 
-  async onUserContentWarningClose() {
-    this.userContentWarning = false
-
-    await this.$axios.$patch('/api/user/', {
-      set: { userContentWarning: this.userContentWarning },
-    })
-  }
-
   async addNewItem() {
-    await this.$axios.$put('/api/extra/', this.newItem)
-    this.$set(this, 'newItem', {})
-    await this.load()
+    const { type } = await this.$axios.$put('/api/extra/', this.newItem)
+
+    if (type === 'extra') {
+      this.$set(this, 'newItem', {})
+      await this.addToQuiz(this.newItem)
+      await this.load()
+    } else {
+      // this.$set(this, 'newItem', {})
+      await this.addToQuiz(this.newItem, type)
+    }
   }
 
   async doDelete() {
@@ -245,10 +224,7 @@ export default class ExtraPage extends Vue {
     }
   }
 
-  async addToQuiz() {
-    const type = 'extra'
-    const item = this.selectedRow.chinese
-
+  async addToQuiz(item = this.selectedRow.chinese, type = 'extra') {
     await this.$axios.$put('/api/card/', { item, type })
     this.$buefy.snackbar.open(`Added ${type}: ${item} to quiz`)
 
@@ -286,6 +262,7 @@ export default class ExtraPage extends Vue {
   display: flex;
   flex-direction: row;
   align-items: center;
+  margin-bottom: 0.5rem;
 }
 
 .new-item-panel > div {

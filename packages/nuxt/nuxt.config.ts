@@ -6,7 +6,7 @@ export default (): Configuration => {
      ** Nuxt rendering mode
      ** See https://nuxtjs.org/api/configuration-mode
      */
-    mode: 'universal',
+    mode: 'spa',
     /*
      ** Nuxt target
      ** See https://nuxtjs.org/api/configuration-target
@@ -24,7 +24,7 @@ export default (): Configuration => {
         {
           hid: 'description',
           name: 'description',
-          content: 'Hanzi, Vocab and Sentences quizzing system',
+          content: process.env.npm_package_description || '',
         },
         {
           hid: 'keywords',
@@ -32,30 +32,7 @@ export default (): Configuration => {
           content: 'chinese,mandarin,srs,quiz',
         },
       ],
-      link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        {
-          rel: 'apple-touch-icon',
-          sizes: '180x180',
-          href: '/apple-touch-icon.png',
-        },
-        {
-          rel: 'icon',
-          type: 'image/png',
-          sizes: '32x32',
-          href: '/favicon-32x32.png',
-        },
-        {
-          rel: 'icon',
-          type: 'image/png',
-          sizes: '16x16',
-          href: '/favicon-16x16.png',
-        },
-        {
-          rel: 'manifest',
-          href: '/site.webmanifest',
-        },
-      ],
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
       script: [
         {
           async: true,
@@ -68,7 +45,7 @@ export default (): Configuration => {
     /*
      ** Global CSS
      */
-    css: ['~/assets/app.css'],
+    css: ['~/assets/app.css', '~/assets/buefy-mod.css'],
     /*
      ** Plugins to load before mounting the App
      ** https://nuxtjs.org/guide/plugins
@@ -91,6 +68,7 @@ export default (): Configuration => {
      */
     buildModules: [
       '@nuxt/typescript-build',
+      '@nuxtjs/pwa',
       [
         '@nuxtjs/fontawesome',
         {
@@ -114,6 +92,7 @@ export default (): Configuration => {
               'faQuestionCircle',
               'faFolderPlus',
               'faCog',
+              'faBookOpen',
             ],
             brands: ['faGithub', 'faGoogle'],
           },
@@ -160,6 +139,11 @@ export default (): Configuration => {
     proxy: {
       '/api/': 'http://localhost:8080',
     },
+    pwa: {
+      meta: {
+        name: 'ZhQuiz',
+      },
+    },
     /*
      ** Build configuration
      ** See https://nuxtjs.org/api/configuration-build/
@@ -173,5 +157,11 @@ export default (): Configuration => {
         })
       },
     },
+    // server:
+    //   process.env.NODE_ENV === 'development'
+    //     ? {
+    //         host: '0.0.0.0', // default: localhost
+    //       }
+    //     : undefined,
   }
 }

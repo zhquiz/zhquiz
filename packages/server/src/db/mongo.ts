@@ -1,7 +1,6 @@
 import {
   getModelForClass,
   index,
-  pre,
   prop,
   Ref,
   setGlobalOptions,
@@ -16,18 +15,40 @@ setGlobalOptions({ options: { allowMixed: Severity.ALLOW } })
 
 export class DbUser {
   @prop({ required: true, unique: true }) email!: string
-  @prop({ default: 1 }) levelMin!: number
-  @prop({ default: 60 }) level!: number
-  @prop({ default: true }) userContentWarning?: boolean
+  @prop() name!: string
+  @prop({ default: 1 }) levelMin?: number
+  @prop({ default: 60 }) level?: number
+  @prop() settings?: Record<string, any>
+
+  static async signIn(email: string, name: string) {
+    let user = await DbUserModel.findOne({ email })
+    if (!user) {
+      user = await DbUserModel.create({ email, name })
+    }
+
+    if (!user.name) {
+      DbUserModel.updateOne(
+        { email },
+        {
+          $set: { name },
+        }
+      )
+    }
+
+    return user
+  }
+
+  static async purgeOne(userId: string) {
+    await DbExtraModel.purgeMany(userId)
+    await DbCardModel.purgeMany(userId)
+    await DbUserModel.deleteOne({ userId })
+  }
 }
 
 export const DbUserModel = getModelForClass(DbUser, {
   schemaOptions: { collection: 'user', timestamps: true },
 })
 
-@pre<DbCard>('remove', function () {
-  DbQuizModel.deleteMany({ cardId: this._id })
-})
 @index({ userId: 1, type: 1, item: 1, direction: 1 }, { unique: true })
 export class DbCard {
   @prop({ default: () => nanoid() }) _id!: string
@@ -35,10 +56,28 @@ export class DbCard {
   @prop({ required: true }) type!: string
   @prop({ required: true }) item!: string
   @prop({ required: true }) direction!: string
-  @prop({ default: '' }) front!: string
-  @prop({ default: '' }) back!: string
+  @prop({ default: '' }) front?: string
+  @prop({ default: '' }) back?: string
   @prop({ default: '' }) mnemonic?: string
-  @prop({ default: () => [] }) tag!: string[]
+  @prop({ default: () => [] }) tag?: string[]
+
+  static async purgeMany(userId: string, cond?: any) {
+    cond = cond
+      ? {
+          $and: [cond, { userId }],
+        }
+      : { userId }
+
+    await DbQuizModel.deleteMany({
+      cardId: {
+        $in: (await DbCardModel.find(cond).select({ _id: 1 })).map(
+          (el) => el._id
+        ),
+      },
+    })
+
+    await DbCardModel.deleteMany(cond)
+  }
 }
 
 export const DbCardModel = getModelForClass(DbCard, {
@@ -46,9 +85,9 @@ export const DbCardModel = getModelForClass(DbCard, {
 })
 
 class DbQuiz {
-  @prop({ default: () => repeatReview() }) nextReview!: Date
-  @prop({ default: 0 }) srsLevel!: number
-  @prop({ default: () => ({}) }) stat!: {
+  @prop({ default: () => repeatReview() }) nextReview?: Date
+  @prop({ default: 0 }) srsLevel?: number
+  @prop({ default: () => ({}) }) stat?: {
     streak?: {
       right?: number
       wrong?: number
@@ -75,6 +114,8 @@ class DbQuiz {
 
   private _updateSrsLevel(dSrsLevel: number) {
     return () => {
+      this.stat = this.stat || {}
+
       if (dSrsLevel > 0) {
         dotProp.set(
           this.stat,
@@ -115,6 +156,8 @@ class DbQuiz {
         }
       }
 
+      this.srsLevel = this.srsLevel || 0
+
       this.srsLevel += dSrsLevel
 
       if (this.srsLevel >= srsMap.length) {
@@ -127,6 +170,8 @@ class DbQuiz {
 
       if (dSrsLevel > 0) {
         this.nextReview = getNextReview(this.srsLevel)
+      } else {
+        this.nextReview = repeatReview()
       }
     }
   }
@@ -136,9 +181,6 @@ export const DbQuizModel = getModelForClass(DbQuiz, {
   schemaOptions: { collection: 'quiz', timestamps: true },
 })
 
-@pre<DbExtra>('remove', function () {
-  DbCardModel.deleteMany({ item: this.chinese, type: 'extra' })
-})
 @index({ userId: 1, chinese: 1 }, { unique: true })
 class DbExtra {
   @prop({ default: () => nanoid() }) _id!: string
@@ -146,6 +188,28 @@ class DbExtra {
   @prop({ required: true }) chinese!: string
   @prop() pinyin?: string
   @prop({ required: true }) english!: string
+
+  static async purgeMany(userId: string, cond?: any) {
+    cond = cond
+      ? {
+          $and: [cond, { userId }],
+        }
+      : { userId }
+
+    const rs = await DbExtraModel.find(cond).select({
+      chinese: 1,
+    })
+
+    if (rs.length > 0) {
+      await DbCardModel.deleteMany({
+        item: { $in: rs.map((el) => el.chinese!) },
+        type: 'extra',
+        userId,
+      })
+
+      await Promise.all(rs.map((el) => el.remove()))
+    }
+  }
 }
 
 export const DbExtraModel = getModelForClass(DbExtra, {

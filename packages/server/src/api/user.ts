@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 
-import { DbUserModel } from '../db/schema'
+import { DbUserModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   f.get(
@@ -49,6 +49,17 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       return reply.status(400).send()
     }
   )
+
+  f.delete('/', async (req, reply) => {
+    const u = req.session.user
+    if (u) {
+      await DbUserModel.purgeOne(u._id)
+
+      return reply.status(201).send()
+    }
+
+    return reply.status(400).send()
+  })
 
   next()
 }

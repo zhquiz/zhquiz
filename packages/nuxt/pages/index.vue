@@ -1,45 +1,47 @@
 <template>
   <section class="IndexPage">
-    <article class="column">
-      <div class="content">
-        <h1>ZhQuiz - A Chinese quizzing app</h1>
+    <client-only>
+      <article>
+        <div class="content">
+          <h1>ZhQuiz - A Chinese quizzing app</h1>
 
-        <button class="button is-info" @click="doLogin" @keypress="doLogin">
-          <span>
-            <fontawesome :icon="['fab', 'google']" />
-          </span>
-          <span>Login with Google</span>
-        </button>
+          <button class="button is-info" @click="doLogin" @keypress="doLogin">
+            <span>
+              <fontawesome :icon="['fab', 'google']" />
+            </span>
+            <span>Login with Google</span>
+          </button>
 
-        <h4>
-          So, you want to learn Chinese. Let's see. How much you can read?
-        </h4>
+          <h4>
+            So, you want to learn Chinese. Let's see. How much you can read?
+          </h4>
 
-        <figure class="image is-16by9">
-          <iframe
-            title="video-demo"
-            class="has-ratio"
-            src="https://www.youtube.com/embed/iomE0xiYoqY"
-            frameborder="0"
-            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-          />
-        </figure>
+          <figure class="image is-16by9">
+            <iframe
+              title="video-demo"
+              class="has-ratio"
+              src="https://www.youtube.com/embed/iomE0xiYoqY"
+              frameborder="0"
+              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            />
+          </figure>
 
-        <h2>Features</h2>
+          <h2>Features</h2>
 
-        <ul>
-          <li>HSK vocabularies made into 60 levels</li>
-          <li>Flashcards showing statuses of success</li>
-          <li>Custom vocabularies input by users</li>
-          <li>Speech-enabled</li>
-        </ul>
+          <ul>
+            <li>HSK vocabularies made into 60 levels</li>
+            <li>Flashcards showing statuses of success</li>
+            <li>Custom vocabularies input by users</li>
+            <li>Speech-enabled</li>
+          </ul>
 
-        <h4>Login to try now.</h4>
-      </div>
-    </article>
+          <h4>Login to try now.</h4>
+        </div>
+      </article>
 
-    <div class="background" />
+      <div class="background" />
+    </client-only>
   </section>
 </template>
 
@@ -66,13 +68,13 @@ export default class IndexPage extends Vue {
   align-items: center;
 }
 
-.IndexPage > article {
+.IndexPage article {
   margin-top: 1rem;
-  width: calc(100vw - 2rem);
+  width: calc(100vw - 1rem);
 }
 
 @media (min-width: 769px) {
-  .IndexPage > article {
+  .IndexPage article {
     max-width: 60vw;
   }
 }

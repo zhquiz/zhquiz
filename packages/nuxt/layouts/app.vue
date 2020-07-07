@@ -4,60 +4,41 @@
 
     <nav v-if="isReady" class="vertical-nav">
       <div class="icon-nav">
-        <nuxt-link to="/random" :class="{ active: $route.path === '/random' }">
-          <fontawesome icon="random" />
-          <span>Random</span>
-        </nuxt-link>
-        <nuxt-link to="/quiz" :class="{ active: $route.path === '/quiz' }">
-          <fontawesome icon="question-circle" />
-          <span>Quiz</span>
-        </nuxt-link>
-        <nuxt-link to="/hanzi" :class="{ active: $route.path === '/hanzi' }">
-          <span class="icon font-hanzi">字</span>
-          <span>Hanzi</span>
-        </nuxt-link>
-        <nuxt-link to="/vocab" :class="{ active: $route.path === '/vocab' }">
-          <span class="icon font-hanzi">词</span>
-          <span>Vocab</span>
-        </nuxt-link>
-        <nuxt-link to="/level" :class="{ active: $route.path === '/level' }">
-          <span class="icon">{{ level }}</span>
-          <span>Level</span>
-        </nuxt-link>
-        <nuxt-link to="/extra" :class="{ active: $route.path === '/extra' }">
-          <fontawesome icon="folder-plus" />
-          <span>Extra</span>
-        </nuxt-link>
-        <nuxt-link
-          to="/settings"
-          :class="{ active: $route.path === '/settings' }"
+        <component
+          :is="nav.to ? 'router-link' : 'a'"
+          v-for="nav in navItems"
+          :key="nav.name"
+          :to="nav.to"
+          :class="{ active: $route.path === nav.to }"
+          :href="nav.href"
+          :rel="nav.href ? 'noopener noreferrer' : undefined"
+          :target="nav.href ? '_blank' : undefined"
         >
-          <fontawesome icon="cog" />
-          <span>Settings</span>
-        </nuxt-link>
-        <a
-          href="https://github.com/patarapolw/zhquiz"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <fontawesome :icon="['fab', 'github']" />
-          <span>About</span>
-        </a>
+          <fontawesome v-if="nav.icon" :icon="nav.icon" />
+          <span
+            v-if="nav.character || nav.text"
+            class="icon"
+            :class="{ 'font-hanamin': nav.character }"
+          >
+            {{ nav.character || nav.text }}
+          </span>
+          <span>{{ nav.name }}</span>
+        </component>
       </div>
 
       <div class="flex-grow" />
 
       <div class="icon-nav">
         <b-tooltip label="Click to logout">
-          <a @click="doLogout" @keypress="doLogout">
+          <a class="w-full" @click="doLogout" @keypress="doLogout">
             <figure class="image is-48x48">
               <img
                 class="is-rounded"
                 :src="getGravatarUrl(user.email)"
-                :alt="user.email"
+                :alt="userName"
               />
             </figure>
-            <span>{{ user.email }}</span>
+            <span>{{ userName }}</span>
           </a>
         </b-tooltip>
       </div>
@@ -72,73 +53,41 @@
       </template>
       <template slot="start">
         <b-navbar-item
-          tag="router-link"
-          to="/random"
-          :active="$route.path === '/random'"
+          v-for="nav in navItems"
+          :key="nav.name"
+          :tag="nav.to ? 'router-link' : 'a'"
+          :to="nav.to"
+          :active="$route.path === nav.to"
+          :href="nav.href"
+          :rel="nav.href ? 'noopener noreferrer' : undefined"
+          :target="nav.href ? '_blank' : undefined"
         >
-          Random
-        </b-navbar-item>
-        <b-navbar-item
-          tag="router-link"
-          to="/quiz"
-          :active="$route.path === '/quiz'"
-        >
-          Quiz
-        </b-navbar-item>
-        <b-navbar-item
-          tag="router-link"
-          to="/hanzi"
-          :active="$route.path === '/hanzi'"
-        >
-          Hanzi
-        </b-navbar-item>
-        <b-navbar-item
-          tag="router-link"
-          to="/vocab"
-          :active="$route.path === '/vocab'"
-        >
-          Vocab
-        </b-navbar-item>
-        <b-navbar-item
-          tag="router-link"
-          to="/level"
-          :active="$route.path === '/level'"
-        >
-          Level
-        </b-navbar-item>
-        <b-navbar-item
-          tag="router-link"
-          to="/extra"
-          :active="$route.path === '/extra'"
-        >
-          Extra
-        </b-navbar-item>
-        <b-navbar-item
-          tag="router-link"
-          to="/settings"
-          :active="$route.path === '/settings'"
-        >
-          Settings
-        </b-navbar-item>
-        <b-navbar-item
-          tag="a"
-          href="https://github.com/patarapolw/zhquiz"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          About
+          <span class="prefix">
+            <fontawesome v-if="nav.icon" :icon="nav.icon" />
+            <span
+              v-if="nav.character || nav.text"
+              class="icon"
+              :class="{ 'font-chinese': nav.character }"
+            >
+              {{ nav.character || nav.text }}
+            </span>
+          </span>
+          <span>{{ nav.name }}</span>
         </b-navbar-item>
       </template>
       <template slot="end">
-        <b-navbar-item tag="div"> Signed in as {{ user.email }} </b-navbar-item>
-        <b-navbar-item tag="div">
-          <button
-            class="button is-danger"
-            @click="doLogout"
-            @keypress="doLogout"
-          >
-            Logout
-          </button>
+        <b-navbar-item tag="div" class="flex flex-row flex-wrap items-center">
+          <div>Signed in as {{ userName }}</div>
+          <div class="flex flex-row flex-grow">
+            <div class="flex-grow" />
+            <button
+              class="button is-danger"
+              @click="doLogout"
+              @keypress="doLogout"
+            >
+              Logout
+            </button>
+          </div>
         </b-navbar-item>
       </template>
     </b-navbar>
@@ -156,9 +105,59 @@ import { getGravatarUrl } from '~/assets/gravatar'
 
 @Component
 export default class AppLayout extends Vue {
-  level = ''
+  level = ' '
 
-  getGravatarUrl = getGravatarUrl
+  readonly getGravatarUrl = getGravatarUrl
+
+  get navItems() {
+    return [
+      {
+        name: 'Random',
+        to: '/random',
+        icon: 'random',
+      },
+      {
+        name: 'Quiz',
+        to: '/quiz',
+        icon: 'question-circle',
+      },
+      {
+        name: 'Hanzi',
+        to: '/hanzi',
+        character: '字',
+      },
+      {
+        name: 'Vocab',
+        to: '/vocab',
+        character: '词',
+      },
+      {
+        name: 'Level',
+        to: '/level',
+        text: this.level,
+      },
+      {
+        name: 'Extra',
+        to: '/extra',
+        icon: 'folder-plus',
+      },
+      {
+        name: 'Library',
+        to: '/library',
+        icon: 'book-open',
+      },
+      {
+        name: 'Settings',
+        to: '/settings',
+        icon: 'cog',
+      },
+      {
+        name: 'About',
+        href: 'https://github.com/patarapolw/zhquiz',
+        icon: ['fab', 'github'],
+      },
+    ]
+  }
 
   get isReady() {
     return this.isAuthReady && this.user
@@ -170,6 +169,14 @@ export default class AppLayout extends Vue {
 
   get user() {
     return this.$store.state.user
+  }
+
+  get userName() {
+    if (this.user) {
+      return this.user.displayName || this.user.name
+    }
+
+    return ''
   }
 
   created() {
@@ -205,12 +212,13 @@ export default class AppLayout extends Vue {
 
 .vertical-nav {
   display: none;
-  overflow: visible;
+  overflow: scroll;
   z-index: 10;
   display: flex;
   flex-direction: column;
   width: 300px;
   min-width: 300px;
+  max-height: 100vh;
   background-image: radial-gradient(
     circle at center right,
     rgb(255, 233, 162),
@@ -249,8 +257,8 @@ export default class AppLayout extends Vue {
   align-items: center;
 }
 
-.icon-nav a:active {
-  background-color: rgba(238, 238, 238, 0.295);
+.icon-nav a.active {
+  background-color: rgba(255, 255, 0, 0.5);
 }
 
 .icon-nav:last-child figure {
@@ -259,6 +267,7 @@ export default class AppLayout extends Vue {
 }
 
 .main-nav {
+  z-index: 1000;
   display: flex;
   background-image: radial-gradient(
     circle at center right,
@@ -267,7 +276,17 @@ export default class AppLayout extends Vue {
   );
 }
 
+.main-nav >>> .navbar-start:not(.is-active) :not(button) {
+  background-color: white;
+}
+
+.main-nav >>> .prefix {
+  width: 2em;
+  display: inline-block;
+}
+
 main {
+  max-height: 100vh;
   overflow: scroll;
   flex-grow: 1;
   padding: 1rem;
