@@ -1,5 +1,6 @@
 import makePinyin from 'chinese-to-pinyin'
 import { FastifyInstance } from 'fastify'
+import S from 'jsonschema-definer'
 
 import { hsk, zhSentence, zhVocab } from '../db/local'
 import { DbCardModel } from '../db/mongo'
@@ -272,25 +273,79 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     }
   )
 
-  f.post(
-    '/all',
+  f.get(
+    '/level',
     {
       schema: {
         tags: ['vocab'],
         summary: 'Get all leveled vocabs',
         response: {
-          200: {
-            type: 'object',
-            additionalProperties: {
-              type: 'array',
-              items: { type: 'string' },
-            },
-          },
+          200: S.shape({
+            result: S.list(
+              S.shape({
+                entry: S.string(),
+                level: S.integer().optional(),
+                srsLevel: S.integer().optional(),
+              })
+            ),
+          }),
         },
       },
     },
-    async () => {
-      return hsk
+    async (req, reply) => {
+      const u = req.session.user
+      if (!u || !u._id) {
+        reply.status(401).send()
+        return
+      }
+
+      const hskLevelMap = new Map<string, number>()
+      Object.entries(hsk).map(([_lv, vs]) => {
+        const lv = parseInt(_lv)
+        vs.map((v) => {
+          hskLevelMap.set(v, lv)
+        })
+      })
+
+      const r = await DbCardModel.aggregate([
+        {
+          $match: {
+            userId: u._id,
+            item: {
+              $in: Array.from(hskLevelMap.keys()),
+            },
+            type: 'vocab',
+          },
+        },
+        {
+          $lookup: {
+            from: 'quiz',
+            localField: '_id',
+            foreignField: 'cardId',
+            as: 'q',
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            entry: '$item',
+            srsLevel: { $ifNull: [{ $max: '$q.srsLevel' }, -1] },
+          },
+        },
+      ])
+
+      const srsLevelMap = new Map<string, number>()
+      r.map(({ entry, srsLevel }) => {
+        srsLevelMap.set(entry, srsLevel)
+      })
+
+      return {
+        result: Array.from(hskLevelMap).map(([entry, level]) => ({
+          entry,
+          level,
+          srsLevel: srsLevelMap.get(entry),
+        })),
+      }
     }
   )
 

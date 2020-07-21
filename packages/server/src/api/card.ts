@@ -114,9 +114,10 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         summary: 'Create a card',
         body: {
           type: 'object',
-          required: ['item', 'type'],
+          required: ['type'],
           properties: {
             item: { type: 'string' },
+            entries: { type: 'array', minItems: 1, items: { type: 'string' } },
             type: { type: 'string' },
           },
         },
@@ -129,37 +130,66 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         return
       }
 
-      const { item, type } = req.body
-      const directions = ['se', 'ec']
+      const { item: _item, entries, type } = req.body
 
-      if (type === 'vocab') {
-        const r = zhVocab.count({
-          $or: [
-            {
-              traditional: item,
-            },
-            {
-              simplified: item,
-              traditional: { $exists: true },
-            },
-          ],
-        })
-
-        if (r > 0) {
-          directions.push('te')
-        }
+      if (!_item && !entries) {
+        reply.status(304).send()
+        return
       }
 
-      await Promise.all(
-        directions.map((direction) =>
-          DbCardModel.create({
-            userId: u._id,
-            item,
-            type,
-            direction,
+      const itemMap = new Map<
+        string,
+        {
+          directions: string[]
+        }
+      >()
+
+      ;(entries || [_item]).map((it: string) => {
+        const directions = ['se', 'ec']
+
+        if (type === 'vocab') {
+          const r = zhVocab.count({
+            $or: [
+              {
+                traditional: it,
+              },
+              {
+                simplified: it,
+                traditional: { $exists: true },
+              },
+            ],
           })
+
+          if (r > 0) {
+            directions.push('te')
+          }
+        }
+
+        itemMap.set(it, { directions })
+      })
+
+      try {
+        await DbCardModel.insertMany(
+          Array.from(itemMap).reduce(
+            (prev, [it, { directions }]) => [
+              ...prev,
+              ...directions.map((dir) => ({
+                userId: u._id,
+                item: it,
+                type,
+                direction: dir,
+              })),
+            ],
+            [] as any[]
+          ),
+          { ordered: false }
         )
-      )
+      } catch (e) {
+        if (!e.result.insertedIds.length) {
+          reply.status(304).send()
+          return
+        }
+      }
 
       reply.status(201).send()
     }
@@ -202,7 +232,12 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           type: 'object',
           required: ['id'],
           properties: {
-            id: { type: 'string' },
+            id: {
+              anyOf: [
+                { type: 'string' },
+                { type: 'array', minItems: 1, items: { type: 'string' } },
+              ],
+            },
           },
         },
       },
@@ -215,7 +250,9 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }
 
       const { id } = req.body
-      await DbCardModel.purgeMany(u._id, { _id: id })
+      await DbCardModel.purgeMany(u._id, {
+        _id: { $in: Array.isArray(id) ? id : [id] },
+      })
 
       reply.status(201).send()
     }

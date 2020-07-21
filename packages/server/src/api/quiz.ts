@@ -1,8 +1,11 @@
 import { FastifyInstance } from 'fastify'
+import S from 'jsonschema-definer'
 
 import { DbCardModel, DbQuizModel } from '../db/mongo'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
+  const tags = ['quiz']
+
   f.get(
     '/card',
     {
@@ -130,5 +133,87 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     }
   )
 
+  postEntries()
+
   next()
+
+  function postEntries() {
+    const sBody = S.shape({
+      entries: S.list(S.string()),
+      type: S.string().enum('vocab'),
+      select: S.list(S.string().enum('cardId', 'entry', 'srsLevel')),
+    })
+
+    const sResponse = S.shape({
+      result: S.list(
+        S.shape({
+          entry: S.string().optional(),
+          srsLevel: S.integer().optional(),
+          cardId: S.string().optional(),
+        })
+      ),
+    })
+
+    f.post<any, any, any, typeof sBody.type>(
+      '/entries',
+      {
+        schema: {
+          tags,
+          body: sBody.valueOf(),
+          response: {
+            200: sResponse.valueOf(),
+          },
+        },
+      },
+      async (req, reply) => {
+        const u = req.session.user
+        if (!u || !u._id) {
+          reply.status(401).send()
+          return
+        }
+
+        const { entries, type, select } = req.body
+
+        const r = await DbCardModel.aggregate([
+          {
+            $match: {
+              userId: u._id,
+              item: {
+                $in: entries,
+              },
+              type,
+            },
+          },
+          {
+            $lookup: {
+              from: 'quiz',
+              localField: '_id',
+              foreignField: 'cardId',
+              as: 'q',
+            },
+          },
+          {
+            $project: Object.assign(
+              { _id: 0 },
+              select.reduce(
+                (prev, k) => ({
+                  ...prev,
+                  [k]: {
+                    cardId: '$_id',
+                    entry: '$item',
+                    srsLevel: { $ifNull: [{ $max: '$q.srsLevel' }, -1] },
+                  }[k],
+                }),
+                {} as any
+              )
+            ),
+          },
+        ])
+
+        return {
+          result: r,
+        }
+      }
+    )
+  }
 }
