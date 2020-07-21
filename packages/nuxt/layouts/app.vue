@@ -18,7 +18,7 @@
           <span
             v-if="nav.character || nav.text"
             class="icon"
-            :class="{ 'font-hanamin': nav.character }"
+            :class="{ 'font-han': nav.character }"
           >
             {{ nav.character || nav.text }}
           </span>
@@ -67,7 +67,7 @@
             <span
               v-if="nav.character || nav.text"
               class="icon"
-              :class="{ 'font-chinese': nav.character }"
+              :class="{ 'font-zh-simp': nav.character }"
             >
               {{ nav.character || nav.text }}
             </span>
@@ -103,8 +103,6 @@ import { getGravatarUrl } from '~/assets/gravatar'
 
 @Component
 export default class AppLayout extends Vue {
-  level = ' '
-
   readonly getGravatarUrl = getGravatarUrl
 
   get navItems() {
@@ -157,6 +155,11 @@ export default class AppLayout extends Vue {
     ]
   }
 
+  get level() {
+    const { level } = this.$store.state
+    return level ? level.toString() : ' '
+  }
+
   get isReady() {
     return this.isAuthReady && this.user
   }
@@ -190,11 +193,6 @@ export default class AppLayout extends Vue {
   async onAuthChanged() {
     if (this.isAuthReady && !this.user) {
       this.$router.push('/')
-    }
-
-    if (this.user) {
-      const { level = 60 } = await this.$axios.$get('/api/user/')
-      this.level = level.toString()
     }
   }
 }

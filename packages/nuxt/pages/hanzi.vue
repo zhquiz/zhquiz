@@ -17,7 +17,7 @@
       <div class="columns">
         <div class="column is-6 entry-display">
           <div
-            class="hanzi-display clickable"
+            class="hanzi-display clickable font-han"
             @contextmenu.prevent="
               (evt) => {
                 selectedHanzi = current
@@ -76,7 +76,7 @@
               <span
                 v-for="h in sub"
                 :key="h"
-                class="font-hanamin clickable"
+                class="font-han clickable"
                 @contextmenu.prevent="
                   (evt) => {
                     selectedHanzi = h
@@ -106,7 +106,7 @@
               <span
                 v-for="h in sup"
                 :key="h"
-                class="font-hanamin clickable"
+                class="font-han clickable"
                 @contextmenu.prevent="
                   (evt) => {
                     selectedHanzi = h
@@ -136,7 +136,7 @@
               <span
                 v-for="h in variants"
                 :key="h"
-                class="font-hanamin clickable"
+                class="font-han clickable"
                 @contextmenu.prevent="
                   (evt) => {
                     selectedHanzi = h
@@ -596,7 +596,7 @@ export default class HanziPage extends Vue {
   overflow: scroll;
 }
 
-.card-content .font-hanamin {
+.card-content .font-han {
   font-size: 50px;
   display: inline-block;
 }

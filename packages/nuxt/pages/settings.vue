@@ -23,7 +23,7 @@
         <div class="flex flex-row">
           <button
             class="button is-success"
-            :disabled="!user"
+            :disabled="!email"
             type="submit"
             aria-label="save"
           >
@@ -129,6 +129,7 @@ export default class SettingsPage extends Vue {
         level: this.lv[1],
       },
     })
+    this.$store.commit('updateLevel', this.lv[1])
     this.$buefy.snackbar.open('Saved')
   }
 

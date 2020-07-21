@@ -18,7 +18,7 @@
         <div class="column is-6 entry-display">
           <div class="vocab-display">
             <div
-              class="clickable text-center"
+              class="clickable text-center font-zh-simp"
               @contextmenu.prevent="
                 (evt) => {
                   selectedVocab = simplified
@@ -103,7 +103,7 @@
 
             <div class="card-content">
               <div
-                class="font-chinese clickable"
+                class="font-zh-trad clickable"
                 @contextmenu.prevent="
                   (evt) => {
                     selectedVocab = current.traditional
@@ -459,7 +459,7 @@ export default class VocabPage extends Vue {
   margin-bottom: 1rem;
 }
 
-.card .font-chinese {
+.card [class^='font-'] {
   font-size: 60px;
   height: 80px;
 }

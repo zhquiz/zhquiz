@@ -31,13 +31,13 @@ vocab:
       #### Vocab Simplified-English
 
       ```pug parsed
-      .font-chinese.text-w-normal(style="font-size: 2rem;") {{item}}
+      .font-zh-simp.text-w-normal(style="font-size: 2rem;") {{item}}
       ```
     back: |
       ```pug parsed
       {{#if raw.traditional}}
       div
-        .font-chinese.text-w-normal.inline-block.mr-4(style="font-size: 1.7rem;") {{join raw.traditional ' | '}}
+        .font-zh-trad.text-w-normal.inline-block.mr-4(style="font-size: 1.7rem;") {{join raw.traditional ' | '}}
         x-speak-button.speak-item--1 {{item}}
       {{/if}}
 
@@ -56,7 +56,7 @@ vocab:
       ul
         {{#each raw.sentences}}
         li
-          span.font-chinese {{chinese}} 
+          span.font-zh-simp {{chinese}} 
           x-speak-button.speak-item-{{@index}} {{chinese}}
           ul
             li {{english}}
@@ -68,12 +68,12 @@ vocab:
       #### Vocab Traditional-English
 
       ```pug parsed
-      .font-chinese.text-w-normal(style="font-size: 1.7rem;") {{join raw.traditional ' | '}}
+      .font-zh-trad.text-w-normal(style="font-size: 1.7rem;") {{join raw.traditional ' | '}}
       ```
     back: |
       ```pug parsed
       div
-        .font-chinese.text-w-normal.inline-block.mr-4(style="font-size: 2rem;") {{item}}
+        .font-zh-simp.text-w-normal.inline-block.mr-4(style="font-size: 2rem;") {{item}}
         x-speak-button.speak-item--1 {{item}}
 
       div {{join raw.pinyin ' | '}}
@@ -89,7 +89,7 @@ vocab:
       ul
         {{#each raw.sentences}}
         li
-          span.font-chinese {{chinese}} 
+          span.font-zh-simp {{chinese}} 
           x-speak-button.speak-item-{{@index}} {{chinese}}
           ul
             li {{english}}
@@ -106,11 +106,11 @@ vocab:
     back: |
       ```pug parsed
       div
-        .font-chinese.text-w-normal.inline-block.mr-4(style="font-size: 2rem;") {{item}}
+        .font-zh-simp.text-w-normal.inline-block.mr-4(style="font-size: 2rem;") {{item}}
         x-speak-button.speak-item--1 {{item}}
 
       {{#if raw.traditional}}
-      .font-chinese.text-w-normal(style="font-size: 1.7rem;") {{join raw.traditional ' | '}}
+      .font-zh-trad.text-w-normal(style="font-size: 1.7rem;") {{join raw.traditional ' | '}}
       {{/if}}
 
       {{#if raw.pinyin}}
@@ -128,7 +128,7 @@ vocab:
       ul
         {{#each raw.sentences}}
         li
-          span.font-chinese {{chinese}} 
+          span.font-zh-simp {{chinese}} 
           x-speak-button.speak-item-{{@index}} {{chinese}}
           ul
             li {{english}}
@@ -141,11 +141,11 @@ sentence:
       #### Sentence Chinese-English
 
       ```pug parsed
-      h2.font-chinese.text-w-normal {{item}}
+      h2.font-zh-simp.text-w-normal {{item}}
       ```
     back: |
       ```pug parsed
-      h2.font-chinese.text-w-normal.mr-4 {{item}}
+      h2.font-zh-simp.text-w-normal.mr-4 {{item}}
       x-speak-button.speak-item--1 {{item}}
 
       ul
@@ -168,7 +168,7 @@ sentence:
     back: |
       ```pug parsed
       div
-        span.font-chinese {{item}}
+        span.font-zh-simp {{item}}
         x-speak-button.speak-item--1 {{item}}
       ```
 
@@ -181,7 +181,7 @@ extra:
       #### Extra Chinese-English
 
       ```pug parsed
-      h2.font-chinese.text-w-normal {{item}}
+      h2.font-zh-simp.text-w-normal {{item}}
       ```
     back: |
       ```pug parsed
@@ -199,7 +199,7 @@ extra:
     back: |
       ```pug parsed
       div
-        h2.font-chinese.text-w-normal.inline-block.mr-4 {{item}}
+        h2.font-zh-simp.text-w-normal.inline-block.mr-4 {{item}}
         x-speak-button.speak-item--1 {{item}}
       ```
 

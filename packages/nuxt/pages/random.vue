@@ -6,7 +6,7 @@
           <div class="item-display item-display-top">
             <b-tooltip :label="hanzi.english">
               <div
-                class="font-hanamin hanzi clickable"
+                class="font-han hanzi clickable"
                 @contextmenu.prevent="(evt) => $refs.hanziContextmenu.open(evt)"
               >
                 {{ hanzi.item }}
@@ -21,7 +21,7 @@
           <div class="item-display item-display-top">
             <b-tooltip :label="vocab.english">
               <div
-                class="font-chinese hanzi clickable"
+                class="font-zh-simp hanzi clickable"
                 @contextmenu.prevent="(evt) => $refs.vocabContextmenu.open(evt)"
               >
                 {{ vocab.item }}
@@ -36,7 +36,7 @@
       <div class="item-display item-display-bottom">
         <b-tooltip :label="sentence.english">
           <div
-            class="font-chinese hanzi clickable text-center"
+            class="font-zh-simp hanzi clickable text-center"
             @contextmenu.prevent="(evt) => $refs.sentenceContextmenu.open(evt)"
           >
             {{ sentence.item }}
