@@ -51,7 +51,7 @@ export const DbUserModel = getModelForClass(DbUser, {
 
 @index({ userId: 1, type: 1, item: 1, direction: 1 }, { unique: true })
 export class DbCard {
-  @prop({ default: () => nanoid() }) _id!: string
+  @prop({ default: () => nanoid() }) _id?: string
   @prop({ required: true, index: true, ref: 'DbUser' }) userId!: Ref<DbUser>
   @prop({ required: true }) type!: string
   @prop({ required: true }) item!: string
@@ -183,7 +183,7 @@ export const DbQuizModel = getModelForClass(DbQuiz, {
 
 @index({ userId: 1, chinese: 1 }, { unique: true })
 class DbExtra {
-  @prop({ default: () => nanoid() }) _id!: string
+  @prop({ default: () => nanoid() }) _id?: string
   @prop({ required: true, index: true, ref: 'DbUser' }) userId!: Ref<DbUser>
   @prop({ required: true }) chinese!: string
   @prop() pinyin?: string
