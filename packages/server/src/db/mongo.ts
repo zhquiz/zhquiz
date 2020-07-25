@@ -6,7 +6,7 @@ import {
   setGlobalOptions,
   Severity,
 } from '@typegoose/typegoose'
-import dotProp from 'dot-prop'
+import { ObjectID } from 'mongodb'
 import { nanoid } from 'nanoid'
 
 import { getNextReview, repeatReview, srsMap } from './quiz'
@@ -38,7 +38,7 @@ export class DbUser {
     return user
   }
 
-  static async purgeOne(userId: string) {
+  static async purgeOne(userId: ObjectID) {
     await DbExtraModel.purgeMany(userId)
     await DbCardModel.purgeMany(userId)
     await DbUserModel.deleteOne({ userId })
@@ -61,7 +61,7 @@ export class DbCard {
   @prop({ default: '' }) mnemonic?: string
   @prop({ default: () => [] }) tag?: string[]
 
-  static async purgeMany(userId: string, cond?: any) {
+  static async purgeMany(userId: ObjectID, cond?: any) {
     cond = cond
       ? {
           $and: [cond, { userId }],
@@ -88,11 +88,11 @@ class DbQuiz {
   @prop({ default: () => repeatReview() }) nextReview?: Date
   @prop({ default: 0 }) srsLevel?: number
   @prop({ default: () => ({}) }) stat?: {
-    streak?: {
-      right?: number
-      wrong?: number
-      maxRight?: number
-      maxWrong?: number
+    streak: {
+      right: number
+      wrong: number
+      maxRight: number
+      maxWrong: number
     }
     lastRight?: Date
     lastWrong?: Date
@@ -114,45 +114,30 @@ class DbQuiz {
 
   private _updateSrsLevel(dSrsLevel: number) {
     return () => {
-      this.stat = this.stat || {}
+      this.stat = this.stat || {
+        streak: {
+          right: 0,
+          wrong: 0,
+          maxRight: 0,
+          maxWrong: 0,
+        },
+      }
 
       if (dSrsLevel > 0) {
-        dotProp.set(
-          this.stat,
-          'streak.right',
-          dotProp.get(this.stat, 'streak.right', 0) + 1
-        )
-        dotProp.set(this.stat, 'streak.wrong', 0)
-        dotProp.set(this.stat, 'lastRight', new Date())
+        this.stat.streak.right++
+        this.stat.streak.wrong = 0
+        this.stat.lastRight = new Date()
 
-        if (
-          dotProp.get(this.stat, 'streak.right', 1) >
-          dotProp.get(this.stat, 'streak.maxRight', 0)
-        ) {
-          dotProp.set(
-            this.stat,
-            'streak.maxRight',
-            dotProp.get(this.stat, 'streak.right', 1)
-          )
+        if (this.stat.streak.right > this.stat.streak.maxRight) {
+          this.stat.streak.maxRight = this.stat.streak.right
         }
       } else if (dSrsLevel < 0) {
-        dotProp.set(
-          this.stat,
-          'streak.wrong',
-          dotProp.get(this.stat, 'streak.wrong', 0) + 1
-        )
-        dotProp.set(this.stat, 'streak.right', 0)
-        dotProp.set(this.stat, 'lastWrong', new Date())
+        this.stat.streak.wrong++
+        this.stat.streak.right = 0
+        this.stat.lastWrong = new Date()
 
-        if (
-          dotProp.get(this.stat, 'streak.wrong', 1) >
-          dotProp.get(this.stat, 'streak.maxWrong', 0)
-        ) {
-          dotProp.set(
-            this.stat,
-            'streak.maxWrong',
-            dotProp.get(this.stat, 'streak.wrong', 1)
-          )
+        if (this.stat.streak.wrong > this.stat.streak.maxWrong) {
+          this.stat.streak.maxWrong = this.stat.streak.wrong
         }
       }
 
@@ -189,7 +174,7 @@ class DbExtra {
   @prop() pinyin?: string
   @prop({ required: true }) english!: string
 
-  static async purgeMany(userId: string, cond?: any) {
+  static async purgeMany(userId: ObjectID, cond?: any) {
     cond = cond
       ? {
           $and: [cond, { userId }],

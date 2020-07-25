@@ -4,14 +4,15 @@ import sqlite3 from 'better-sqlite3'
 import XRegExp from 'xregexp'
 
 import {
+  ensureSchema,
+  sSentence,
+  sToken,
+  sVocab,
   zh,
   zhInit,
   zhSentence,
   zhToken,
   zhVocab,
-  zSentence,
-  zToken,
-  zVocab,
 } from '../src/db/local'
 
 async function main() {
@@ -59,8 +60,8 @@ async function main() {
       // )
 
       zhSentence.insertOne(
-        zSentence.parse({
-          chinese: cleanOl(chinese),
+        ensureSchema(sSentence, {
+          chinese: cleanOl(chinese)!,
           pinyin: pinyin || undefined,
           english: cleanOl(english),
           frequency: frequency || undefined,
@@ -96,7 +97,7 @@ async function main() {
       }) => {
         if (reHan1.test(entry)) {
           zhToken.insertOne(
-            zToken.parse({
+            ensureSchema(sToken, {
               entry,
               sub: sub || undefined,
               sup: sup || undefined,
@@ -122,11 +123,11 @@ async function main() {
     .all()
     .map(({ simplified, traditional, pinyin, english, frequency }) => {
       zhVocab.insertOne(
-        zVocab.parse({
+        ensureSchema(sVocab, {
           simplified,
           traditional: traditional || undefined,
           pinyin: pinyin || undefined,
-          english: addSpaceToSlash(english),
+          english: addSpaceToSlash(english)!,
           frequency: frequency || undefined,
         })
       )

@@ -1,3 +1,16 @@
+import { FastifyReply, FastifyRequest } from 'fastify'
+import { ObjectID } from 'mongodb'
+
+export function checkAuthorize(req: FastifyRequest, reply: FastifyReply) {
+  const u = req.session.get('user')
+  if (!u || !u._id) {
+    reply.status(401)
+    return null
+  }
+
+  return new ObjectID(u._id)
+}
+
 export function restoreDate(obj: any): any {
   if (obj && typeof obj === 'object') {
     if (Array.isArray(obj)) {

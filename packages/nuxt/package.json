@@ -16,10 +16,10 @@
     "@nuxt/typescript-runtime": "^0.4.10",
     "@nuxtjs/axios": "^5.11.0",
     "@nuxtjs/firebase": "^6.1.0",
-    "@patarapolw/make-html-frontend-functions": "^1.0.0-pre15",
     "@types/codemirror": "^0.0.96",
     "@types/dompurify": "^2.0.2",
     "@types/he": "^1.1.1",
+    "@types/markdown-it": "^10.0.1",
     "@types/spark-md5": "^3.0.2",
     "@types/xregexp": "^4.3.0",
     "codemirror": "^5.55.0",
@@ -28,6 +28,8 @@
     "firebase": "^7.15.5",
     "handlebars": "^4.7.6",
     "he": "^1.2.0",
+    "hyperpug": "^1.5.3",
+    "markdown-it": "^11.0.0",
     "nuxt": "^2.13.0",
     "nuxt-buefy": "^0.3.31",
     "spark-md5": "^3.0.1",
@@ -53,6 +55,7 @@
     "eslint-plugin-vue-a11y": "^0.0.31",
     "nuxt-property-decorator": "^2.7.2",
     "prettier": "^2.0.5",
+    "typescript": "~3.8",
     "yaml-loader": "^0.6.0"
   },
   "resolutions": {

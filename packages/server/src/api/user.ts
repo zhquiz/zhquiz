@@ -1,32 +1,23 @@
 import { FastifyInstance } from 'fastify'
 
 import { DbUserModel } from '../db/mongo'
+import { checkAuthorize } from '../util'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
-  f.get(
-    '/',
-    {
-      schema: {
-        tags: ['user'],
-        summary: 'Get user config',
-      },
-    },
-    async (req, reply) => {
-      const u = req.session.user
-      if (u) {
-        return u.toJSON()
-      }
-
-      return reply.status(400).send()
+  f.get('/', async (req, reply) => {
+    const u = req.session.get('user')
+    if (!u) {
+      reply.status(401)
+      return null
     }
-  )
+
+    return u
+  })
 
   f.patch(
     '/',
     {
       schema: {
-        tags: ['user'],
-        summary: 'Update user config',
         body: {
           type: 'object',
           required: ['set'],
@@ -37,28 +28,32 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       },
     },
     async (req, reply) => {
-      const u = req.session.user
-      if (u) {
-        await DbUserModel.findByIdAndUpdate(u._id, {
-          $set: req.body.set,
-        })
-
-        return reply.status(201).send()
+      const userId = checkAuthorize(req, reply)
+      if (userId) {
+        return null
       }
 
-      return reply.status(400).send()
+      const { set } = req.body as {
+        set: any
+      }
+
+      await DbUserModel.findByIdAndUpdate(userId, {
+        $set: set,
+      })
+      reply.status(201)
+      return null
     }
   )
 
   f.delete('/', async (req, reply) => {
-    const u = req.session.user
-    if (u) {
-      await DbUserModel.purgeOne(u._id)
-
-      return reply.status(201).send()
+    const userId = checkAuthorize(req, reply)
+    if (!userId) {
+      return null
     }
 
-    return reply.status(400).send()
+    await DbUserModel.purgeOne(userId)
+    reply.status(201)
+    return null
   })
 
   next()

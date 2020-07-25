@@ -145,7 +145,7 @@ sentence:
       ```
     back: |
       ```pug parsed
-      h2.font-zh-simp.text-w-normal.mr-4 {{item}}
+      h2.font-zh-simp.text-w-normal.inline-block {{item}}
       x-speak-button.speak-item--1 {{item}}
 
       ul
