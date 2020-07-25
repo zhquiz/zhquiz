@@ -1,9 +1,9 @@
 import fs from 'fs'
 
 import yaml from 'js-yaml'
+import S, { BaseSchema } from 'jsonschema-definer'
 import Loki, { Collection } from 'lokijs'
 import XRegExp from 'xregexp'
-import * as z from 'zod'
 
 export const hsk = yaml.safeLoad(
   fs.readFileSync('assets/hsk.yaml', 'utf8')
@@ -11,46 +11,42 @@ export const hsk = yaml.safeLoad(
 
 export let zh: Loki
 
-export const zSentence = z.object({
-  chinese: z.string(),
-  pinyin: z.string().optional(),
-  english: z.string().optional(),
-  frequency: z.number().optional(),
-  level: z.number().optional(),
-  type: z.string().optional(),
+export const sSentence = S.shape({
+  chinese: S.string(),
+  pinyin: S.string().optional(),
+  english: S.string(),
+  frequency: S.number().optional(),
+  level: S.integer().optional(),
+  type: S.string().optional(),
 })
 
-export let zhSentence: Collection<z.infer<typeof zSentence>>
-
-const zDistinctString = z
-  .string()
-  .refine((s) => s && new Set(s).size === s.length)
+export let zhSentence: Collection<typeof sSentence.type>
 
 const reHan1 = XRegExp('^\\p{Han}$')
 
-export const zToken = z.object({
-  entry: z.string().refine((s) => reHan1.test(s)),
-  sub: zDistinctString.optional(),
-  sup: zDistinctString.optional(),
-  variants: zDistinctString.optional(),
-  frequency: z.number().optional(),
-  level: z.number().optional(),
-  tag: z.array(z.string()).optional(),
-  pinyin: z.string().optional(),
-  english: z.string().optional(),
+export const sToken = S.shape({
+  entry: S.string().custom((s) => reHan1.test(s)),
+  sub: S.string().optional(),
+  sup: S.string().optional(),
+  variants: S.string().optional(),
+  frequency: S.number().optional(),
+  level: S.integer().optional(),
+  tag: S.list(S.string()).optional(),
+  pinyin: S.string().optional(),
+  english: S.string().optional(),
 })
 
-export let zhToken: Collection<z.infer<typeof zToken>>
+export let zhToken: Collection<typeof sToken.type>
 
-export const zVocab = z.object({
-  simplified: z.string(),
-  traditional: z.string().optional(),
-  pinyin: z.string().optional(),
-  english: z.string(),
-  frequency: z.number().optional(),
+export const sVocab = S.shape({
+  simplified: S.string(),
+  traditional: S.string().optional(),
+  pinyin: S.string().optional(),
+  english: S.string(),
+  frequency: S.number().optional(),
 })
 
-export let zhVocab: Collection<z.infer<typeof zVocab>>
+export let zhVocab: Collection<typeof sVocab.type>
 
 export async function zhInit(filename = 'assets/zh.loki') {
   return new Promise((resolve) => {
@@ -82,4 +78,16 @@ export async function zhInit(filename = 'assets/zh.loki') {
       },
     })
   })
+}
+
+export function ensureSchema<T extends BaseSchema>(
+  schema: T,
+  data: T['type']
+): T['type'] {
+  const [, err] = schema.validate(data)
+  if (err) {
+    throw new Error((err[0] || {}).message)
+  }
+
+  return data as any
 }

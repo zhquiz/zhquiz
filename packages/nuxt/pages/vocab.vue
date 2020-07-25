@@ -347,7 +347,7 @@ export default class VocabPage extends Vue {
   @Watch('q')
   async onQChange(q: string) {
     if (q) {
-      let qs = (await this.$axios.$post('/api/lib/jieba', { entry: q }))
+      let qs = (await this.$axios.$get('/api/chinese/jieba', { params: { q } }))
         .result as string[]
       qs = qs.filter((h) => XRegExp('\\p{Han}+').test(h))
       this.$set(
