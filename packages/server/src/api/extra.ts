@@ -15,6 +15,9 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
   next()
 
+  /**
+   * TODO: Remove generic method. Consider more specific than cond: any
+   */
   function postQ() {
     const sBody = S.shape({
       cond: S.object().additionalProperties(true).optional(),
@@ -197,6 +200,9 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     )
   }
 
+  /**
+   * TODO: Remove generic method. Consider more specific than set: any
+   */
   function doPatch() {
     const sBody = S.shape({
       ids: S.list(S.string()),

@@ -7,6 +7,7 @@ import mongoose from 'mongoose'
 
 import { zhInit } from './db/local'
 import apiRouter from './api'
+import { logger } from './logger'
 
 async function main() {
   await mongoose.connect(process.env.MONGO_URI!, {
@@ -19,12 +20,7 @@ async function main() {
   await zhInit()
 
   const app = fastify({
-    logger:
-      process.env.NODE_ENV === 'development'
-        ? ({
-            prettyPrint: true,
-          } as any)
-        : true,
+    logger,
   })
   const port = parseInt(process.env.PORT || '8080')
 
@@ -47,7 +43,7 @@ async function main() {
         throw err
       }
 
-      console.log(`Go to http://localhost:${port}`)
+      logger.info(`Go to http://localhost:${port}`)
     }
   )
 }
