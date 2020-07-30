@@ -3,10 +3,11 @@ import fs from 'fs'
 import { FastifyInstance } from 'fastify'
 import fSession from 'fastify-secure-session'
 import admin from 'firebase-admin'
+import rison from 'rison-node'
 
-import { DbUserModel } from '../db/mongo'
+import { DbUserModel } from '@/db/mongo'
+import { filterObjValue, ser } from '@/util'
 
-import cardRouter from './card'
 import chineseRouter from './chinese'
 import extraRouter from './extra'
 import hanziRouter from './hanzi'
@@ -26,6 +27,53 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   }
 
   f.register(fSession, { key: fs.readFileSync('session-key') })
+
+  f.addHook('preHandler', function (req, _, done) {
+    if (req.body && typeof req.body === 'object') {
+      req.log.debug(
+        {
+          body: filterObjValue(
+            req.body,
+            /**
+             * This will keep only primitives, nulls, plain objects, Date, and RegExp
+             * ArrayBuffer in file uploads will be removed.
+             */
+            (v) => ser.hash(v) === ser.hash(ser.clone(v))
+          ),
+        },
+        'parsed body'
+      )
+    }
+    done()
+  })
+
+  f.addHook<{
+    Querystring: Record<string, string | string[]>
+  }>('preValidation', (req) => {
+    if (req.query) {
+      Object.entries(req.query).map(([k, v]) => {
+        if (
+          [
+            'select',
+            'sort',
+            'type',
+            'direction',
+            'tag',
+            'offset',
+            'limit',
+            'page',
+            'perPage',
+            'count',
+            'level',
+            'levelMin',
+          ].includes(k) ||
+          /^is[A-Z]/.test(k)
+        ) {
+          req.query[k] = rison.decode(v)
+        }
+      })
+    }
+  })
 
   f.addHook('preHandler', async (req, reply) => {
     const m = /^Bearer (.+)$/.exec(req.headers.authorization || '')
@@ -50,7 +98,6 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   f.register(sentenceRouter, { prefix: '/sentence' })
   f.register(vocabRouter, { prefix: '/vocab' })
   f.register(hanziRouter, { prefix: '/hanzi' })
-  f.register(cardRouter, { prefix: '/card' })
   f.register(userRouter, { prefix: '/user' })
   f.register(quizRouter, { prefix: '/quiz' })
   f.register(extraRouter, { prefix: '/extra' })

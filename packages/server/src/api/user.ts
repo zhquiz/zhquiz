@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 
-import { DbUserModel } from '../db/mongo'
-import { checkAuthorize } from '../util'
+import { DbUserModel } from '@/db/mongo'
+import { checkAuthorize } from '@/util/api'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   f.get('/', async (req, reply) => {

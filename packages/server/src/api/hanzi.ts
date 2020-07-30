@@ -1,18 +1,18 @@
 import { FastifyInstance } from 'fastify'
 import S from 'jsonschema-definer'
 
-import { hsk, zhToken } from '../db/local'
-import { DbCardModel } from '../db/mongo'
-import { checkAuthorize } from '../util'
+import { hsk, zhToken } from '@/db/local'
+import { DbQuizModel } from '@/db/mongo'
+import { checkAuthorize } from '@/util/api'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
-  postMatch()
-  postRandom()
+  getMatch()
+  getRandom()
 
   next()
 
-  function postMatch() {
-    const sBody = S.shape({
+  function getMatch() {
+    const sQuery = S.shape({
       entry: S.string(),
     })
 
@@ -26,20 +26,20 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }),
     })
 
-    f.post<{
-      Body: typeof sBody.type
+    f.get<{
+      Querystring: typeof sQuery.type
     }>(
       '/match',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
         },
       },
       async (req): Promise<typeof sResponse.type> => {
-        const { entry } = req.body
+        const { entry } = req.query
         const { sub, sup, variants, pinyin, english } =
           zhToken.findOne({ entry }) || {}
 
@@ -50,8 +50,8 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     )
   }
 
-  function postRandom() {
-    const sBody = S.shape({
+  function getRandom() {
+    const sQuery = S.shape({
       levelMin: S.integer().optional(),
       level: S.integer().optional(),
     })
@@ -62,13 +62,13 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       level: S.integer().optional(),
     })
 
-    f.post<{
-      Body: typeof sBody.type
+    f.get<{
+      Querystring: typeof sQuery.type
     }>(
       '/random',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
@@ -80,7 +80,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           return {}
         }
 
-        const { levelMin, level } = req.body
+        const { levelMin, level } = req.query
 
         const hsMap = new Map<string, number>()
 
@@ -101,33 +101,13 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
         const reviewing = new Set<string>(
           (
-            await DbCardModel.aggregate([
-              {
-                $match: {
-                  userId,
-                  item: { $in: Array.from(hsMap.keys()) },
-                  type: 'hanzi',
-                },
-              },
-              {
-                $lookup: {
-                  from: 'quiz',
-                  localField: '_id',
-                  foreignField: 'cardId',
-                  as: 'q',
-                },
-              },
-              {
-                $match: { 'q.nextReview': { $exists: true } },
-              },
-              {
-                $project: {
-                  _id: 0,
-                  item: 1,
-                },
-              },
-            ])
-          ).map((el) => el.item)
+            await DbQuizModel.find({
+              userId,
+              entry: { $in: Array.from(hsMap.keys()) },
+              type: 'hanzi',
+              nextReview: { $exists: true },
+            }).select('entry')
+          ).map((el) => el.entry)
         )
 
         const hs = Array.from(hsMap).filter(([h]) => !reviewing.has(h))
