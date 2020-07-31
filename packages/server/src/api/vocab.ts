@@ -2,9 +2,9 @@ import makePinyin from 'chinese-to-pinyin'
 import { FastifyInstance } from 'fastify'
 import S from 'jsonschema-definer'
 
-import { hsk, zhSentence, zhVocab } from '../db/local'
-import { DbCardModel } from '../db/mongo'
-import { checkAuthorize } from '../util'
+import { hsk, zhSentence, zhVocab } from '@/db/local'
+import { DbQuizModel } from '@/db/mongo'
+import { checkAuthorize } from '@/util/api'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   const isSimp = (s = '') => {
@@ -17,15 +17,15 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     return -(arr.reverse().indexOf(s) + 1) / arr.length
   }
 
-  postQ()
-  postMatch()
-  postRandom()
+  getQ()
+  getMatch()
+  getRandom()
   getLevel()
 
   next()
 
-  function postQ() {
-    const sBody = S.shape({
+  function getQ() {
+    const sQuery = S.shape({
       entry: S.string(),
       offset: S.integer().optional(),
       limit: S.integer(),
@@ -43,20 +43,20 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       count: S.integer().optional(),
     })
 
-    f.post<{
-      Body: typeof sBody.type
+    f.get<{
+      Querystring: typeof sQuery.type
     }>(
       '/q',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
         },
       },
       async (req): Promise<typeof sResponse.type> => {
-        const { entry, offset = 0, limit = 10 } = req.body
+        const { entry, offset = 0, limit = 10 } = req.query
 
         return {
           result: zhVocab
@@ -86,8 +86,8 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     )
   }
 
-  function postMatch() {
-    const sBody = S.shape({
+  function getMatch() {
+    const sQuery = S.shape({
       entry: S.string(),
     })
 
@@ -111,20 +111,20 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       }),
     })
 
-    f.post<{
-      Body: typeof sBody.type
+    f.get<{
+      Querystring: typeof sQuery.type
     }>(
       '/match',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
         },
       },
       async (req): Promise<typeof sResponse.type> => {
-        const { entry } = req.body
+        const { entry } = req.query
 
         return {
           result: {
@@ -160,8 +160,8 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     )
   }
 
-  function postRandom() {
-    const sBody = S.shape({
+  function getRandom() {
+    const sQuery = S.shape({
       level: S.integer().optional(),
       levelMin: S.integer().optional(),
     })
@@ -172,13 +172,13 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       level: S.integer().optional(),
     })
 
-    f.post<{
-      Body: typeof sBody.type
+    f.get<{
+      Querystring: typeof sQuery.type
     }>(
       '/random',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
@@ -190,7 +190,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           return {}
         }
 
-        const { levelMin, level } = req.body
+        const { levelMin, level } = req.query
 
         let vs = Object.entries(hsk)
           .map(([lv, vs]) => ({ lv: parseInt(lv), vs }))
@@ -206,33 +206,13 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
         const reviewing = new Set<string>(
           (
-            await DbCardModel.aggregate([
-              {
-                $match: {
-                  userId,
-                  item: { $in: vs.map(({ v }) => v) },
-                  type: 'vocab',
-                },
-              },
-              {
-                $lookup: {
-                  from: 'quiz',
-                  localField: '_id',
-                  foreignField: 'cardId',
-                  as: 'q',
-                },
-              },
-              {
-                $match: { 'q.nextReview': { $exists: true } },
-              },
-              {
-                $project: {
-                  _id: 0,
-                  item: 1,
-                },
-              },
-            ])
-          ).map((el) => el.item)
+            await DbQuizModel.find({
+              userId,
+              entry: { $in: vs.map(({ v }) => v) },
+              type: 'vocab',
+              nextReview: { $exists: true },
+            }).select('entry')
+          ).map((el) => el.entry)
         )
 
         vs = vs.filter(({ v }) => !reviewing.has(v))
@@ -294,35 +274,17 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           })
         })
 
-        const r = await DbCardModel.aggregate([
-          {
-            $match: {
-              userId,
-              item: {
-                $in: Array.from(hskLevelMap.keys()),
-              },
-              type: 'vocab',
-            },
+        const r = await DbQuizModel.find({
+          userId,
+          entry: {
+            $in: Array.from(hskLevelMap.keys()),
           },
-          {
-            $lookup: {
-              from: 'quiz',
-              localField: '_id',
-              foreignField: 'cardId',
-              as: 'q',
-            },
-          },
-          {
-            $project: {
-              _id: 0,
-              entry: '$item',
-              srsLevel: { $ifNull: [{ $max: '$q.srsLevel' }, -1] },
-            },
-          },
-        ])
+          type: 'vocab',
+          tag: 'hsk',
+        })
 
         const srsLevelMap = new Map<string, number>()
-        r.map(({ entry, srsLevel }) => {
+        r.map(({ entry, srsLevel = -1 }) => {
           srsLevelMap.set(entry, srsLevel)
         })
 

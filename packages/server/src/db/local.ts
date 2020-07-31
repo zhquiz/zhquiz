@@ -13,7 +13,7 @@ export let zh: Loki
 
 export const sSentence = S.shape({
   chinese: S.string(),
-  pinyin: S.string().optional(),
+  pinyin: S.string(),
   english: S.string(),
   frequency: S.number().optional(),
   level: S.integer().optional(),
@@ -41,7 +41,7 @@ export let zhToken: Collection<typeof sToken.type>
 export const sVocab = S.shape({
   simplified: S.string(),
   traditional: S.string().optional(),
-  pinyin: S.string().optional(),
+  pinyin: S.string(),
   english: S.string(),
   frequency: S.number().optional(),
 })

@@ -2,44 +2,42 @@ import makePinyin from 'chinese-to-pinyin'
 import { FastifyInstance } from 'fastify'
 import S from 'jsonschema-definer'
 
-import { zhSentence, zhToken, zhVocab } from '../db/local'
-import { DbExtraModel } from '../db/mongo'
-import { checkAuthorize } from '../util'
+import { zhSentence, zhToken, zhVocab } from '@/db/local'
+import { DbExtraModel, sDbExtraExport } from '@/db/mongo'
+import { checkAuthorize } from '@/util/api'
+import { sId, sQuizType, sSort, sStringNonEmpty } from '@/util/schema'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
-  postQ()
-  postMatch()
-  doPut()
-  doPatch()
+  getQ()
+  getMatch()
+  doCreate()
+  doUpdate()
   doDelete()
 
   next()
 
-  /**
-   * TODO: Remove generic method. Consider more specific than cond: any
-   */
-  function postQ() {
-    const sBody = S.shape({
-      cond: S.object().additionalProperties(true).optional(),
-      projection: S.object().additionalProperties(S.integer()).optional(),
-      sort: S.object().additionalProperties(S.integer()).optional(),
-      offset: S.integer().optional(),
-      limit: S.anyOf(S.integer(), S.null()).optional(),
-      hasCount: S.boolean().optional(),
+  function getQ() {
+    const sQuery = S.shape({
+      select: S.list(S.string()).minItems(1),
+      sort: S.list(sSort(['chinese', 'pinyin', 'english', 'updatedAt']))
+        .minItems(1)
+        .optional(),
+      page: S.integer().minimum(1),
+      perPage: S.integer().minimum(10).optional(),
     })
 
     const sResponse = S.shape({
-      result: S.list(S.object().additionalProperties(true)),
+      result: S.list(sDbExtraExport),
       count: S.integer().optional(),
     })
 
-    f.post<{
-      Body: typeof sBody.type
+    f.get<{
+      Querystring: typeof sQuery.type
     }>(
       '/q',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
@@ -48,86 +46,73 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       async (req, reply): Promise<typeof sResponse.type> => {
         const userId = checkAuthorize(req, reply)
         if (!userId) {
-          return {
-            result: [],
-          }
+          return undefined as any
         }
 
         const {
-          cond = {},
-          projection,
-          sort = { updatedAt: -1 },
-          offset = 0,
-          limit = 10,
-          hasCount = true,
-        } = req.body
+          select,
+          sort = ['-updatedAt'],
+          page = 1,
+          perPage = 10,
+        } = req.query
+        const offset = (page - 1) * perPage
 
-        const match = [{ $match: { userId } }, { $match: cond }]
+        const result = await DbExtraModel.find({
+          userId,
+        })
+          .sort(sort.join(' '))
+          .select(select.join(' '))
+          .skip(offset)
+          .limit(perPage)
 
-        const [rData, rCount = []] = await Promise.all([
-          DbExtraModel.aggregate([
-            ...match,
-            { $sort: sort },
-            { $skip: offset },
-            ...(limit ? [{ $limit: limit }] : []),
-            ...(projection ? [{ $project: projection }] : []),
-          ]),
-          hasCount
-            ? DbExtraModel.aggregate([...match, { $count: 'count' }])
-            : undefined,
-        ])
+        const count = await DbExtraModel.countDocuments({ userId })
 
         return {
-          result: rData,
-          count: hasCount ? (rCount[0] || {}).count || 0 : undefined,
+          result,
+          count,
         }
       }
     )
   }
 
-  function postMatch() {
-    const sBody = S.shape({
-      entry: S.string(),
+  function getMatch() {
+    const sQuery = S.shape({
+      entry: sStringNonEmpty,
+      select: S.list(S.string()).minItems(1).optional(),
     })
 
-    const sResponse = S.shape({
-      result: S.shape({
-        chinese: S.string(),
-        pinyin: S.string(),
-        english: S.string(),
-      }).optional(),
-    })
+    const sResponse = sDbExtraExport
 
-    f.post<{
-      Body: typeof sBody.type
+    f.get<{
+      Querystring: typeof sQuery.type
     }>(
-      '/match',
+      '/',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
         },
       },
-      async (req): Promise<typeof sResponse.type> => {
-        const { entry } = req.body
-        const r = await DbExtraModel.findOne({ chinese: entry })
-
-        return {
-          result: r
-            ? {
-                chinese: r.chinese,
-                pinyin: r.pinyin || makePinyin(r.chinese, { keepRest: true }),
-                english: r.english,
-              }
-            : undefined,
+      async (req, reply): Promise<typeof sResponse.type> => {
+        const userId = checkAuthorize(req, reply)
+        if (!userId) {
+          return undefined as any
         }
+
+        const { entry, select = ['chinese', 'pinyin', 'english'] } = req.query
+        const r = await DbExtraModel.findOne({
+          userId,
+          entry,
+        }).select(select.join(' '))
+
+        return r || {}
       }
     )
   }
 
-  function doPut() {
+  function doCreate() {
     const sBody = S.shape({
       chinese: S.string(),
       pinyin: S.string().optional(),
@@ -135,7 +120,11 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     })
 
     const sResponse = S.shape({
-      type: S.string().optional(),
+      existing: S.shape({
+        type: sQuizType,
+        entry: S.string(),
+      }).optional(),
+      _id: sId.optional(),
     })
 
     f.put<{
@@ -153,60 +142,70 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       async (req, reply): Promise<typeof sResponse.type> => {
         const userId = checkAuthorize(req, reply)
         if (!userId) {
-          return {}
+          return undefined as any
         }
 
         const { chinese, pinyin, english } = req.body
 
-        if (
-          zhVocab.count({
-            $or: [{ simplified: chinese }, { traditional: chinese }],
-          }) > 0
-        ) {
-          return {
-            type: 'vocab',
-          }
-        }
-
-        if (zhSentence.count({ chinese }) > 0) {
-          return {
-            type: 'sentence',
-          }
-        }
-
-        if (
-          zhToken.count({
-            entry: chinese,
-            // @ts-ignore
-            english: { $exists: true },
+        {
+          const existing = zhVocab.findOne({
+            $or: [{ simplified: chinese }, { traditional: { $in: chinese } }],
           })
-        ) {
-          return {
-            type: 'hanzi',
+          if (existing) {
+            return {
+              existing: {
+                type: 'vocab',
+                entry: existing.simplified,
+              },
+            }
           }
         }
 
-        await DbExtraModel.create({
+        if (chinese.length === 1) {
+          const existing = zhToken.findOne({
+            entry: chinese,
+            english: { $ne: undefined },
+          })
+          if (existing) {
+            return {
+              existing: {
+                type: 'hanzi',
+                entry: chinese,
+              },
+            }
+          }
+        } else {
+          const existing = zhSentence.findOne({
+            chinese,
+          })
+          if (existing) {
+            return {
+              existing: {
+                type: 'sentence',
+                entry: chinese,
+              },
+            }
+          }
+        }
+
+        const extra = await DbExtraModel.create({
           userId,
           chinese,
-          pinyin,
+          pinyin: pinyin || makePinyin(chinese, { keepRest: true }),
           english,
         })
 
         return {
-          type: 'extra',
+          _id: extra._id,
         }
       }
     )
   }
 
-  /**
-   * TODO: Remove generic method. Consider more specific than set: any
-   */
-  function doPatch() {
+  function doUpdate() {
     const sBody = S.shape({
-      ids: S.list(S.string()),
-      set: S.object().additionalProperties(true),
+      id: S.anyOf(sId, S.list(sId).minItems(1)),
+      set: sDbExtraExport,
     })
 
     f.patch<{
@@ -215,49 +214,63 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       '/',
       {
         schema: {
-          body: sBody.valueOf(),
+          body: {
+            type: 'object',
+            required: ['ids', 'set'],
+            properties: {
+              ids: { type: 'array', items: { type: 'string' } },
+              set: { type: 'object' },
+            },
+          },
         },
       },
-      async (req, reply) => {
-        const { ids, set } = req.body
+      async (req, reply): Promise<void> => {
+        const userId = checkAuthorize(req, reply)
+        if (!userId) {
+          return
+        }
+
+        const { id, set } = req.body
 
         await DbExtraModel.updateMany(
-          { _id: { $in: ids } },
+          { _id: { $in: Array.isArray(id) ? id : [id] } },
           {
             $set: set,
           }
         )
 
-        reply.status(201)
-        return null
+        reply.status(201).send()
       }
     )
   }
 
   function doDelete() {
-    const sBody = S.shape({
-      ids: S.list(S.string()).minItems(1),
+    const sQuery = S.shape({
+      id: sId,
     })
 
     f.delete<{
-      Body: typeof sBody.type
+      Querystring: typeof sQuery.type
     }>(
       '/',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
         },
       },
-      async (req, reply) => {
+      async (req, reply): Promise<void> => {
         const userId = checkAuthorize(req, reply)
         if (!userId) {
-          return null
+          return
         }
 
-        const { ids } = req.body
-        await DbExtraModel.purgeMany(userId, { _id: { $in: ids } })
-        reply.status(201)
-        return null
+        const { id } = req.query
+
+        await DbExtraModel.purgeMany(userId, {
+          _id: id,
+        })
+
+        reply.status(201).send()
       }
     )
   }

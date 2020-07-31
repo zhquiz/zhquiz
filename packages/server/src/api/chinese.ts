@@ -24,8 +24,6 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       '/jieba',
       {
         schema: {
-          // tags,
-          // summary: 'Cut chinese text into segments',
           querystring: sQuery.valueOf(),
           response: {
             200: sResult.valueOf(),

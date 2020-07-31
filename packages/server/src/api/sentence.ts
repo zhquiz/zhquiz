@@ -2,9 +2,9 @@ import makePinyin from 'chinese-to-pinyin'
 import { FastifyInstance } from 'fastify'
 import S from 'jsonschema-definer'
 
-import { zhSentence } from '../db/local'
-import { DbCardModel } from '../db/mongo'
-import { checkAuthorize } from '../util'
+import { zhSentence } from '@/db/local'
+import { DbQuizModel } from '@/db/mongo'
+import { checkAuthorize } from '@/util/api'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   const isSimp = (s = '') => {
@@ -17,14 +17,14 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     return -(arr.reverse().indexOf(s) + 1) / arr.length
   }
 
-  postMatch()
-  postQ()
-  postRandom()
+  getMatch()
+  matchQ()
+  getRandom()
 
   next()
 
-  function postMatch() {
-    const sBody = S.shape({
+  function getMatch() {
+    const sQuery = S.shape({
       entry: S.string(),
     })
 
@@ -38,20 +38,20 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       ),
     })
 
-    f.post<{
-      Body: typeof sBody.type
+    f.get<{
+      Querystring: typeof sQuery.type
     }>(
       '/match',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
         },
       },
       async (req): Promise<typeof sResponse.type> => {
-        const { entry } = req.body
+        const { entry } = req.query
 
         return {
           result: zhSentence
@@ -73,8 +73,8 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     )
   }
 
-  function postQ() {
-    const sBody = S.shape({
+  function matchQ() {
+    const sQuery = S.shape({
       entry: S.string(),
       offset: S.integer().optional(),
       limit: S.integer().optional(),
@@ -91,20 +91,20 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       count: S.integer().optional(),
     })
 
-    f.post<{
-      Body: typeof sBody.type
+    f.get<{
+      Querystring: typeof sQuery.type
     }>(
       '/q',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
         },
       },
       async (req): Promise<typeof sResponse.type> => {
-        const { entry, offset = 0, limit = 10 } = req.body
+        const { entry, offset = 0, limit = 10 } = req.query
 
         return {
           result: zhSentence
@@ -130,8 +130,8 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     )
   }
 
-  function postRandom() {
-    const sBody = S.shape({
+  function getRandom() {
+    const sQuery = S.shape({
       levelMin: S.integer().optional(),
       level: S.integer().optional(),
     })
@@ -142,13 +142,13 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       level: S.integer().optional(),
     })
 
-    f.post<{
-      Body: typeof sBody.type
+    f.get<{
+      Querystring: typeof sQuery.type
     }>(
       '/random',
       {
         schema: {
-          body: sBody.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
@@ -160,41 +160,23 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           return {}
         }
 
-        const reviewing: string[] = (
-          await DbCardModel.aggregate([
-            {
-              $match: {
-                userId,
-                type: 'sentence',
-              },
-            },
-            {
-              $lookup: {
-                from: 'quiz',
-                localField: '_id',
-                foreignField: 'cardId',
-                as: 'q',
-              },
-            },
-            {
-              $match: { 'q.nextReview': { $exists: true } },
-            },
-            {
-              $project: {
-                _id: 0,
-                item: 1,
-              },
-            },
-          ])
-        ).map((el) => el.item)
+        const reviewing = new Set<string>(
+          (
+            await DbQuizModel.find({
+              userId,
+              type: 'sentence',
+              nextReview: { $exists: true },
+            }).select('entry')
+          ).map((el) => el.entry)
+        )
 
-        const { levelMin, level } = req.body
+        const { levelMin, level } = req.query
         const getSentence = (type: any) => {
           const ss = zhSentence.find({
             $and: [
               { level: { $lte: level || 60 } },
               { level: { $gte: levelMin || 1 } },
-              { chinese: { $nin: reviewing } },
+              { chinese: { $nin: Array.from(reviewing) } },
               { type },
             ],
           })

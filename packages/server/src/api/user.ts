@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 
-import { DbUserModel } from '../db/mongo'
-import { checkAuthorize } from '../util'
+import { DbUserModel } from '@/db/mongo'
+import { checkAuthorize } from '@/util/api'
 
 export default (f: FastifyInstance, _: any, next: () => void) => {
   f.get('/', async (req, reply) => {
@@ -52,6 +52,13 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     }
 
     await DbUserModel.purgeOne(userId)
+    req.session.delete()
+    reply.status(201)
+    return null
+  })
+
+  f.delete('/signOut', async (req, reply) => {
+    req.session.delete()
     reply.status(201)
     return null
   })

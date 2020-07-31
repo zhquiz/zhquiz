@@ -22,7 +22,12 @@
             <b-tooltip :label="vocab.english">
               <div
                 class="font-zh-simp hanzi clickable"
-                @contextmenu.prevent="(evt) => $refs.vocabContextmenu.open(evt)"
+                @contextmenu.prevent="
+                  (evt) =>
+                    getQuizStatus(sentence).then(() =>
+                      $refs.vocabContextmenu.open(evt)
+                    )
+                "
               >
                 {{ vocab.item }}
               </div>
@@ -37,7 +42,12 @@
         <b-tooltip :label="sentence.english">
           <div
             class="font-zh-simp hanzi clickable text-center"
-            @contextmenu.prevent="(evt) => $refs.sentenceContextmenu.open(evt)"
+            @contextmenu.prevent="
+              (evt) =>
+                getQuizStatus(sentence).then(() =>
+                  $refs.sentenceContextmenu.open(evt)
+                )
+            "
           >
             {{ sentence.item }}
           </div>
@@ -244,14 +254,20 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from 'nuxt-property-decorator'
+import { Component, Vue } from 'nuxt-property-decorator'
 
-import { doMapKeypress } from '../assets/keypress'
-
+import { doMapKeypress } from '~/assets/keypress'
 import { speak } from '~/assets/speak'
 
-@Component({
+@Component<RandomPage>({
   layout: 'app',
+  mounted() {
+    window.onkeypress = this.onKeypress.bind(this)
+    Promise.all([this.loadHanzi(), this.loadVocab(), this.loadSentence()])
+  },
+  beforeDestroy() {
+    window.onkeypress = null
+  },
 })
 export default class RandomPage extends Vue {
   hanzi = {
@@ -275,19 +291,12 @@ export default class RandomPage extends Vue {
     id: [],
   }
 
-  levelMin = 0
-  level = 0
-
-  created() {
-    this.onUserChanged()
+  get level() {
+    return this.$accessor.level
   }
 
-  mounted() {
-    window.onkeypress = this.onKeypress.bind(this)
-  }
-
-  beforeDestroy() {
-    window.onkeypress = null
+  get levelMin() {
+    return this.$accessor.levelMin
   }
 
   onKeypress(evt: KeyboardEvent) {
@@ -307,113 +316,91 @@ export default class RandomPage extends Vue {
     }
   }
 
-  @Watch('$store.state.user')
-  async onUserChanged() {
-    if (this.$store.state.user) {
-      const { levelMin, level } = await this.$axios.$get('/api/user/')
-      this.levelMin = levelMin || 1
-      this.level = level || 60
-    }
-  }
-
-  @Watch('level')
   async loadHanzi() {
     if (this.level) {
-      const { result, english = null } = await this.$axios.$post(
+      const { result, english = null } = await this.$axios.$get(
         '/api/hanzi/random',
         {
-          levelMin: this.levelMin,
-          level: this.level,
+          params: {
+            levelMin: this.levelMin,
+            level: this.level,
+          },
         }
       )
 
       this.hanzi.item = result
       this.hanzi.english = english
-      await this.getQuizStatus(this.hanzi)
     }
   }
 
-  @Watch('level')
   async loadVocab() {
     if (this.level) {
-      const { result, english = null } = await this.$axios.$post(
+      const { result, english = null } = await this.$axios.$get(
         '/api/vocab/random',
         {
-          levelMin: this.levelMin,
-          level: this.level,
+          params: {
+            levelMin: this.levelMin,
+            level: this.level,
+          },
         }
       )
 
       this.vocab.item = result
       this.vocab.english = english
-      await this.getQuizStatus(this.vocab)
     }
   }
 
-  @Watch('level')
   async loadSentence() {
     if (this.level) {
-      const { result, english = null } = await this.$axios.$post(
+      const { result, english = null } = await this.$axios.$get(
         '/api/sentence/random',
         {
-          levelMin: this.levelMin,
-          level: this.level,
+          params: {
+            levelMin: this.levelMin,
+            level: this.level,
+          },
         }
       )
       this.sentence.item = result
       this.sentence.english = english
-
-      await this.getQuizStatus(this.sentence)
     }
   }
 
   async getQuizStatus(item: any) {
     const vm = this as any
 
-    if (this.$store.state.user) {
-      const { result } = await this.$axios.$post('/api/card/q', {
-        cond: {
-          item: item.item,
-          type: item.type,
-        },
-        projection: { _id: 1 },
-        hasCount: false,
-      })
+    const { result } = await this.$axios.$get('/api/quiz/entry', {
+      params: {
+        entry: item.item,
+        type: item.type,
+        select: ['_id'],
+      },
+    })
 
-      this.$set(
-        vm[item.type],
-        'id',
-        result.map((el: any) => el._id)
-      )
-    } else {
-      this.$set(vm[item.type], 'id', [])
-    }
+    this.$set(
+      vm[item.type],
+      'id',
+      result.map((el: any) => el._id)
+    )
   }
 
   async addToQuiz(item: any) {
-    if (this.$store.state.user) {
-      await this.$axios.$put('/api/card/', item)
-      this.getQuizStatus(item)
+    await this.$axios.$put('/api/quiz/', {
+      entry: item.item,
+      type: item.type,
+    })
 
-      this.$buefy.snackbar.open(`Added ${item.type}: ${item.item} to quiz`)
-    }
+    this.$buefy.snackbar.open(`Added ${item.type}: ${item.item} to quiz`)
   }
 
   async removeFromQuiz(item: any) {
-    if (this.$store.state.user) {
-      const vm = this as any
+    const vm = this as any
 
-      await Promise.all(
-        vm[item.type].id.map((i: string) =>
-          this.$axios.$delete('/api/card/', {
-            data: { id: i },
-          })
-        )
-      )
-      this.getQuizStatus(item)
+    await this.$axios.$post('/api/quiz/delete/ids', {
+      ids: vm[item.type].id,
+    })
 
-      this.$buefy.snackbar.open(`Removed ${item.type}: ${item.item} from quiz`)
-    }
+    this.$buefy.snackbar.open(`Removed ${item.type}: ${item.item} from quiz`)
   }
 }
 </script>

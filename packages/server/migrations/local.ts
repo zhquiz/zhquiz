@@ -1,6 +1,7 @@
 import fs from 'fs'
 
 import sqlite3 from 'better-sqlite3'
+import makePinyin from 'chinese-to-pinyin'
 import XRegExp from 'xregexp'
 
 import {
@@ -55,15 +56,11 @@ async function main() {
   )
     .all()
     .map(({ chinese, pinyin, english, frequency, level }) => {
-      // console.log(
-      //   Array.from<string>(chinese.match(reHan)).every((c) => simpChars.has(c))
-      // )
-
       zhSentence.insertOne(
         ensureSchema(sSentence, {
           chinese: cleanOl(chinese)!,
-          pinyin: pinyin || undefined,
-          english: cleanOl(english),
+          pinyin: pinyin || makePinyin(chinese, { keepRest: true }),
+          english: cleanOl(english)!,
           frequency: frequency || undefined,
           level: level || undefined,
           type:
@@ -156,5 +153,5 @@ function indicesOf(str: string, c: string) {
 }
 
 if (require.main === module) {
-  main().catch(console.error)
+  main()
 }
