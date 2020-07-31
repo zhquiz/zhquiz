@@ -24,9 +24,15 @@
 
 <script lang="ts">
 import {} from 'codemirror'
-import { Component, Prop, Vue, Watch } from 'nuxt-property-decorator'
+import { Component, Prop, Vue } from 'nuxt-property-decorator'
 
-@Component
+@Component<MarkdownEditor>({
+  watch: {
+    value() {
+      this.onValueChange()
+    },
+  },
+})
 export default class MarkdownEditor extends Vue {
   @Prop({ default: '' }) value!: string
   @Prop({ required: true }) renderer!: (s: string) => string
@@ -64,7 +70,6 @@ export default class MarkdownEditor extends Vue {
     }
   }
 
-  @Watch('value')
   onValueChange() {
     this.isFromExternal = true
     this.codemirror.setValue(this.value)

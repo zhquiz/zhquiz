@@ -406,12 +406,29 @@
 
 <script lang="ts">
 import XRegExp from 'xregexp'
-import { Component, Vue, Watch } from 'nuxt-property-decorator'
+import { Component, Vue } from 'nuxt-property-decorator'
 
 import { speak } from '~/assets/speak'
 
-@Component({
+@Component<HanziPage>({
   layout: 'app',
+  watch: {
+    q() {
+      this.onQChange(this.q)
+    },
+    current() {
+      this.load()
+    },
+    selectedHanzi() {
+      this.loadHanziStatus()
+    },
+    selectedVocab() {
+      this.loadVocabStatus()
+    },
+    selectedSentence() {
+      this.loadSentenceStatus()
+    },
+  },
 })
 export default class HanziPage extends Vue {
   entries: string[] = []
@@ -453,7 +470,6 @@ export default class HanziPage extends Vue {
     this.onQChange(this.q0)
   }
 
-  @Watch('q')
   onQChange(q: string) {
     const qs = q.split('').filter((h) => XRegExp('\\p{Han}').test(h))
     this.$set(
@@ -465,7 +481,6 @@ export default class HanziPage extends Vue {
     this.load()
   }
 
-  @Watch('current')
   load() {
     if (this.current) {
       this.loadHanzi()
@@ -482,7 +497,11 @@ export default class HanziPage extends Vue {
 
   async loadHanzi() {
     const r = (
-      await this.$axios.$post('/api/hanzi/match', { entry: this.current })
+      await this.$axios.$get('/api/hanzi/match', {
+        params: {
+          entry: this.current,
+        },
+      })
     ).result
     this.sub = r.sub
     this.sup = r.sup
@@ -490,57 +509,57 @@ export default class HanziPage extends Vue {
   }
 
   async loadVocab() {
-    const { result } = await this.$axios.$post('/api/vocab/q', {
-      entry: this.current,
+    const { result } = await this.$axios.$get('/api/vocab/q', {
+      params: {
+        entry: this.current,
+        limit: -1,
+      },
     })
     this.$set(this, 'vocabs', result)
   }
 
   async loadSentences() {
-    const { result } = await this.$axios.$post('/api/sentence/q', {
-      entry: this.current,
+    const { result } = await this.$axios.$get('/api/sentence/q', {
+      params: {
+        entry: this.current,
+      },
     })
     this.$set(this, 'sentences', result)
   }
 
-  @Watch('selectedHanzi')
   async loadHanziStatus() {
     if (this.selectedHanzi) {
-      const { result } = await this.$axios.$post('/api/card/q', {
-        cond: {
-          item: this.selectedHanzi,
+      const { result } = await this.$axios.$get('/api/quiz/entry', {
+        params: {
+          entry: this.selectedHanzi,
           type: 'hanzi',
+          select: ['_id'],
         },
-        projection: { _id: 1 },
-        hasCount: false,
       })
       this.$set(this.hanziIds, this.selectedHanzi, !!result.length)
     }
   }
 
-  @Watch('selectedVocab')
   async loadVocabStatus() {
     if (this.selectedVocab) {
-      const { result } = await this.$axios.$post('/api/card/q', {
-        cond: {
-          item: this.selectedVocab,
+      const { result } = await this.$axios.$get('/api/quiz/entry', {
+        params: {
+          entry: this.selectedVocab,
           type: 'vocab',
+          select: ['_id'],
         },
-        projection: { _id: 1 },
-        hasCount: false,
       })
       this.$set(this.vocabIds, this.selectedVocab, !!result.length)
     }
   }
 
-  @Watch('selectedSentence')
   async loadSentenceStatus() {
     if (this.selectedSentence) {
-      const { result } = await this.$axios.$post('/api/card/q', {
-        cond: { item: this.selectedSentence, type: 'sentence' },
-        hasCount: false,
-        projection: {
-          _id: 1,
+      const { result } = await this.$axios.$get('/api/quiz/entry', {
+        params: {
+          entry: this.selectedSentence,
+          type: 'sentence',
+          select: ['_id'],
         },
       })
       this.$set(
@@ -552,7 +571,7 @@ export default class HanziPage extends Vue {
   }
 
   async addToQuiz(item: string, type: string) {
-    await this.$axios.$put('/api/card/', { item, type })
+    await this.$axios.$put('/api/quiz/', { item, type })
     this.$buefy.snackbar.open(`Added ${type}: ${item} to quiz`)
 
     type === 'vocab' ? this.loadVocabStatus() : this.loadHanziStatus()
@@ -563,8 +582,8 @@ export default class HanziPage extends Vue {
       (type === 'vocab' ? this.vocabIds[item] : this.hanziIds[item]) || []
     await Promise.all(
       ids.map((id: string) =>
-        this.$axios.$delete('/api/card/', {
-          data: { id },
+        this.$axios.$delete('/api/quiz/', {
+          params: { id },
         })
       )
     )

@@ -8,6 +8,7 @@ import { nanoid } from 'nanoid'
 
 import { DbExtraModel, DbQuizModel, DbUserModel } from '@/db/mongo'
 import { mongoInit } from '@/util/mongo'
+import { ensureSchema, sQuizStat } from '@/util/schema'
 
 import { V1Extra, V1User } from './v1'
 
@@ -87,16 +88,13 @@ async function main() {
         {
           $lookup: {
             from: 'quiz',
-            localField: 'cardId',
-            foreignField: '_id',
+            localField: '_id',
+            foreignField: 'cardId',
             as: 'q',
           },
         },
         {
           $project: {
-            /**
-             * cardId of old db is quizId of new db
-             */
             _id: 0,
             userIdObjectId: '$userId',
             type: 1,
@@ -115,73 +113,78 @@ async function main() {
         },
       ])
       .toArray()
-  )
-    .map(
-      ({
-        userIdObjectId,
-        front = '',
-        back = '',
-        mnemonic = '',
-        tag = [],
-        item: entry,
+  ).map(
+    ({
+      userIdObjectId,
+      front = '',
+      back = '',
+      mnemonic = '',
+      tag = [],
+      item: entry,
+      type,
+      direction,
+      ...others
+    }: {
+      userIdObjectId: ObjectID
+      /**
+       * @default ''
+       */
+      front: string
+      /**
+       * @default ''
+       */
+      back: string
+      /**
+       * @default ''
+       */
+      mnemonic: string
+      /**
+       * @default []
+       */
+      tag: string[]
+      item: string
+      type: 'hanzi' | 'vocab' | 'sentence' | 'extra'
+      direction: 'se' | 'te' | 'ec'
+      srsLevel?: number
+      stat?: typeof sQuizStat.type
+    }) => {
+      if (hsk.has(entry)) {
+        tag.push('hsk')
+      }
+
+      if (others.stat) {
+        others.stat.streak.maxRight = others.stat.streak.maxRight || 0
+        others.stat.streak.maxWrong = others.stat.streak.maxWrong || 0
+        ensureSchema(sQuizStat, others.stat)
+      }
+
+      const data = {
+        ...others,
+        entry,
         type,
         direction,
-        ...others
-      }: {
-        userIdObjectId: ObjectID
-        /**
-         * @default ''
-         */
-        front: string
-        /**
-         * @default ''
-         */
-        back: string
-        /**
-         * @default ''
-         */
-        mnemonic: string
-        /**
-         * @default []
-         */
-        tag: string[]
-        item: string
-        type: 'hanzi' | 'vocab' | 'sentence' | 'extra'
-        direction: 'se' | 'te' | 'ec'
-        srsLevel?: number
-      }) => {
-        if (hsk.has(entry)) {
-          tag.push('hsk')
-        }
-
-        const data = {
-          ...others,
-          entry,
-          type,
-          direction,
-          userId: userIdMap.get(userIdObjectId.toHexString()),
-          front: front || undefined,
-          back: back || undefined,
-          mnemonic: mnemonic || undefined,
-          tag: tag.length ? tag : undefined,
-        }
-
-        const key = ser.hash({
-          userId: data.userId,
-          type: data.type,
-          direction: data.direction,
-          entry: data.entry,
-        })
-        const oldData = toMigrateQsMap.get(key)
-        if (
-          !oldData ||
-          (oldData && data.srsLevel && data.srsLevel > (oldData.srsLevel || -1))
-        ) {
-          toMigrateQsMap.set(key, data)
-        }
+        userId: userIdMap.get(userIdObjectId.toHexString()),
+        front: front || undefined,
+        back: back || undefined,
+        mnemonic: mnemonic || undefined,
+        tag: tag.length ? tag : undefined,
       }
-    )
-    .flat()
+
+      const key = ser.hash({
+        userId: data.userId,
+        type: data.type,
+        direction: data.direction,
+        entry: data.entry,
+      })
+      const oldData = toMigrateQsMap.get(key)
+      if (
+        !oldData ||
+        (oldData && data.srsLevel && data.srsLevel > (oldData.srsLevel || -1))
+      ) {
+        toMigrateQsMap.set(key, data)
+      }
+    }
+  )
 
   if (toMigrateQsMap.size) {
     await DbQuizModel.insertMany(Array.from(toMigrateQsMap.values()))

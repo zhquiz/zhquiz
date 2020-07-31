@@ -30,7 +30,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
   f.addHook('preHandler', function (req, _, done) {
     if (req.body && typeof req.body === 'object') {
-      req.log.debug(
+      req.log.info(
         {
           body: filterObjValue(
             req.body,
@@ -49,7 +49,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
   f.addHook<{
     Querystring: Record<string, string | string[]>
-  }>('preValidation', (req) => {
+  }>('preValidation', async (req) => {
     if (req.query) {
       Object.entries(req.query).map(([k, v]) => {
         if (
@@ -57,6 +57,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
             'select',
             'sort',
             'type',
+            'stage',
             'direction',
             'tag',
             'offset',
@@ -75,18 +76,17 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     }
   })
 
-  f.addHook('preHandler', async (req, reply) => {
+  f.addHook('preHandler', async (req) => {
     const m = /^Bearer (.+)$/.exec(req.headers.authorization || '')
 
     if (!m) {
-      reply.status(401).send(null)
       return
     }
 
     const ticket = await admin.auth().verifyIdToken(m[1], true)
     const user = req.session.get('user')
 
-    if (!user && ticket.email) {
+    if (ticket.email && (!user || user.email !== ticket.email)) {
       req.session.set(
         'user',
         await DbUserModel.signIn(ticket.email, ticket.name)

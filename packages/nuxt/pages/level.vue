@@ -302,7 +302,7 @@ export default class LevelPage extends Vue {
       const { result = [] } = await this.$axios.$post('/api/quiz/entries', {
         entries,
         type: 'vocab',
-        select: ['cardId'],
+        select: ['_id'],
       })
 
       this.selected.cardIds = result
@@ -316,8 +316,8 @@ export default class LevelPage extends Vue {
     const { entries } = this.selected
 
     if (entries.length) {
-      await this.$axios.$put('/api/card', {
-        entries,
+      await this.$axios.$put('/api/quiz', {
+        entry: entries,
         type: 'vocab',
       })
       this.$buefy.snackbar.open(
@@ -333,7 +333,9 @@ export default class LevelPage extends Vue {
     const { entries, cardIds } = this.selected
 
     if (entries.length && cardIds.length) {
-      await this.$axios.$delete('/api/card', { data: { id: cardIds } })
+      await this.$axios.$post('/api/quiz/delete/ids', {
+        ids: cardIds,
+      })
       this.$buefy.snackbar.open(
         `Removed vocab: ${entries.slice(0, 3).join(',')}${
           entries.length > 3 ? '...' : ''

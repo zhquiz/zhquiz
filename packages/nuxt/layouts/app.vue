@@ -97,11 +97,20 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from 'nuxt-property-decorator'
+import { Component, Vue } from 'nuxt-property-decorator'
 
 import { getGravatarUrl } from '~/assets/gravatar'
 
-@Component
+@Component<AppLayout>({
+  watch: {
+    isAuthReady() {
+      this.onAuthChanged()
+    },
+    user() {
+      this.onAuthChanged()
+    },
+  },
+})
 export default class AppLayout extends Vue {
   readonly getGravatarUrl = getGravatarUrl
 
@@ -156,7 +165,7 @@ export default class AppLayout extends Vue {
   }
 
   get level() {
-    const { level } = this.$store.state
+    const { level } = this.$accessor
     return level ? level.toString() : ' '
   }
 
@@ -165,16 +174,16 @@ export default class AppLayout extends Vue {
   }
 
   get isAuthReady() {
-    return this.$store.state.isAuthReady
+    return this.$accessor.isAuthReady
   }
 
   get user() {
-    return this.$store.state.user
+    return this.$accessor.user
   }
 
   get userName() {
     if (this.user) {
-      return this.user.displayName || this.user.name
+      return this.user.displayName || (this.user as any).name
     }
 
     return ''
@@ -188,9 +197,7 @@ export default class AppLayout extends Vue {
     this.$fireAuth.signOut()
   }
 
-  @Watch('isAuthReady')
-  @Watch('user')
-  async onAuthChanged() {
+  onAuthChanged() {
     if (this.isAuthReady && !this.user) {
       this.$router.push('/')
     }

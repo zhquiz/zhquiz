@@ -1,6 +1,6 @@
 <template>
   <section>
-    <div v-show="isInit" class="SettingsPage">
+    <div class="SettingsPage">
       <form class="container" @submit.prevent="doSave">
         <div class="flex flex-row items-center">
           <b-field label="Level Range" class="flex-grow">
@@ -88,15 +88,13 @@
 </template>
 
 <script lang="ts">
-import { User } from 'firebase/app'
-import { Component, Vue, Watch } from 'nuxt-property-decorator'
+import { Component, Vue } from 'nuxt-property-decorator'
 
 @Component({
   layout: 'app',
 })
 export default class SettingsPage extends Vue {
   lv = [1, 60]
-  isInit = false
 
   isDeleteAccountModal = false
   deleteAccountEmail = ''
@@ -104,22 +102,12 @@ export default class SettingsPage extends Vue {
   readonly lvRange = [1, 60]
 
   get email() {
-    const u = this.$store.state.user as User | null
-    return u ? u.email : undefined
+    const u = this.$accessor.user
+    return u ? u.email : null
   }
 
   created() {
-    this.onUserChanged()
-  }
-
-  @Watch('user')
-  async onUserChanged() {
-    if (this.email) {
-      this.isInit = false
-      const { levelMin, level } = await this.$axios.$get('/api/user/')
-      this.lv = [levelMin || 1, level || 60]
-      this.isInit = true
-    }
+    this.lv = [this.$accessor.levelMin || 1, this.$accessor.level || 60]
   }
 
   async doSave() {
@@ -129,7 +117,10 @@ export default class SettingsPage extends Vue {
         level: this.lv[1],
       },
     })
-    this.$store.commit('updateLevel', this.lv[1])
+    this.$accessor.SET_LEVEL({
+      levelMin: this.lv[0],
+      level: this.lv[1],
+    })
     this.$buefy.snackbar.open('Saved')
   }
 

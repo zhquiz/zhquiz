@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import S from 'jsonschema-definer'
 
+import { zhVocab } from '@/db/local'
 import { DbQuizModel, DbUserModel, sDbQuizExport } from '@/db/mongo'
 import { checkAuthorize } from '@/util/api'
 import {
@@ -342,7 +343,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
         if (stage.includes('new')) {
           $or.push({
-            nextReview: { $exists: false },
+            srsLevel: { $exists: false },
           })
         }
 
@@ -368,7 +369,9 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           $and: [
             {
               userId,
-              tag: tag ? { $in: tag } : undefined,
+              type: { $in: type },
+              direction: { $in: direction },
+              ...(tag ? { tag: { $in: tag } } : {}),
             },
             ...($or.length ? [{ $or }] : []),
           ],
@@ -381,7 +384,12 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
 
           rs.map(({ nextReview, srsLevel, stat, _id }) => {
             if (!nextReview || nextReview < now) {
-              quiz.push({ nextReview, srsLevel, stat, _id })
+              quiz.push({
+                nextReview: nextReview ? nextReview.toISOString() : undefined,
+                srsLevel,
+                stat: stat ? JSON.parse(JSON.stringify(stat)) : undefined,
+                _id,
+              })
             } else {
               upcoming.push(nextReview.toISOString())
             }
@@ -422,8 +430,24 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           return
         }
 
-        const { entry, type, direction = ['se', 'ec'] } = req.body
+        const {
+          entry,
+          type,
+          direction = type === 'vocab' ? ['se', 'te', 'ec'] : ['se', 'ec'],
+        } = req.body
         const entries = Array.isArray(entry) ? entry : [entry]
+
+        if (type === 'vocab' && direction.includes('te')) {
+          const v = zhVocab.findOne({
+            $or: [{ simplified: entry }, { traditional: { $contains: entry } }],
+          })
+          if (!v || !v.traditional) {
+            const i = direction.indexOf('te')
+            if (i !== -1) {
+              direction.splice(i, 1)
+            }
+          }
+        }
 
         try {
           await DbQuizModel.insertMany(

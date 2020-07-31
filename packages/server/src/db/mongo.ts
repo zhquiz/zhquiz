@@ -6,6 +6,7 @@ import {
   Severity,
 } from '@typegoose/typegoose'
 import S from 'jsonschema-definer'
+import { Schema } from 'mongoose'
 import { nanoid } from 'nanoid'
 
 import {
@@ -89,7 +90,7 @@ export class DbQuiz implements IDbQuiz {
   @prop() front?: string
   @prop() back?: string
   @prop() mnemonic?: string
-  @prop({ index: true }) tag?: string[]
+  @prop({ index: true, type: Schema.Types.Mixed }) tag?: string[]
   @prop({ index: true }) nextReview?: Date
   @prop({ index: true }) srsLevel?: number
   @prop({ validate: (s) => !!ensureSchema(sQuizStat, s) })

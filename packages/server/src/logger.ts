@@ -28,8 +28,19 @@ const gcloudConf: pino.LoggerOptions = {
   },
 }
 
-export const logger = pino(
-  process.env.NODE_ENV === 'development'
+export const logger = pino({
+  serializers: {
+    req(req) {
+      return {
+        method: req.method,
+        url: decodeURI(req.url),
+        version: req.headers['accept-version'],
+        hostname: req.hostname,
+        remoteAddress: req.ip,
+      }
+    },
+  },
+  ...(process.env.NODE_ENV === 'development'
     ? {
         prettyPrint: true,
         prettifier: function pinoInspector(opts: any) {
@@ -53,5 +64,5 @@ export const logger = pino(
           }
         },
       }
-    : gcloudConf
-)
+    : gcloudConf),
+})

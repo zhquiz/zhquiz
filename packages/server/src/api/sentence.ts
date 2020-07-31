@@ -91,7 +91,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       count: S.integer().optional(),
     })
 
-    f.post<{
+    f.get<{
       Querystring: typeof sQuery.type
     }>(
       '/q',
@@ -148,7 +148,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       '/random',
       {
         schema: {
-          body: sQuery.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },

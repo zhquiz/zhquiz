@@ -15,7 +15,7 @@ Vue.filter('format', (v: any) => {
 })
 
 Vue.filter('formatDate', (v: any) => {
-  return dayjs(v).format('YYYY-MM-DD HH:mm')
+  return v ? dayjs(v).format('YYYY-MM-DD HH:mm') : ''
 })
 
 Vue.filter('duration', (v: any) => {

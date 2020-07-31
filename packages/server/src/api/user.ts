@@ -52,6 +52,13 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
     }
 
     await DbUserModel.purgeOne(userId)
+    req.session.delete()
+    reply.status(201)
+    return null
+  })
+
+  f.delete('/signOut', async (req, reply) => {
+    req.session.delete()
     reply.status(201)
     return null
   })

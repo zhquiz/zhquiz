@@ -78,7 +78,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   function getMatch() {
     const sQuery = S.shape({
       entry: sStringNonEmpty,
-      select: S.list(S.string()).minItems(1),
+      select: S.list(S.string()).minItems(1).optional(),
     })
 
     const sResponse = sDbExtraExport
@@ -101,7 +101,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
           return undefined as any
         }
 
-        const { entry, select } = req.query
+        const { entry, select = ['chinese', 'pinyin', 'english'] } = req.query
         const r = await DbExtraModel.findOne({
           userId,
           entry,

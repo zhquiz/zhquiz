@@ -117,7 +117,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       '/match',
       {
         schema: {
-          body: sQuery.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
@@ -178,7 +178,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
       '/random',
       {
         schema: {
-          body: sQuery.valueOf(),
+          querystring: sQuery.valueOf(),
           response: {
             200: sResponse.valueOf(),
           },
