@@ -3,10 +3,10 @@ import fs from 'fs'
 import { FastifyInstance } from 'fastify'
 import fSession from 'fastify-secure-session'
 import admin from 'firebase-admin'
-import rison from 'rison-node'
 
 import { DbUserModel } from '@/db/mongo'
 import { filterObjValue, ser } from '@/util'
+import { parseQuery } from '@/util/query'
 
 import chineseRouter from './chinese'
 import extraRouter from './extra'
@@ -50,30 +50,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
   f.addHook<{
     Querystring: Record<string, string | string[]>
   }>('preValidation', async (req) => {
-    if (req.query) {
-      Object.entries(req.query).map(([k, v]) => {
-        if (
-          [
-            'select',
-            'sort',
-            'type',
-            'stage',
-            'direction',
-            'tag',
-            'offset',
-            'limit',
-            'page',
-            'perPage',
-            'count',
-            'level',
-            'levelMin',
-          ].includes(k) ||
-          /^is[A-Z]/.test(k)
-        ) {
-          req.query[k] = rison.decode(v)
-        }
-      })
-    }
+    req.query = parseQuery(req.query)
   })
 
   f.addHook('preHandler', async (req) => {
