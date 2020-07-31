@@ -22,9 +22,6 @@ const gcloudConf: pino.LoggerOptions = {
         level: number,
       }
     },
-    log(message) {
-      return { message }
-    },
   },
 }
 

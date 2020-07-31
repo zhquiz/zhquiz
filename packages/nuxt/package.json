@@ -9,7 +9,7 @@
   "private": true,
   "scripts": {
     "dev": "nuxt-ts",
-    "build": "nuxt-ts build && nuxt-ts export",
+    "build": "nuxt-ts generate",
     "lint": "eslint --ext .ts,.js,.vue --ignore-path .gitignore ."
   },
   "dependencies": {
@@ -33,7 +33,7 @@
     "hyperpug": "^1.5.3",
     "jsonschema-definer": "^1.2.2",
     "markdown-it": "^11.0.0",
-    "nuxt": "^2.13.0",
+    "nuxt": "^2.14.0",
     "nuxt-buefy": "^0.3.31",
     "nuxt-typed-vuex": "^0.1.19",
     "rison-node": "^2.1.1",

@@ -187,7 +187,11 @@ async function main() {
   )
 
   if (toMigrateQsMap.size) {
-    await DbQuizModel.insertMany(Array.from(toMigrateQsMap.values()))
+    try {
+      await DbQuizModel.insertMany(Array.from(toMigrateQsMap.values()), {
+        ordered: false,
+      })
+    } catch (_) {}
   }
 
   const xs = await DbExtraModel.find().select('_id')
