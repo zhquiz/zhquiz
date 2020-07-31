@@ -1,5 +1,7 @@
 import pino from 'pino'
 
+import { parseQuery } from './util/query'
+
 /**
  * https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
  */
@@ -30,10 +32,11 @@ export const logger = pino({
     req(req) {
       return {
         method: req.method,
-        url: decodeURI(req.url),
+        url: req.url,
         version: req.headers['accept-version'],
         hostname: req.hostname,
         remoteAddress: req.ip,
+        query: parseQuery(req.query),
       }
     },
   },
