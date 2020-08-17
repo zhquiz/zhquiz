@@ -4,7 +4,7 @@ import {
   SnackbarProgrammatic as Snackbar,
 } from 'buefy'
 
-const onInit: Plugin = ({ $axios }) => {
+const onInit: Plugin = ({ $axios, app }) => {
   let loading: {
     close(): any
     requestEnded?: boolean
@@ -32,6 +32,18 @@ const onInit: Plugin = ({ $axios }) => {
         }
       }, 1000)
     }
+
+    return config
+  })
+
+  $axios.interceptors.request.use(async (config) => {
+    const { currentUser } = app.$fireAuth
+
+    config.headers = Object.assign(config.headers || {}, {
+      Authorization: currentUser
+        ? `Bearer ${await currentUser.getIdToken()}`
+        : undefined,
+    })
 
     return config
   })

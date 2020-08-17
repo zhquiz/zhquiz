@@ -93,6 +93,7 @@
     </b-navbar>
 
     <nuxt v-if="isReady" class="main" />
+    <b-loading v-else active />
   </section>
 </template>
 
@@ -178,7 +179,7 @@ export default class AppLayout extends Vue {
   }
 
   get user() {
-    return this.$accessor.user
+    return this.$fireAuth.currentUser
   }
 
   get userName() {
@@ -199,7 +200,7 @@ export default class AppLayout extends Vue {
 
   onAuthChanged() {
     if (this.isAuthReady && !this.user) {
-      this.$router.push('/')
+      this.$router.push('/login')
     }
   }
 }

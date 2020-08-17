@@ -225,7 +225,7 @@ export default (f: FastifyInstance, _: any, next: () => void) => {
         }
 
         ;({
-          right: () => quiz.markRepeat(),
+          right: () => quiz.markRight(),
           wrong: () => quiz.markWrong(),
           repeat: () => quiz.markRepeat(),
         }[type]())

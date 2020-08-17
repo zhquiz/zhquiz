@@ -113,7 +113,6 @@ export default (): Configuration => {
           defaultIconComponent: 'fontawesome',
         },
       ],
-      // Doc: https://axios.nuxtjs.org/usage
       [
         '@nuxtjs/axios',
         {

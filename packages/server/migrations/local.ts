@@ -14,7 +14,7 @@ import {
   zhSentence,
   zhToken,
   zhVocab,
-} from '../src/db/local'
+} from '@/db/local'
 
 async function main() {
   // require('log-buffer')

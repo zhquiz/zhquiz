@@ -580,13 +580,9 @@ export default class HanziPage extends Vue {
   async removeFromQuiz(item: string, type: string) {
     const ids =
       (type === 'vocab' ? this.vocabIds[item] : this.hanziIds[item]) || []
-    await Promise.all(
-      ids.map((id: string) =>
-        this.$axios.$delete('/api/quiz/', {
-          params: { id },
-        })
-      )
-    )
+
+    this.$axios.$post('/api/quiz/delete/ids', { ids })
+
     this.$buefy.snackbar.open(`Removed ${type}: ${item} from quiz`)
 
     type === 'vocab' ? this.loadVocabStatus() : this.loadHanziStatus()
