@@ -34,11 +34,11 @@
             <figure class="image is-48x48">
               <img
                 class="is-rounded"
-                :src="getGravatarUrl(user.email)"
-                :alt="userName"
+                :src="getGravatarUrl()"
+                :alt="getUserName()"
               />
             </figure>
-            <span>{{ userName }}</span>
+            <span>{{ getUserName() }}</span>
           </a>
         </b-tooltip>
       </div>
@@ -77,7 +77,7 @@
       </template>
       <template slot="end">
         <b-navbar-item tag="div" class="flex flex-row flex-wrap items-center">
-          <div>Signed in as {{ userName }}</div>
+          <div>Signed in as {{ getUserName() }}</div>
           <div class="flex flex-row flex-grow">
             <div class="flex-grow" />
             <button
@@ -103,6 +103,9 @@ import { Component, Vue } from 'nuxt-property-decorator'
 import { getGravatarUrl } from '~/assets/gravatar'
 
 @Component<AppLayout>({
+  created() {
+    this.onAuthChanged()
+  },
   watch: {
     isAuthReady() {
       this.onAuthChanged()
@@ -113,8 +116,6 @@ import { getGravatarUrl } from '~/assets/gravatar'
   },
 })
 export default class AppLayout extends Vue {
-  readonly getGravatarUrl = getGravatarUrl
-
   get navItems() {
     return [
       {
@@ -171,27 +172,31 @@ export default class AppLayout extends Vue {
   }
 
   get isReady() {
-    return this.isAuthReady && this.user
+    return this.isAuthReady && this.$fireAuth.currentUser
   }
 
   get isAuthReady() {
     return this.$accessor.isAuthReady
   }
 
-  get user() {
-    return this.$fireAuth.currentUser
-  }
+  getGravatarUrl() {
+    const { currentUser } = this.$fireAuth
 
-  get userName() {
-    if (this.user) {
-      return this.user.displayName || (this.user as any).name
+    if (currentUser) {
+      return getGravatarUrl(currentUser.email || undefined)
     }
 
     return ''
   }
 
-  created() {
-    this.onAuthChanged()
+  getUserName() {
+    const { currentUser } = this.$fireAuth
+
+    if (currentUser) {
+      return currentUser.displayName || (currentUser as any).name
+    }
+
+    return ''
   }
 
   doLogout() {
@@ -199,7 +204,7 @@ export default class AppLayout extends Vue {
   }
 
   onAuthChanged() {
-    if (this.isAuthReady && !this.user) {
+    if (this.isAuthReady && !this.$fireAuth.currentUser) {
       this.$router.push('/login')
     }
   }
