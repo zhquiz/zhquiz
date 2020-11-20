@@ -2,11 +2,9 @@ package db
 
 import (
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/patarapolw/zhquiz/shared"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -20,19 +18,14 @@ type DB struct {
 
 // Connect connect to DATABASE_URL
 func Connect() *gorm.DB {
-	databaseURL := os.Getenv("DATABASE_URL")
-	if databaseURL == "" {
+	databaseURL := shared.GetenvOrDefaultFn("DATABASE_URL", func() string {
 		paths := []string{"data.db"}
-		if root := os.Getenv("ZHQUIZ_ROOT"); root != "" {
+		if root := shared.Paths().Root; root != "" {
 			paths = append([]string{root}, paths...)
 		}
 
-		databaseURL = filepath.Join(paths...)
-
-		godotenv.Write(map[string]string{
-			"DATABASE_URL": databaseURL,
-		}, filepath.Join(shared.Root(), ".env"))
-	}
+		return filepath.Join(paths...)
+	})
 
 	if strings.HasPrefix(databaseURL, "postgres://") {
 		db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{})

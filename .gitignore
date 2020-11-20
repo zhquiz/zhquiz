@@ -187,3 +187,6 @@ $RECYCLE.BIN/
 
 .npmrc
 /docs/
+/zhquiz
+/_*
+/*.db

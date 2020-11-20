@@ -1,39 +1,45 @@
 dev:
   command: |
+    go build
     npx concurrently \
-      'cd packages/server && pnpm dev'\
-      'cd packages/nuxt && pnpm dev'
+      'ZHQUIZ_DESKTOP=0 ./zhquiz'\
+      'cd packages/next-web && pnpm dev'
 build:
   command: |
-    docker build . --build-arg FIREBASE_CONFIG -t {{.docker.tag}}
-build-local:
+    go build
+    cd packages/next-web && pnpm build
+build-windows:
   command: |
-    cd packages/server && pnpm build && cd -
-    cd packages/nuxt && pnpm build && cd -
-    docker build -f Dockerfile.local -t {{.docker.tag}} .
+    $(go env GOPATH)/bin/xgo \
+      -ldflags="-H windowsgui" \
+      -branch={{.branch}} \
+      -targets=windows/* \
+      {{.repo}}
+build-mac-linux:
+  command: |
+    $(go env GOPATH)/bin/xgo \
+      -branch={{.branch}} \
+      -targets=darwin/amd64,linux/386,linux/amd64 \
+      {{.repo}}
+build-all:
+  summary: |
+    Build for Linux, Windows, and macOS
+    Install `xgo` using `go get github.com/karalabe/xgo`
+  command: |
+    robo -c {{ .robo.file }} build-windows
+    robo -c {{ .robo.file }} build-mac-linux
+desktop:
+  command: |
+    ./zhquiz
 start:
   command: |
-    docker run -p 8080:8080 -e MONGO_URI -e SECRET -e FIREBASE_SDK -e FIREBASE_CONFIG {{.docker.tag}}
-deploy:
-  command: |
-    docker push {{.docker.tag}}
-heroku-token:
-  command: |
-    heroku auth:token
-heroku-docker-login:
-  command: |
-    docker login --username=_ --password=${HEROKU_TOKEN} registry.heroku.com
-heroku-release:
-  command: |
-    heroku container:release web
+    ZHQUIZ_DESKTOP=0 ./zhquiz
 swagger:
-  command: swag init -g server/main.go
+  command: swag init -g server/controller.go
 
 ##########
 # Settings
 
 variables:
-  docker:
-    # tag: ${DOCKER_TAG:-zhquiz}
-    # tag: registry.heroku.com/${HEROKU_APP}/web
-    tag: gcr.io/${PROJECT_ID}/zhquiz
+  repo: github.com/patarapolw/zhquiz
+  branch: $(git branch --show-current)
