@@ -33,7 +33,7 @@ import (
 @license.name MIT
 @license.url https://mit-license.org/
 */
-func (res *Resource) registerAPI(r *gin.Engine) {
+func (res Resource) registerAPI(r *gin.Engine) {
 	r.Use(sessions.Sessions("session", res.Store))
 
 	r.Use(func(c *gin.Context) {

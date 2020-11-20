@@ -14,10 +14,11 @@ import (
 // DB storage for current DB
 type DB struct {
 	Current *gorm.DB
+	Type    string
 }
 
 // Connect connect to DATABASE_URL
-func Connect() *gorm.DB {
+func Connect() DB {
 	databaseURL := shared.GetenvOrDefaultFn("DATABASE_URL", func() string {
 		paths := []string{"data.db"}
 		if root := shared.Paths().Root; root != "" {
@@ -27,17 +28,31 @@ func Connect() *gorm.DB {
 		return filepath.Join(paths...)
 	})
 
+	output := DB{}
+
 	if strings.HasPrefix(databaseURL, "postgres://") {
 		db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
 		if err != nil {
 			log.Fatalln(err)
 		}
-		return db
+
+		output = DB{
+			Current: db,
+			Type:    "postgres",
+		}
+	} else {
+		db, err := gorm.Open(sqlite.Open(databaseURL), &gorm.Config{})
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		output = DB{
+			Current: db,
+			Type:    "sqlite",
+		}
 	}
 
-	db, err := gorm.Open(sqlite.Open(databaseURL), &gorm.Config{})
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return db
+	output.Current.AutoMigrate(&User{}, &Tag{}, &Quiz{}, &Entry{}, &EntryItem{})
+
+	return output
 }

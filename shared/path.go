@@ -31,7 +31,7 @@ func Paths() Path {
 }
 
 // Dotenv get path to .env
-func (p *Path) Dotenv() string {
+func (p Path) Dotenv() string {
 	return filepath.Join(p.Root, ".env")
 }
 

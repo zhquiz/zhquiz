@@ -54,21 +54,16 @@ func Prepare() Resource {
 		return s
 	})
 
-	currentDB := db.DB{
-		Current: db.Connect(),
-	}
-	store := memstore.NewStore([]byte(apiSecret))
-
 	return Resource{
-		DB:       currentDB,
-		Store:    store,
+		DB:       db.Connect(),
+		Store:    memstore.NewStore([]byte(apiSecret)),
 		FireApp:  fireApp,
 		FireAuth: fireAuth,
 	}
 }
 
 // Serve start the server
-func (res *Resource) Serve() {
+func (res Resource) Serve() {
 	r := gin.Default()
 	res.registerAPI(r)
 
@@ -77,6 +72,6 @@ func (res *Resource) Serve() {
 }
 
 // Cleanup cleanup resources
-func (res *Resource) Cleanup() {
+func (res Resource) Cleanup() {
 	res.DB.Current.Commit()
 }
