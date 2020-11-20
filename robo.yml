@@ -26,6 +26,8 @@ heroku-docker-login:
 heroku-release:
   command: |
     heroku container:release web
+swagger:
+  command: swag init -g server/main.go
 
 ##########
 # Settings
