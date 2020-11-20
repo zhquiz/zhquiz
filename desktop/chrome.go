@@ -28,6 +28,10 @@ import (
 
 	"github.com/zserge/lorca"
 )
+import (
+	"net/http"
+	"time"
+)
 
 // OpenInWindowedChrome open in Chrome/Chromium windowed mode
 // Also, Chrome/Chromium location can be located with
@@ -46,19 +50,29 @@ func OpenInWindowedChrome(url string) lorca.UI {
 		height = 768
 	}
 
-	w, err := lorca.New(url, "", width, height)
+	w, err := lorca.New("data:text/html,<title>Loading...</title>", "", width, height)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer w.Close()
 
-	// This does nothing in macOS, BTW.
+	// This does nothing in macOS.
 	w.SetBounds(lorca.Bounds{
 		WindowState: lorca.WindowStateMaximized,
 	})
 
-	// <- w.Done()
+	go func() {
+		for {
+			time.Sleep(1 * time.Second)
+			_, err := http.Head(url)
+			if err == nil {
+				break
+			}
+		}
+
+		w.Load(url)
+	}()
 
 	return w
 }

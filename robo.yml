@@ -35,7 +35,7 @@ start:
   command: |
     ZHQUIZ_DESKTOP=0 ./zhquiz
 swagger:
-  command: swag init -g server/controller.go
+  command: swag init -g server/api/init.go
 
 ##########
 # Settings

@@ -4,7 +4,7 @@ ZhQuiz, a Chinese quizzing platform
 
 <https://www.zhquiz.cc>
 
-![Preview GIF](/assets/preview.gif)
+![Preview GIF](/docs/preview.gif)
 
 <https://youtu.be/iomE0xiYoqY>
 

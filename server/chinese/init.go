@@ -16,7 +16,7 @@ type DB struct {
 
 // Connect connect to the database
 func Connect() DB {
-	db, err := gorm.Open(sqlite.Open(path.Join(shared.Paths().Root, "chinese.db")), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(path.Join(shared.Paths().Dir, "assets", "chinese.db")), &gorm.Config{})
 	if err != nil {
 		log.Fatalln(err)
 	}

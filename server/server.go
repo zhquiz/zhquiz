@@ -1,77 +1,57 @@
 package server
 
 import (
-	"context"
+	"fmt"
 	"log"
-	"os"
+	"net/http"
+	"path/filepath"
+	"strings"
 
-	firebase "firebase.google.com/go"
-	"firebase.google.com/go/auth"
-	"github.com/gin-contrib/sessions/memstore"
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 
-	"github.com/patarapolw/zhquiz/server/db"
-	"github.com/patarapolw/zhquiz/server/rand"
+	"github.com/patarapolw/zhquiz/server/api"
 	"github.com/patarapolw/zhquiz/shared"
 )
 
-// Resource for reuse and cleanup
-type Resource struct {
-	DB       db.DB
-	Store    memstore.Store
-	FireApp  *firebase.App
-	FireAuth *auth.Client
-}
+// Serve start the server
+// Runs go func by default
+func Serve(res *api.Resource) *gin.Engine {
+	r := gin.Default()
 
-// Prepare initialize Resource for reuse and cleanup
-func Prepare() Resource {
-	var fireApp *firebase.App
-	var fireAuth *auth.Client
+	p := shared.Paths()
+	r.Use(func(c *gin.Context) {
+		if c.Request.Method == "GET" {
+			if strings.HasPrefix(c.Request.URL.Path, "/docs/") || c.Request.URL.Path == "/docs" {
+				static.Serve("/docs", static.LocalFile(filepath.Join(p.Dir, "docs"), true))(c)
+				return
+			}
 
-	if os.Getenv("GOOGLE_APPLICATION_CREDENTIALS") != "" {
-		ctx := context.Background()
+			if strings.HasPrefix(c.Request.URL.Path, "/media/") {
+				static.Serve("/media", static.LocalFile(p.MediaPath(), false))(c)
+				return
+			}
 
-		app, err := firebase.NewApp(context.Background(), nil)
-		if err != nil {
-			log.Fatalf("error initializing app: %v\n", err)
+			static.Serve("/", static.LocalFile(filepath.Join(p.Dir, "public"), true))(c)
+			return
 		}
-
-		fireApp = app
-
-		client, err := app.Auth(ctx)
-		if err != nil {
-			log.Fatalf("error getting Auth client: %v\n", err)
-		}
-
-		fireAuth = client
-	}
-
-	apiSecret := shared.GetenvOrDefaultFn("ZHQUIZ_API_SECRET", func() string {
-		s, err := rand.GenerateRandomString(64)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		return s
+		c.Next()
 	})
 
-	return Resource{
-		DB:       db.Connect(),
-		Store:    memstore.NewStore([]byte(apiSecret)),
-		FireApp:  fireApp,
-		FireAuth: fireAuth,
+	res.Register(r)
+
+	port := shared.Port()
+	fmt.Printf("Server running at http://localhost:%s\n", port)
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: r,
 	}
-}
 
-// Serve start the server
-func (res Resource) Serve() {
-	r := gin.Default()
-	res.registerAPI(r)
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
 
-	// fmt.Printf("Server running at http://localhost:%s\n", port)
-	r.Run(":" + shared.Port())
-}
-
-// Cleanup cleanup resources
-func (res Resource) Cleanup() {
-	res.DB.Current.Commit()
+	return r
 }
