@@ -8,8 +8,8 @@ import (
 // EntryItem (internal) represents items of an entry
 type EntryItem struct {
 	gorm.Model
-	Name    string `gorm:"index:name_entryId_idx,unique"`
-	EntryID uint   `gorm:"index:name_entryId_idx,unique"`
+	Name    string `gorm:"index:name_entryId_idx,unique;not null;check:name <> ''"`
+	EntryID uint   `gorm:"index:name_entryId_idx,unique;not null"`
 }
 
 // Entry is a dictionary entry
@@ -21,8 +21,8 @@ type Entry struct {
 
 	// Entry
 	Items        []EntryItem       `gorm:"foreignKey:EntryID"`
-	Readings     types.StringArray `gorm:"type:text"`
-	Translations types.StringArray `gorm:"type:text"`
+	Readings     types.StringArray `gorm:"type:text;not null;check:readings <> ''"`
+	Translations types.StringArray `gorm:"type:text;not null;check:translations <> ''"`
 
-	Type string `gorm:"index"`
+	Type string `gorm:"index;not null;check:[type] in ('hanzi', 'vocab', 'sentence')"`
 }

@@ -8,8 +8,8 @@ import (
 type Deck struct {
 	gorm.Model
 
-	UserID uint `gorm:"index:deck_unique_idx,unique"`
+	UserID uint `gorm:"index:deck_unique_idx,unique;not null"`
 
-	Name string `gorm:"index:deck_unique_idx,unique"`
-	Q    string
+	Name string `gorm:"index:deck_unique_idx,unique;not null;check:name <> ''"`
+	Q    string `gorm:"not null"`
 }

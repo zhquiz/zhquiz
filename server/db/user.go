@@ -11,10 +11,10 @@ import (
 type User struct {
 	gorm.Model
 
-	Email  string `gorm:"index,unique"`
-	Name   string
-	Image  string
-	APIKey string
+	Email  string  `gorm:"index:,unique;not null;check:email <> ''"`
+	Name   string  `gorm:"not null;check:name <> ''"`
+	Image  string  `gorm:"not null;check:image <> ''"`
+	APIKey string  `gorm:"index,not null;check:api_key <> ''"`
 	API    UserAPI `gorm:"embedded"`
 
 	// Relations

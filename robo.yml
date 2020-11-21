@@ -3,39 +3,50 @@ dev:
     go build
     npx concurrently \
       'ZHQUIZ_DESKTOP=0 ./zhquiz'\
-      'cd packages/next-web && pnpm dev'
-build:
+      'cd _packages/next-web && pnpm dev'
+dist-web:
   command: |
-    go build
-    cd packages/next-web && pnpm build
-build-windows:
+    mkdir -p ./public
+    cd _packages/nuxt
+    cp -rv ./dist/* ../../public
+dist-windows:
   command: |
+    if [ "$DIST_WEB" != "0" ]; then
+      robo -c {{ .robo.file }} dist-web
+    fi
+
     $(go env GOPATH)/bin/xgo \
       -ldflags="-H windowsgui" \
       -branch={{.branch}} \
       -targets=windows/* \
       {{.repo}}
-build-mac-linux:
+dist-mac-linux:
   command: |
+    if [ "$DIST_WEB" != "0" ]; then
+      robo -c {{ .robo.file }} dist-web
+    fi
+
     $(go env GOPATH)/bin/xgo \
       -branch={{.branch}} \
       -targets=darwin/amd64,linux/386,linux/amd64 \
       {{.repo}}
-build-all:
+dist:
   summary: |
     Build for Linux, Windows, and macOS
     Install `xgo` using `go get github.com/karalabe/xgo`
   command: |
-    robo -c {{ .robo.file }} build-windows
-    robo -c {{ .robo.file }} build-mac-linux
+    robo -c {{ .robo.file }} dist-windows
+
+    export DIST_WEB=0
+
+    robo -c {{ .robo.file }} dist-windows
+    robo -c {{ .robo.file }} dist-mac-linux
 desktop:
   command: |
     ./zhquiz
 start:
   command: |
     ZHQUIZ_DESKTOP=0 ./zhquiz
-swagger:
-  command: swag init -g server/api/init.go
 
 ##########
 # Settings

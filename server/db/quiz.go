@@ -11,18 +11,18 @@ type Quiz struct {
 	gorm.Model
 
 	// Relationships
-	UserID uint  `gorm:"index:quiz_unique_idx,unique"`
+	UserID uint  `gorm:"index:quiz_unique_idx,unique;not null"`
 	Tags   []Tag `gorm:"many2many:quiz_tag"`
 
 	// Entry references
-	Entry     string `gorm:"index:quiz_unique_idx,unique"`
-	Type      string `gorm:"index:quiz_unique_idx,unique"`
-	Direction string `gorm:"index:quiz_unique_idx,unique"`
+	Entry     string `gorm:"index:quiz_unique_idx,unique;not null;check:entry <> ''"`
+	Type      string `gorm:"index:quiz_unique_idx,unique;not null;check:[type] in ('hanzi','vocab','sentence')"`
+	Direction string `gorm:"index:quiz_unique_idx,unique;not null;check:direction in ('ce','ec','te')"`
 
 	// Quiz annotations
-	Front    string
-	Back     string
-	Mnemonic string
+	Front    *string
+	Back     *string
+	Mnemonic *string
 
 	// Quiz statistics
 	SRSLevel    *int8      `gorm:"index"`

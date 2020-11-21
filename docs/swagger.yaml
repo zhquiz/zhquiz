@@ -11,6 +11,7 @@ info:
   title: ZhQuiz API
   version: "0.1"
 security:
+  - {} # Only if local
   - BasicAuth: []
   - FirebaseAuth: []
 components:

@@ -48,7 +48,9 @@ devDependencies:
   prettier: 2.0.5
   typescript: 3.8.3
   yaml-loader: 0.6.0
-lockfileVersion: 5.1
+lockfileVersion: 5.2
+overrides:
+  core-js: '2'
 packages:
   /@babel/code-frame/7.10.4:
     dependencies:
@@ -1070,8 +1072,6 @@ packages:
       tslib: 1.13.0
     dev: false
     optional: true
-    peerDependencies:
-      '@firebase/app-types': '*'
     resolution:
       integrity: sha512-+X2dNFDpcLEcDRdXp2Hgkf0RnNz3AOIC+Y7UFMQYadm9buB+snXomlnlkMzOj6o+Cp3V7GnpBrKKeeFqzF6wGQ==
   /@firebase/database/0.6.9_@firebase+app-types@0.6.1:
@@ -1548,7 +1548,7 @@ packages:
       consola: 2.14.0
       error-stack-parser: 2.0.6
       string-width: 2.1.1
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     engines:
       node: '>=8.0.0'
@@ -1794,7 +1794,7 @@ packages:
       time-fix-plugin: 2.0.6_webpack@4.44.1
       url-loader: 2.3.0_file-loader@4.3.0+webpack@4.44.1
       vue-loader: 15.9.3_a2d6ddd675f3eaa9d1a5d052dddbbb23
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
       webpack-bundle-analyzer: 3.8.0
       webpack-dev-middleware: 3.7.2_webpack@4.44.1
       webpack-hot-middleware: 2.25.0
@@ -2977,7 +2977,7 @@ packages:
       mkdirp: 0.5.5
       pify: 4.0.1
       schema-utils: 2.7.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     engines:
       node: '>= 6.9'
@@ -3329,7 +3329,7 @@ packages:
       mkdirp: 0.5.5
       neo-async: 2.6.2
       schema-utils: 2.7.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     engines:
       node: '>= 8.9.0'
@@ -3970,7 +3970,7 @@ packages:
       postcss-value-parser: 4.1.0
       schema-utils: 2.7.0
       semver: 6.3.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     engines:
       node: '>= 8.9.0'
@@ -5264,7 +5264,7 @@ packages:
       loader-utils: 2.0.0
       normalize-url: 1.9.1
       schema-utils: 1.0.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
       webpack-external-import: 2.2.4_webpack@4.44.1
       webpack-sources: 1.4.3
     dev: false
@@ -5344,7 +5344,7 @@ packages:
     dependencies:
       loader-utils: 1.4.0
       schema-utils: 2.7.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     engines:
       node: '>= 8.9.0'
@@ -5901,7 +5901,7 @@ packages:
       rimraf: 2.7.1
       semver: 5.7.1
       tapable: 1.1.3
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
       webpack-sources: 1.4.3
       write-json-file: 2.3.0
     dev: false
@@ -6108,7 +6108,7 @@ packages:
       pretty-error: 2.1.1
       tapable: 1.1.3
       util.promisify: 1.0.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     engines:
       node: '>=6.9'
@@ -7861,7 +7861,7 @@ packages:
     dependencies:
       cssnano: 4.1.10
       last-call-webpack-plugin: 3.0.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     peerDependencies:
       webpack: ^4.0.0
@@ -10025,7 +10025,7 @@ packages:
       is-promise: 2.2.2
       loader-utils: 1.4.0
       schema-utils: 2.7.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     engines:
       node: '>=7.6'
@@ -10139,7 +10139,7 @@ packages:
       serialize-javascript: 3.1.0
       source-map: 0.6.1
       terser: 4.8.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
       webpack-sources: 1.4.3
       worker-farm: 1.7.0
     dev: false
@@ -10159,7 +10159,7 @@ packages:
       serialize-javascript: 3.1.0
       source-map: 0.6.1
       terser: 4.8.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
       webpack-sources: 1.4.3
     dev: false
     engines:
@@ -10186,7 +10186,7 @@ packages:
       loader-runner: 2.4.0
       loader-utils: 1.4.0
       neo-async: 2.6.2
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     engines:
       node: '>= 6.9.0 <7.0.0 || >= 8.9.0'
@@ -10222,7 +10222,7 @@ packages:
       integrity: sha512-iOqSav00cVxEEICeD7TjLB1sueEL+81Wpzp2bY17uZjZN0pWZPuo4suZ/61VujxmqSGFfgOcNuTZ85QJwNZQpw==
   /time-fix-plugin/2.0.6_webpack@4.44.1:
     dependencies:
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     peerDependencies:
       webpack: '>=4.0.0'
@@ -10571,7 +10571,7 @@ packages:
       loader-utils: 1.4.0
       mime: 2.4.6
       schema-utils: 2.7.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     engines:
       node: '>= 8.9.0'
@@ -10778,7 +10778,7 @@ packages:
       loader-utils: 1.4.0
       vue-hot-reload-api: 2.3.4
       vue-style-loader: 4.1.2
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     peerDependencies:
       cache-loader: '*'
@@ -10940,7 +10940,7 @@ packages:
       mime: 2.4.6
       mkdirp: 0.5.5
       range-parser: 1.2.1
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
       webpack-log: 2.0.0
     dev: false
     engines:
@@ -10958,7 +10958,7 @@ packages:
       mem: 6.1.0
       pkg-up: 3.1.0
       tapable: 1.1.3
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
     dev: false
     peerDependencies:
       webpack: ^4.40.2
@@ -10993,7 +10993,7 @@ packages:
     dev: false
     resolution:
       integrity: sha512-lgTS3Xhv1lCOKo7SA5TjKXMjpSM4sBjNV5+q2bqesbSPs5FjGmU6jjtBSkX9b4qW87vDIsCIlUPOEhbZrMdjeQ==
-  /webpack/4.44.1_webpack@4.44.1:
+  /webpack/4.44.1:
     dependencies:
       '@webassemblyjs/ast': 1.9.0
       '@webassemblyjs/helper-module-context': 1.9.0
@@ -11017,14 +11017,12 @@ packages:
       tapable: 1.1.3
       terser-webpack-plugin: 1.4.4_webpack@4.44.1
       watchpack: 1.7.4
-      webpack: 4.44.1_webpack@4.44.1
       webpack-sources: 1.4.3
     dev: false
     engines:
       node: '>=6.11.5'
     hasBin: true
     peerDependencies:
-      webpack: '*'
       webpack-cli: '*'
       webpack-command: '*'
     peerDependenciesMeta:
@@ -11043,7 +11041,7 @@ packages:
       pretty-time: 1.1.0
       std-env: 2.2.1
       text-table: 0.2.0
-      webpack: 4.44.1_webpack@4.44.1
+      webpack: 4.44.1
       wrap-ansi: 6.2.0
     dev: false
     engines:
