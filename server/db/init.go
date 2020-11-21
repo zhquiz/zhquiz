@@ -11,13 +11,13 @@ import (
 	"gorm.io/gorm"
 )
 
-// DB storage for current DB
+// DB is the storage for current DB
 type DB struct {
 	Current *gorm.DB
 	Type    string
 }
 
-// Connect connect to DATABASE_URL
+// Connect connects to DATABASE_URL
 func Connect() DB {
 	databaseURL := shared.GetenvOrDefaultFn("DATABASE_URL", func() string {
 		paths := []string{"data.db"}
@@ -52,7 +52,7 @@ func Connect() DB {
 		}
 	}
 
-	output.Current.AutoMigrate(&User{}, &Tag{}, &Quiz{}, &Entry{}, &EntryItem{})
+	output.Current.AutoMigrate(&User{}, &Tag{}, &Quiz{}, &Entry{}, &EntryItem{}, &Preset{})
 
 	return output
 }

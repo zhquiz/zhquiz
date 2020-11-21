@@ -22,7 +22,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Resource for reuse and cleanup
+// Resource is a struct for reuse and cleanup.
 type Resource struct {
 	DB       db.DB
 	Chinese  chinese.DB
@@ -31,7 +31,7 @@ type Resource struct {
 	FireAuth *auth.Client
 }
 
-// Prepare initialize Resource for reuse and cleanup
+// Prepare initializes Resource for reuse and cleanup.
 func Prepare() Resource {
 	var fireApp *firebase.App
 	var fireAuth *auth.Client
@@ -63,7 +63,7 @@ func Prepare() Resource {
 	})
 
 	f, _ := os.Create(filepath.Join(shared.Paths().Root, "gin.log"))
-	gin.DefaultWriter = io.MultiWriter(os.Stdout, f)
+	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
 
 	return Resource{
 		DB:       db.Connect(),
@@ -74,7 +74,7 @@ func Prepare() Resource {
 	}
 }
 
-// Register to the server
+// Register registers API paths to Gin Engine.
 func (res Resource) Register(r *gin.Engine) {
 	r.Use(sessions.Sessions("session", res.Store))
 
@@ -109,9 +109,24 @@ func (res Resource) Register(r *gin.Engine) {
 			}
 		}
 	})
+
+	tAPIRouter{
+		Router: r.Group("/api"),
+	}.init()
+
+	// Send media files
+	r.GET("/media/:filename", func(c *gin.Context) {
+		filePath := filepath.Join(shared.Paths().MediaPath(), c.Param("filename"))
+		if fileInfo, err := os.Stat(filePath); err == nil && !fileInfo.IsDir() {
+			c.File(filePath)
+			return
+		}
+
+		c.Status(404)
+	})
 }
 
-// Cleanup cleanup resources
+// Cleanup cleans up Resource.
 func (res Resource) Cleanup() {
 	res.DB.Current.Commit()
 }

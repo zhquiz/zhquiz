@@ -8,13 +8,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Path calculable paths
+// Path stores path values
 type Path struct {
 	Dir  string
 	Root string
 }
 
-// Paths get paths
+// Paths returns Path object
 func Paths() Path {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	root := os.Getenv("ZHQUIZ_ROOT")
@@ -30,12 +30,12 @@ func Paths() Path {
 	}
 }
 
-// Dotenv get path to .env
+// Dotenv returns path to .env
 func (p Path) Dotenv() string {
 	return filepath.Join(p.Root, ".env")
 }
 
-// MediaPath get media to media, and generate if necessary
+// MediaPath returns path to media folder, and mkdir if necessary
 func (p Path) MediaPath() string {
 	mediaPath := filepath.Join(p.Root, "_media")
 	_, err := os.Stat(mediaPath)
@@ -48,7 +48,7 @@ func (p Path) MediaPath() string {
 	return mediaPath
 }
 
-// GetenvOrDefault write to .env if env not exists
+// GetenvOrDefault writes to .env if env not exists
 func GetenvOrDefault(key string, value string) string {
 	v := os.Getenv(key)
 	if v == "" {
@@ -63,7 +63,7 @@ func GetenvOrDefault(key string, value string) string {
 	return v
 }
 
-// GetenvOrDefaultFn write to .env if env not exists, using function
+// GetenvOrDefaultFn writes to .env if env not exists, using function
 func GetenvOrDefaultFn(key string, fn func() string) string {
 	v := os.Getenv(key)
 	if v == "" {

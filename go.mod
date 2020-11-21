@@ -1,6 +1,6 @@
 module github.com/patarapolw/zhquiz
 
-go 1.13
+go 1.15
 
 require (
 	firebase.google.com/go v3.13.0+incompatible

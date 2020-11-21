@@ -5,20 +5,19 @@ import (
 	"gorm.io/gorm"
 )
 
-// EntryItem (internal) items of an entry
+// EntryItem (internal) are items of an entry
 type EntryItem struct {
 	gorm.Model
 	Name    string `gorm:"index:name_entryId_idx,unique"`
 	EntryID uint   `gorm:"index:name_entryId_idx,unique"`
 }
 
-// Entry custom dictionary entry
+// Entry is a custom dictionary entry
 type Entry struct {
 	gorm.Model
 
 	// Relationships
 	UserID uint  `gorm:"index"`
-	User   User  `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 	Tags   []Tag `gorm:"many2many:entry_tag"`
 
 	// Entry

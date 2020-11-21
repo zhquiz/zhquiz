@@ -33,9 +33,11 @@ import (
 	"time"
 )
 
-// OpenInWindowedChrome open in Chrome/Chromium windowed mode
-// Also, Chrome/Chromium location can be located with
-// LORCACHROME environmental variable
+// OpenInWindowedChrome opens in Chrome/Chromium windowed mode.
+//
+// Chrome/Chromium location can be specified with `LORCACHROME` environmental variable.
+//
+// See https://github.com/zserge/lorca/blob/master/locate.go
 func OpenInWindowedChrome(url string) lorca.UI {
 	if lorca.LocateChrome() == "" {
 		lorca.PromptDownload()
@@ -54,8 +56,6 @@ func OpenInWindowedChrome(url string) lorca.UI {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	defer w.Close()
 
 	// This does nothing in macOS.
 	w.SetBounds(lorca.Bounds{

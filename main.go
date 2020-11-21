@@ -17,15 +17,15 @@ func main() {
 	godotenv.Load(p.Dotenv())
 
 	res := api.Prepare()
+	defer res.Cleanup()
 
 	if shared.IsDesktop() {
 		w := desktop.OpenInWindowedChrome(fmt.Sprintf("http://localhost:%s", shared.Port()))
+		defer w.Close()
 
 		server.Serve(&res)
 
 		<-w.Done()
-
-		res.Cleanup()
 	} else {
 		server.Serve(&res)
 
@@ -33,7 +33,5 @@ func main() {
 		signal.Notify(c, os.Interrupt)
 
 		<-c
-
-		res.Cleanup()
 	}
 }

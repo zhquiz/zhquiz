@@ -6,19 +6,18 @@ import (
 	"gorm.io/gorm"
 )
 
-// Quiz database model for quiz
+// Quiz is the database model for quiz
 type Quiz struct {
 	gorm.Model
 
 	// Relationships
-	UserID uint  `gorm:"index"`
-	User   User  `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	UserID uint  `gorm:"index:quiz_unique_idx,unique"`
 	Tags   []Tag `gorm:"many2many:quiz_tag"`
 
 	// Entry references
-	Entry     string `gorm:"index:entry_type_direction_idx,unique"`
-	Type      string `gorm:"index:entry_type_direction_idx,unique"`
-	Direction string `gorm:"index:entry_type_direction_idx,unique"`
+	Entry     string `gorm:"index:quiz_unique_idx,unique"`
+	Type      string `gorm:"index:quiz_unique_idx,unique"`
+	Direction string `gorm:"index:quiz_unique_idx,unique"`
 
 	// Quiz annotations
 	Front    string
@@ -36,7 +35,7 @@ type Quiz struct {
 	MaxWrong    *uint      `gorm:"index"`
 }
 
-// New new quiz item
+// New creates a new quiz item
 func (q *Quiz) New(userID uint, entry string, typing string, direction string) {
 	q.UserID = userID
 	q.Entry = entry
@@ -63,7 +62,7 @@ func getNextReview(srsLevel int8) time.Time {
 	return time.Now().Add(10 * time.Minute)
 }
 
-// UpdateSRSLevel this will also update stats
+// UpdateSRSLevel updates SRSLevel and also updates stats
 func (q *Quiz) UpdateSRSLevel(dSRSLevel int8) {
 	if dSRSLevel > 0 {
 		if q.RightStreak == nil {

@@ -5,14 +5,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// EntryItem (internal) items of an entry
+// EntryItem (internal) represents items of an entry
 type EntryItem struct {
 	gorm.Model
 	Name    string `gorm:"index:name_entryId_idx,unique"`
 	EntryID uint   `gorm:"index:name_entryId_idx,unique"`
 }
 
-// Entry custom dictionary entry
+// Entry is a dictionary entry
 type Entry struct {
 	gorm.Model
 

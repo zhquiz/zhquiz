@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -14,8 +15,8 @@ import (
 	"github.com/patarapolw/zhquiz/shared"
 )
 
-// Serve start the server
-// Runs go func by default
+// Serve starts the server.
+// Runs `go func` by default.
 func Serve(res *api.Resource) *gin.Engine {
 	r := gin.Default()
 
@@ -37,6 +38,12 @@ func Serve(res *api.Resource) *gin.Engine {
 		}
 		c.Next()
 	})
+
+	if _, err := os.Stat(filepath.Join(p.Dir, "public")); os.IsNotExist(err) {
+		r.GET("/", func(c *gin.Context) {
+			c.Redirect(http.StatusTemporaryRedirect, "/docs")
+		})
+	}
 
 	res.Register(r)
 
