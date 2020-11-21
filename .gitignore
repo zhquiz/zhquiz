@@ -187,6 +187,7 @@ $RECYCLE.BIN/
 
 .npmrc
 /zhquiz
+/zhquiz-*
 /_media/
 /*.db
 /dist/

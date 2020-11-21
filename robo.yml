@@ -11,7 +11,7 @@ dist-web:
     cp -rv ./dist/* ../../public
 dist-windows:
   command: |
-    if [ "$DIST_WEB" != "0" ]; then
+    if [ "$DIST_MAIN" != "0" ]; then
       robo -c {{ .robo.file }} dist-web
     fi
 
@@ -20,9 +20,13 @@ dist-windows:
       -branch={{.branch}} \
       -targets=windows/* \
       {{.repo}}
+
+    if [ "$DIST_MAIN" != "0" ]; then
+      robo -c {{ .robo.file }} pack
+    fi
 dist-mac-linux:
   command: |
-    if [ "$DIST_WEB" != "0" ]; then
+    if [ "$DIST_MAIN" != "0" ]; then
       robo -c {{ .robo.file }} dist-web
     fi
 
@@ -30,17 +34,26 @@ dist-mac-linux:
       -branch={{.branch}} \
       -targets=darwin/amd64,linux/386,linux/amd64 \
       {{.repo}}
+
+    if [ "$DIST_MAIN" != "0" ]; then
+      robo -c {{ .robo.file }} pack
+    fi
 dist:
   summary: |
     Build for Linux, Windows, and macOS
     Install `xgo` using `go get github.com/karalabe/xgo`
   command: |
-    robo -c {{ .robo.file }} dist-windows
+    robo -c {{ .robo.file }} dist-web
 
-    export DIST_WEB=0
+    export DIST_MAIN=0
 
     robo -c {{ .robo.file }} dist-windows
     robo -c {{ .robo.file }} dist-mac-linux
+
+    robo -c {{ .robo.file }} pack
+pack:
+  command: |
+    go run ./_scripts/pack
 desktop:
   command: |
     ./zhquiz
