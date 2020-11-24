@@ -1,0 +1,20 @@
+name: zhquiz
+version: 0.1.0
+description: 'ZhQuiz, a Chinese quizzing platform'
+main: index.js
+private: true
+directories:
+  doc: docs
+scripts:
+  test: 'echo "Error: no test specified" && exit 1'
+repository:
+  type: git
+  url: 'git+https://github.com/patarapolw/zhquiz.git'
+keywords: []
+author: 'Pacharapol Withayasakpunt <polv@polv.cc> (https://www.polv.cc)'
+license: MIT
+bugs:
+  url: 'https://github.com/patarapolw/zhquiz/issues'
+homepage: 'https://github.com/patarapolw/zhquiz#readme'
+devDependencies:
+  prettier: ^2.2.0
