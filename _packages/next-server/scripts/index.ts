@@ -1,113 +1,130 @@
-import FSStorage from '@lokidb/fs-storage'
-import FullTextSearch from '@lokidb/full-text-search'
-import LokiDB, { Collection } from '@lokidb/loki'
-import S from 'jsonschema-definer'
-import jieba from 'nodejieba'
-import XRegExp from 'xregexp'
+import axios from 'axios'
+/* eslint-disable no-unused-vars */
+import sqlite3 from 'better-sqlite3'
 
-FSStorage.register()
-FullTextSearch.register()
+import {
+  initZh,
+  sSentence,
+  sVocab,
+  zhSentence,
+  zhVocab
+} from '../src/db/chinese'
 
-let zh: LokiDB
+async function main() {
+  const zh = await initZh('assets/zh.loki')
 
-export const sSentence = S.shape({
-  chinese: S.string(),
-  pinyin: S.string(),
-  english: S.list(S.string()).minItems(1),
-  frequency: S.number().optional(),
-  level: S.integer().optional(),
-  type: S.string().optional(),
-  tag: S.list(S.string()).optional()
-})
+  async function addVocabs() {
+    const cedict = sqlite3(
+      '/mnt/c/Users/Pacharapol W/Dropbox/database/cedict.db',
+      { readonly: true }
+    )
 
-export let zhSentence: Collection<typeof sSentence.type>
+    const wordfreq: Record<string, number> = {}
+    {
+      const promises: (() => Promise<any>)[] = []
 
-const reHan1 = XRegExp('^\\p{Han}$')
-const sHan1 = S.string().custom((s) => reHan1.test(s))
+      const vs = cedict
+        .prepare(
+          /* sql */ `
+        SELECT DISTINCT simplified
+        FROM vocab
+        `
+        )
+        .all()
+        .map((c) => c.simplified)
 
-export const sToken = S.shape({
-  entry: sHan1,
-  sub: S.list(sHan1).optional(),
-  sup: S.list(sHan1).optional(),
-  variants: S.list(sHan1).optional(),
-  frequency: S.number().optional(),
-  hanziLevel: S.integer().optional(),
-  vocabLevel: S.integer().optional(),
-  tag: S.list(S.string()).optional(),
-  pinyin: S.string().optional(),
-  english: S.string().optional()
-})
+      promises.push(
+        ...vs.map((q) => () =>
+          axios
+            .get('http://localhost:9999', {
+              params: {
+                q
+              }
+            })
+            .then((r) => r.data)
+        )
+      )
 
-export let zhToken: Collection<typeof sToken.type>
-
-export const sVocab = S.shape({
-  simplified: S.string(),
-  traditional: S.string().optional(),
-  pinyin: S.string(),
-  english: S.string(),
-  frequency: S.number().optional()
-})
-
-export let zhVocab: Collection<typeof sVocab.type>
-
-export async function initDB(filename: string) {
-  zh = new LokiDB(filename)
-
-  await zh.initializePersistence({
-    adapter: new FSStorage(),
-    autoload: true
-  })
-
-  zhSentence = zh.getCollection('sentence')
-  if (!zhSentence) {
-    zhSentence = zh.addCollection('sentence', {
-      unique: ['chinese'],
-      rangedIndexes: {
-        frequency: {},
-        level: {},
-        type: {},
-        tag: {}
-      },
-      fullTextSearch: [
-        {
-          field: 'chinese',
-          analyzer: {
-            tokenizer: (str) => jieba.cutForSearch(str)
-          }
-        },
-        {
-          field: 'english'
-        }
-      ]
-    })
-  }
-
-  zhToken = zh.getCollection('token')
-  if (!zhToken) {
-    zhToken = zh.addCollection('token', {
-      unique: ['entry'],
-      rangedIndexes: {
-        sub: {},
-        sup: {},
-        variants: {},
-        frequency: {},
-        hanziLevel: {},
-        vocabLevel: {},
-        tag: {}
+      const chunkSize = 1000
+      for (let i = 0; i < promises.length; i += chunkSize) {
+        await Promise.all(promises.slice(i, i + chunkSize).map((p) => p()))
       }
-    })
+    }
+
+    const vs = cedict
+      .prepare(
+        /* sql */ `
+    SELECT simplified, traditional, pinyin, english
+    FROM vocab
+    `
+      )
+      .all()
+      .map((v) =>
+        sVocab.ensure({
+          simplified: v.simplified,
+          traditional: v.traditional || undefined,
+          pinyin: v.pinyin,
+          english: v.english.replace(/\//g, ' $& '),
+          frequency: wordfreq[v.simplified]
+        })
+      )
+
+    zhVocab.insert(vs)
+
+    cedict.close()
   }
 
-  zhVocab = zh.getCollection('vocab')
-  if (!zhVocab) {
-    zhVocab = zh.addCollection('vocab', {
-      rangedIndexes: {
-        simplified: {},
-        traditional: {},
-        frequency: {}
-      }
-    })
+  await addVocabs()
+  await zh.saveDatabase()
+
+  async function addSentences() {
+    const tatoeba = sqlite3(
+      '/mnt/c/Users/Pacharapol W/Dropbox/database/tatoeba.db'
+    )
+
+    const promises: (() => Promise<any>)[] = []
+
+    for (const s of tatoeba
+      .prepare(
+        /* sql */ `
+    SELECT
+      s1.text                     chinese,
+      group_concat(s2.text, '; ') english
+    FROM sentence     s1
+    JOIN translation  t   ON t.sentence_id = s1.id
+    JOIN sentence     s2  ON t.translation_id = s2.id
+    WHERE s1.lang = 'cmn' AND s2.lang = 'eng'
+    GROUP BY chinese
+    `
+      )
+      .iterate()) {
+      promises.push(async () => {
+        zhSentence.insert(
+          sSentence.ensure({
+            chinese: s.chinese,
+            english: s.english,
+            frequency: await axios
+              .get('http://localhost:9999', {
+                params: {
+                  q: s.chinese
+                }
+              })
+              .then((r) => r.data[s.chinese])
+          })
+        )
+      })
+    }
+
+    const chunkSize = 1000
+    for (let i = 0; i < promises.length; i += chunkSize) {
+      await Promise.all(promises.slice(i, i + chunkSize).map((p) => p()))
+    }
   }
 
-  return zh
+  await addSentences()
+  await zh.saveDatabase()
+
+  await zh.close()
 }
+
+main().catch(console.error)
