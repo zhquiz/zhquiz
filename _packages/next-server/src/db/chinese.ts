@@ -1,113 +1,246 @@
-import { FSStorage } from '@lokidb/fs-storage'
-import { FullTextSearch } from '@lokidb/full-text-search'
-import LokiDB, { Collection } from '@lokidb/loki'
-import S from 'jsonschema-definer'
+import sqlite3 from 'better-sqlite3'
 import jieba from 'nodejieba'
 import XRegExp from 'xregexp'
 
-FSStorage.register()
-FullTextSearch.register()
+// eslint-disable-next-line no-use-before-define
+export let zh: Zh
 
-let zh: LokiDB
+export interface IZhSentence {
+  id: number
+  chinese: string
+  pinyin?: string | null
+  english: string[]
+  frequency?: number
+}
 
-export const sSentence = S.shape({
-  chinese: S.string(),
-  pinyin: S.string().optional(),
-  english: S.string(),
-  frequency: S.number().optional(),
-  level: S.integer().optional(),
-  type: S.string().optional(),
-  tag: S.list(S.string()).optional()
-})
+class Zh {
+  db: sqlite3.Database
 
-export let zhSentence: Collection<typeof sSentence.type>
+  constructor(public filename: string) {
+    this.db = sqlite3(filename)
+    this.init()
+  }
 
-const reHan1 = XRegExp('^\\p{Han}$')
-const sHan1 = S.string().custom((s) => reHan1.test(s))
+  private init() {
+    this.db.exec(/* sql */ `
+    CREATE TABLE IF NOT EXISTS tag (
+      id        INT PRIMARY KEY,
+      [name]    TEXT NOT NULL UNIQUE COLLATE NOCASE
+    );
+    `)
 
-export const sToken = S.shape({
-  entry: sHan1,
-  sub: S.list(sHan1).optional(),
-  sup: S.list(sHan1).optional(),
-  variants: S.list(sHan1).optional(),
-  frequency: S.number().optional(),
-  hanziLevel: S.integer().optional(),
-  vocabLevel: S.integer().optional(),
-  tag: S.list(S.string()).optional(),
-  pinyin: S.string().optional(),
-  english: S.string().optional()
-})
+    this.db.exec(/* sql */ `
+    CREATE TABLE IF NOT EXISTS token (
+      [entry]       TEXT PRIMARY KEY,
+      -- sub m2m
+      -- sup m2m
+      -- var m2m
+      frequency     FLOAT,
+      hanzi_level   INT,
+      vocab_level   INT,
+      -- tag m2m
+      pinyin        TEXT,
+      english       TEXT
+    );
 
-export let zhToken: Collection<typeof sToken.type>
+    CREATE INDEX IF NOT EXISTS idx_token_frequency ON token(frequency);
+    CREATE INDEX IF NOT EXISTS idx_token_hanzi_level on token(hanzi_level);
+    CREATE INDEX IF NOT EXISTS idx_token_vocab_level on token(vocab_level);
 
-export const sVocab = S.shape({
-  simplified: S.string(),
-  traditional: S.string().optional(),
-  pinyin: S.string(),
-  english: S.string(),
-  frequency: S.number().optional()
-})
+    CREATE TABLE IF NOT EXISTS token_sub_token (
+      parent    TEXT NOT NULL REFERENCES token,
+      children  TEXT NOT NULL REFERENCES token,
+      PRIMARY KEY (parent, children)
+    );
 
-export let zhVocab: Collection<typeof sVocab.type>
+    CREATE TABLE IF NOT EXISTS token_sup_token (
+      parent    TEXT NOT NULL REFERENCES token,
+      children  TEXT NOT NULL REFERENCES token,
+      PRIMARY KEY (parent, children)
+    );
 
-export async function initZh(filename: string) {
-  zh = new LokiDB(filename)
+    CREATE TABLE IF NOT EXISTS token_var_token (
+      parent    TEXT NOT NULL REFERENCES token,
+      children  TEXT NOT NULL REFERENCES token,
+      PRIMARY KEY (parent, children)
+    );
 
-  await zh.initializePersistence({
-    adapter: new FSStorage(),
-    autoload: true
-  })
+    CREATE TABLE IF NOT EXISTS token_tag (
+      [entry]   TEXT NOT NULL REFERENCES token,
+      tag_id    INT NOT NULL REFERENCES token,
+      PRIMARY KEY ([entry], tag_id)
+    );
+    `)
 
-  zhSentence = zh.getCollection('sentence')
-  if (!zhSentence) {
-    zhSentence = zh.addCollection('sentence', {
-      unique: ['chinese'],
-      rangedIndexes: {
-        frequency: { indexTypeName: 'avl', comparatorName: 'js' },
-        level: { indexTypeName: 'avl', comparatorName: 'js' },
-        type: { indexTypeName: 'avl', comparatorName: 'js' },
-        tag: { indexTypeName: 'avl', comparatorName: 'js' }
-      },
-      fullTextSearch: [
-        {
-          field: 'chinese',
-          analyzer: {
-            tokenizer: (str) => jieba.cutForSearch(str)
+    this.db.exec(/* sql */ `
+    CREATE TABLE IF NOT EXISTS sentence (
+      id          INT PRIMARY KEY,
+      chinese     TEXT NOT NULL UNIQUE,
+      pinyin      TEXT,
+      english     TEXT NOT NULL, -- \x1f joined
+      frequency   FLOAT,
+      [level]     INT
+      -- tag m2m
+      -- token m2m
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_sentence_frequency ON sentence(frequency);
+    CREATE INDEX IF NOT EXISTS idx_sentence_level ON sentence([level]);
+
+    CREATE TABLE IF NOT EXISTS sentence_tag (
+      sentence_id INT NOT NULL REFERENCES sentence,
+      tag_id      INT NOT NULL REFERENCES tag,
+      PRIMARY KEY (sentence_id, tag_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS sentence_token (
+      sentence_id INT NOT NULL REFERENCES sentence,
+      [entry]     TEXT NOT NULL REFERENCES token,
+      PRIMARY KEY (sentence_id, [entry])
+    );
+    `)
+
+    this.db.exec(/* sql */ `
+    CREATE TABLE IF NOT EXISTS cedict (
+      simplified  TEXT NOT NULL,
+      traditional TEXT,
+      pinyin      TEXT NOT NULL,
+      english     TEXT NOT NULL,
+      frequency   FLOAT
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_cedict ON cedict(simplified, traditional, pinyin);
+    CREATE INDEX IF NOT EXISTS idx_cedict_frequency ON cedict(frequency);
+    `)
+  }
+
+  tagFindOrCreate(names: string[]): number[] {
+    const m = new Map<string, number>()
+
+    this.db
+      .prepare(
+        /* sql */ `
+    SELECT id, [name]
+    FROM tag
+    WHERE [name] IN (${Array(names.length)
+      .fill(null)
+      .map(() => '?')})
+    `
+      )
+      .all(...names)
+      .map(({ id, name }) => {
+        m.set(name, id)
+      })
+
+    const stmt = this.db.prepare(/* sql */ `
+    INSERT INTO tag ([name]) values (@name)
+    `)
+
+    this.db.transaction((ts: string[]) => {
+      ts.map((t) => {
+        m.set(t, stmt.run(t).lastInsertRowid as number)
+      })
+    })(names.filter((n) => !m.has(n)))
+
+    return names.map((n) => m.get(n)!)
+  }
+
+  tokenFindOrCreate(names: string[]): string[] {
+    const stmt = this.db.prepare(/* sql */ `
+    INSERT INTO token ([entry])
+    VALUES (@entry)
+    ON CONFLICT DO NOTHING
+    `)
+
+    this.db.transaction(() => {
+      names.map((entry) => {
+        stmt.run({ entry })
+      })
+    })()
+
+    return names
+  }
+
+  sentenceCreateMany(its: IZhSentence[]) {
+    const wMap = new Map<string, string[]>()
+
+    this.tokenFindOrCreate([
+      ...new Set(
+        its.flatMap((it) => {
+          const segments = [
+            ...new Set(
+              jieba
+                .cutForSearch(it.chinese)
+                .filter((s) => XRegExp('\\p{Han}').test(s))
+            )
+          ]
+          wMap.set(it.chinese, segments)
+          return segments
+        })
+      )
+    ])
+
+    {
+      const stmt = this.db.prepare(/* sql */ `
+      INSERT INTO sentence (id, chinese, pinyin, english, frequency)
+      VALUES (@id, @chinese, @pinyin, @english, @frequency)
+      `)
+
+      this.db.transaction(() => {
+        its.map((it) =>
+          stmt.run({
+            ...it,
+            english: it.english.join('\x1f')
+          })
+        )
+      })()
+    }
+
+    {
+      const stmt = this.db.prepare(/* sql */ `
+      INSERT INTO sentence_token (sentence_id, [entry])
+      VALUES (@sentence_id, @entry)
+      `)
+
+      this.db.transaction(() => {
+        its.map((it) => {
+          const tokens = wMap.get(it.chinese)
+          if (tokens) {
+            tokens.map((entry) => {
+              stmt.run({
+                sentence_id: it.id,
+                entry
+              })
+            })
           }
-        },
-        {
-          field: 'english'
-        }
-      ]
-    })
+        })
+      })()
+    }
+
+    return its.map((it) => it.id)
   }
 
-  zhToken = zh.getCollection('token')
-  if (!zhToken) {
-    zhToken = zh.addCollection('token', {
-      unique: ['entry'],
-      rangedIndexes: {
-        sub: { indexTypeName: 'avl', comparatorName: 'js' },
-        sup: { indexTypeName: 'avl', comparatorName: 'js' },
-        variants: { indexTypeName: 'avl', comparatorName: 'js' },
-        frequency: { indexTypeName: 'avl', comparatorName: 'js' },
-        hanziLevel: { indexTypeName: 'avl', comparatorName: 'js' },
-        vocabLevel: { indexTypeName: 'avl', comparatorName: 'js' },
-        tag: { indexTypeName: 'avl', comparatorName: 'js' }
-      }
-    })
-  }
+  cedictCreate(
+    its: {
+      simplified: string
+      traditional?: string
+      pinyin: string
+      english: string
+      frequency?: number
+    }[]
+  ): number[] {
+    const stmt = this.db.prepare(/* sql */ `
+    INSERT INTO cedict (simplified, traditional, pinyin, english, frequency)
+    VALUES (@simplified, @traditional, @pinyin, @english, @frequency)
+    `)
 
-  zhVocab = zh.getCollection('vocab')
-  if (!zhVocab) {
-    zhVocab = zh.addCollection('vocab', {
-      rangedIndexes: {
-        simplified: { indexTypeName: 'avl', comparatorName: 'js' },
-        traditional: { indexTypeName: 'avl', comparatorName: 'js' },
-        frequency: { indexTypeName: 'avl', comparatorName: 'js' }
-      }
-    })
+    return this.db.transaction(() => {
+      return its.map((it) => stmt.run(it).lastInsertRowid as number)
+    })()
   }
+}
 
+export function initZh(filename: string) {
+  zh = new Zh(filename)
   return zh
 }

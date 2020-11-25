@@ -12,6 +12,7 @@ module.exports = {
   plugins: ['@typescript-eslint'],
   rules: {
     'space-before-function-paren': 0,
-    'array-callback-return': 0
+    'array-callback-return': 0,
+    'no-useless-constructor': 0
   }
 }

@@ -1,28 +1,22 @@
 import axios from 'axios'
-/* eslint-disable no-unused-vars */
 import sqlite3 from 'better-sqlite3'
 
-import {
-  initZh,
-  sSentence,
-  sVocab,
-  zhSentence,
-  zhVocab
-} from '../src/db/chinese'
+import { IZhSentence, initZh } from '../src/db/chinese'
 
 async function main() {
-  const zh = await initZh('assets/zh.loki')
+  const zh = initZh('assets/zh.db')
+  const wordfreq = new Map<string, number>()
 
+  // eslint-disable-next-line no-unused-vars
   async function addVocabs() {
+    console.log('Adding vocab')
+
     const cedict = sqlite3(
       '/mnt/c/Users/Pacharapol W/Dropbox/database/cedict.db',
       { readonly: true }
     )
 
-    const wordfreq: Record<string, number> = {}
     {
-      const promises: (() => Promise<any>)[] = []
-
       const vs = cedict
         .prepare(
           /* sql */ `
@@ -33,22 +27,18 @@ async function main() {
         .all()
         .map((c) => c.simplified)
 
-      promises.push(
-        ...vs.map((q) => () =>
-          axios
-            .get('http://localhost:9999', {
-              params: {
-                q
-              }
-            })
-            .then((r) => r.data)
+      await axios
+        .post('http://localhost:9999/freq', {
+          entries: vs
+        })
+        .then(({ data: { result } }) =>
+          (result as {
+            entry: string
+            frequency: number
+          }[]).map(({ entry, frequency }) => {
+            wordfreq.set(entry, frequency)
+          })
         )
-      )
-
-      const chunkSize = 1000
-      for (let i = 0; i < promises.length; i += chunkSize) {
-        await Promise.all(promises.slice(i, i + chunkSize).map((p) => p()))
-      }
     }
 
     const vs = cedict
@@ -59,37 +49,59 @@ async function main() {
     `
       )
       .all()
-      .map((v) =>
-        sVocab.ensure({
-          simplified: v.simplified,
-          traditional: v.traditional || undefined,
-          pinyin: v.pinyin,
-          english: v.english.replace(/\//g, ' $& '),
-          frequency: wordfreq[v.simplified]
-        })
-      )
+      .map((v) => ({
+        simplified: v.simplified,
+        traditional: v.traditional || undefined,
+        pinyin: v.pinyin,
+        english: v.english.replace(/\//g, ' $& '),
+        frequency: wordfreq.get(v.simplified)
+      }))
 
-    zhVocab.insert(vs)
-
+    zh.cedictCreate(vs)
     cedict.close()
+
+    console.log('Added vocab')
   }
 
-  await addVocabs()
-  await zh.saveDatabase()
-
   async function addSentences() {
+    console.log('Adding sentences')
+
     const tatoeba = sqlite3(
       '/mnt/c/Users/Pacharapol W/Dropbox/database/tatoeba.db'
     )
 
-    const promises: (() => Promise<any>)[] = []
+    const ss: IZhSentence[] = []
+
+    const ssInsert = async (ssSub: IZhSentence[]) => {
+      await axios
+        .post('http://localhost:9999/freq', {
+          entries: ssSub.map(({ chinese }) => chinese)
+        })
+        .then(({ data: { result } }) =>
+          (result as {
+            entry: string
+            frequency: number
+          }[]).map(({ entry, frequency }) => {
+            wordfreq.set(entry, frequency)
+          })
+        )
+
+      zh.sentenceCreateMany(
+        ssSub.map((s) => ({
+          ...s,
+          pinyin: null,
+          frequency: wordfreq.get(s.chinese)
+        }))
+      )
+    }
 
     for (const s of tatoeba
       .prepare(
         /* sql */ `
     SELECT
+      s1.id                       id,
       s1.text                     chinese,
-      group_concat(s2.text, '; ') english
+      json_group_array(s2.text)   english
     FROM sentence     s1
     JOIN translation  t   ON t.sentence_id = s1.id
     JOIN sentence     s2  ON t.translation_id = s2.id
@@ -98,33 +110,26 @@ async function main() {
     `
       )
       .iterate()) {
-      promises.push(async () => {
-        zhSentence.insert(
-          sSentence.ensure({
-            chinese: s.chinese,
-            english: s.english,
-            frequency: await axios
-              .get('http://localhost:9999', {
-                params: {
-                  q: s.chinese
-                }
-              })
-              .then((r) => r.data[s.chinese])
-          })
-        )
+      ss.push({
+        id: s.id,
+        chinese: s.chinese,
+        english: JSON.parse(s.english)
       })
+
+      if (ss.length > 500) {
+        await ssInsert(ss.splice(0, 500))
+      }
     }
 
-    const chunkSize = 1000
-    for (let i = 0; i < promises.length; i += chunkSize) {
-      await Promise.all(promises.slice(i, i + chunkSize).map((p) => p()))
-    }
+    await ssInsert(ss)
+
+    console.log('Added sentences')
   }
 
   await addSentences()
-  await zh.saveDatabase()
+  await addVocabs()
 
-  await zh.close()
+  zh.db.close()
 }
 
 main().catch(console.error)

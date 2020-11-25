@@ -1,11 +1,24 @@
-import { initZh, zhSentence } from '../src/db/chinese'
+import { initZh } from '../src/db/chinese'
 
 async function main() {
-  const zh = await initZh('assets/zh.loki')
+  const zh = initZh('assets/zh.db')
 
-  console.log(zhSentence.find({ english: { $fts: '你好' } as any }))
+  console.log(
+    zh.db
+      .prepare(
+        /* sql */ `
+  SELECT chinese, english
+  FROM sentence s
+  JOIN sentence_token st  ON st.sentence_id = s.id
+  WHERE st.entry = @entry
+  GROUP BY chinese
+  LIMIT 10
+  `
+      )
+      .all({ entry: '你们' })
+  )
 
-  zh.close()
+  zh.db.close()
 }
 
 if (require.main === module) {
