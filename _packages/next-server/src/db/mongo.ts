@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 
 import {
+  Ref,
   Severity,
   getModelForClass,
   index,
@@ -11,6 +12,7 @@ import {
 import dayjs from 'dayjs'
 import escapeRegex from 'escape-string-regexp'
 import { Ulid } from 'id128'
+import S from 'jsonschema-definer'
 
 import { IStatus } from '../types'
 import { getNextReview, srsMap } from './quiz'
@@ -19,22 +21,47 @@ import { ISplitOpToken, removeBraces, splitOp } from './tokenize'
 // eslint-disable-next-line no-use-before-define
 @pre<User>('remove', async function () {
   await Promise.all([
-    NoteModel.find({ user: this._id }).then((rs) =>
-      rs.map((r) => r.deleteOne())
-    ),
-    PresetModel.deleteMany({ user: this._id })
+    QuizModel.deleteMany({ userId: this._id }),
+    ExtraModel.deleteMany({ userId: this._id })
   ])
+})
+@modelOptions({
+  options: {
+    allowMixed: Severity.ALLOW
+  }
 })
 class User {
   @prop({ default: () => Ulid.generate().toCanonical() }) _id?: string
   @prop({ required: true, unique: true }) email!: string
   @prop({ required: true }) name!: string
-  @prop({ required: true }) image!: string
+  @prop() image?: string
   @prop({
     required: true,
     default: () => User.newApiKey()
   })
   apiKey?: string
+
+  @prop() forvoApi?: string
+
+  @prop() settings?: Record<string, unknown>
+
+  /* eslint-disable no-use-before-define */
+
+  @prop({
+    ref: () => Quiz,
+    foreignField: 'userId',
+    localField: '_id'
+  })
+  quizzes?: Ref<Quiz>[]
+
+  @prop({
+    ref: () => Extra,
+    foreignField: 'userId',
+    localField: '_id'
+  })
+  extras?: Ref<Extra>[]
+
+  /* eslint-enable no-use-before-define */
 
   static newApiKey() {
     return crypto.randomBytes(64).toString('base64').replace(/=+$/, '')
@@ -45,24 +72,25 @@ export const UserModel = getModelForClass(User, {
   schemaOptions: { timestamps: true, collection: 'User' }
 })
 
-// eslint-disable-next-line no-use-before-define
-@pre<Note>('remove', async function () {
-  await NoteAttrModel.deleteMany({ note: this._id })
-})
-@modelOptions({
-  options: {
-    allowMixed: Severity.ALLOW
-  }
-})
-class Note {
+export const sQuizDirection = S.string().enum('se', 'te', 'ec')
+export const sQuizType = S.string().enum('hanzi', 'vocab', 'sentence')
+
+class Quiz {
   @prop({ default: () => Ulid.generate().toCanonical() }) _id?: string
   @prop({ required: true }) userId!: string
 
-  @prop({ index: true }) deck?: string
+  @prop({ required: true, validate: (s) => !!sQuizType.validate(s) })
+  type!: typeof sQuizType.type
+
+  @prop({ required: true }) entry!: string
+  @prop({ required: true, validate: (s) => !!sQuizDirection.validate })
+  direction!: typeof sQuizDirection.type
+
+  @prop() audio?: string
+
   @prop() front?: string
   @prop() back?: string
   @prop() mnemonic?: string
-  @prop() data?: Record<string, unknown>
   @prop({ index: true }) tag?: string[]
   @prop({ index: true }) srsLevel?: number
   @prop({ index: true }) nextReview?: Date
@@ -343,7 +371,7 @@ class Note {
       }
     }
 
-    return NoteModel.aggregate([...where, ...post])
+    return QuizModel.aggregate([...where, ...post])
   }
 
   markRight = this._updateSrsLevel(+1)
@@ -396,38 +424,28 @@ class Note {
   }
 }
 
-export const NoteModel = getModelForClass(Note, {
-  schemaOptions: { timestamps: true, collection: 'Note' }
+export const QuizModel = getModelForClass(Quiz, {
+  schemaOptions: { timestamps: true, collection: 'Quiz' }
 })
 
-@index({ key: 1, noteId: 1 }, { unique: true })
-class NoteAttr {
-  @prop({ required: true }) noteId!: string
-
-  @prop({ required: true }) key!: string
-  @prop({ required: true }) value!: string
-}
-
-export const NoteAttrModel = getModelForClass(NoteAttr, {
-  schemaOptions: { timestamps: true, collection: 'NoteAttr' }
-})
-
-@modelOptions({
-  options: {
-    allowMixed: Severity.ALLOW
-  }
-})
-class Preset {
+@index({ entry: 1, type: 1 }, { unique: true })
+class Extra {
   @prop({ default: () => Ulid.generate().toCanonical() }) _id?: string
   @prop({ required: true }) userId!: string
 
-  @prop({ validate: (q) => typeof q !== 'undefined' }) q!: string
-  @prop({ required: true }) name!: string
-  @prop({ required: true }) status!: IStatus
-  @prop({ required: true }) selected!: string[]
-  @prop({ required: true }) opened!: string[]
+  @prop({ required: true }) entry!: string
+  @prop({
+    required: true,
+    default: 'vocab',
+    validate: (s) => !!sQuizType.validate(s)
+  })
+  type?: typeof sQuizType.type
+
+  @prop({ index: true }) alt?: string[]
+  @prop({ required: true }) pinyin!: string
+  @prop({ required: true }) english!: string
 }
 
-export const PresetModel = getModelForClass(Preset, {
-  schemaOptions: { timestamps: true, collection: 'Preset' }
+export const ExtraModel = getModelForClass(Extra, {
+  schemaOptions: { timestamps: true, collection: 'Extra' }
 })

@@ -1,3 +1,5 @@
+import path from 'path'
+
 import sqlite3 from 'better-sqlite3'
 import jieba from 'nodejieba'
 import XRegExp from 'xregexp'
@@ -15,13 +17,17 @@ export interface IZhSentence {
 
 class Zh {
   db: sqlite3.Database
+  custom: sqlite3.Database
 
-  constructor(public filename: string) {
-    this.db = sqlite3(filename)
-    this.init()
+  constructor(public dir: string) {
+    this.db = sqlite3(path.join(dir, 'zh.db'))
+    this.custom = sqlite3(path.join(dir, 'custom.db'))
+
+    this.initDb()
+    this.initCustom()
   }
 
-  private init() {
+  initDb() {
     this.db.exec(/* sql */ `
     CREATE TABLE IF NOT EXISTS tag (
       id        INT PRIMARY KEY,
@@ -47,22 +53,22 @@ class Zh {
     CREATE INDEX IF NOT EXISTS idx_token_hanzi_level on token(hanzi_level);
     CREATE INDEX IF NOT EXISTS idx_token_vocab_level on token(vocab_level);
 
-    CREATE TABLE IF NOT EXISTS token_sub_token (
-      parent    TEXT NOT NULL REFERENCES token,
-      children  TEXT NOT NULL REFERENCES token,
-      PRIMARY KEY (parent, children)
+    CREATE TABLE IF NOT EXISTS token_sub (
+      parent  TEXT NOT NULL REFERENCES token,
+      child   TEXT NOT NULL REFERENCES token,
+      PRIMARY KEY (parent, child)
     );
 
-    CREATE TABLE IF NOT EXISTS token_sup_token (
-      parent    TEXT NOT NULL REFERENCES token,
-      children  TEXT NOT NULL REFERENCES token,
-      PRIMARY KEY (parent, children)
+    CREATE TABLE IF NOT EXISTS token_sup (
+      parent  TEXT NOT NULL REFERENCES token,
+      child   TEXT NOT NULL REFERENCES token,
+      PRIMARY KEY (parent, child)
     );
 
-    CREATE TABLE IF NOT EXISTS token_var_token (
-      parent    TEXT NOT NULL REFERENCES token,
-      children  TEXT NOT NULL REFERENCES token,
-      PRIMARY KEY (parent, children)
+    CREATE TABLE IF NOT EXISTS token_var (
+      parent  TEXT NOT NULL REFERENCES token,
+      child   TEXT NOT NULL REFERENCES token,
+      PRIMARY KEY (parent, child)
     );
 
     CREATE TABLE IF NOT EXISTS token_tag (
@@ -111,6 +117,29 @@ class Zh {
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_cedict ON cedict(simplified, traditional, pinyin);
     CREATE INDEX IF NOT EXISTS idx_cedict_frequency ON cedict(frequency);
+    `)
+  }
+
+  initCustom() {
+    this.custom.exec(/* sql */ `
+    CREATE TABLE IF NOT EXISTS custom (
+      id        INT PRIMARY KEY,
+      [entry]   TEXT NOT NULL UNIQUE REFERENCES [entry],
+      -- alt m2o
+      pinyin    TEXT NOT NULL,
+      english   TEXT NOT NULL,
+      frequency FLOAT,
+      [type]    TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_custom_frequency ON custom(frequency);
+    CREATE INDEX IF NOT EXISTS idx_custom_type ON custom([type]);
+
+    CREATE TABLE IF NOT EXISTS custom_alt (
+      custom_id INT NOT NULL REFERENCES custom,
+      [entry]   TEXT NOT NULL,
+      PRIMARY KEY (custom_id, [entry])
+    )
     `)
   }
 
