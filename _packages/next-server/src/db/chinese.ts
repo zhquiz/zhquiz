@@ -73,7 +73,7 @@ class Zh {
 
     CREATE TABLE IF NOT EXISTS token_tag (
       [entry]   TEXT NOT NULL REFERENCES token,
-      tag_id    INT NOT NULL REFERENCES token,
+      tag_id    INT NOT NULL REFERENCES tag,
       PRIMARY KEY ([entry], tag_id)
     );
     `)
