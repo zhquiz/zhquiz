@@ -1,0 +1,6 @@
+[submodule "submodules/server"]
+	path = submodules/server
+	url = git@github.com:zhquiz/go-server.git
+[submodule "submodules/web"]
+	path = submodules/web
+	url = git@github.com:zhquiz/web.git
