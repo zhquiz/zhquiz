@@ -193,3 +193,5 @@ $RECYCLE.BIN/
 /dist/
 /public/
 /submodules/
+/submodules/server/
+/submodules/web/

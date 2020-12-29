@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "submodules/server": "git@github.com:zhquiz/go-server.git",
+    "submodules/web": "git@github.com:zhquiz/web.git"
+  }
+}
