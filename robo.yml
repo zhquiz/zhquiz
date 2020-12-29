@@ -2,3 +2,7 @@ clone:
   command: meta git init
 status:
   command: meta git status
+dev:
+  command: |
+    cd submodules/web
+    yarn dev
