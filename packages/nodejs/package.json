@@ -12,6 +12,7 @@
     "axios": "^0.21.1",
     "better-sqlite3": "^7.1.2",
     "js-yaml": "^3.14.1",
+    "nodejieba": "^2.5.1",
     "prettier": "^2.2.1",
     "runes2": "^0.4.14",
     "ts-node": "^9.1.1",
