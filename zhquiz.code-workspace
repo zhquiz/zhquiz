@@ -7,9 +7,6 @@
       "path": "submodules/web"
     },
     {
-      "path": "packages/python"
-    },
-    {
       "path": "."
     }
   ]
