@@ -10,6 +10,13 @@
     core-js-pure "^3.0.0"
     regenerator-runtime "^0.13.4"
 
+"@types/adm-zip@^0.4.33":
+  version "0.4.33"
+  resolved "https://registry.yarnpkg.com/@types/adm-zip/-/adm-zip-0.4.33.tgz#ea5b94f771443f655613b64f920c0555867200dd"
+  integrity sha512-WM0DCWFLjXtddl0fu0+iN2ZF+qz8RF9RddG5OSy/S90AQz01Fu8lHn/3oTIZDxvG8gVcnBLAHMHOdBLbV6m6Mw==
+  dependencies:
+    "@types/node" "*"
+
 "@types/better-sqlite3@^5.4.1":
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/@types/better-sqlite3/-/better-sqlite3-5.4.1.tgz#d45600bc19f8f41397263d037ca9b0d05df85e58"
@@ -27,6 +34,11 @@
   resolved "https://registry.yarnpkg.com/@types/js-yaml/-/js-yaml-3.12.5.tgz#136d5e6a57a931e1cce6f9d8126aa98a9c92a6bb"
   integrity sha512-JCcp6J0GV66Y4ZMDAQCXot4xprYB+Zfd3meK9+INSJeVZwJmHAW30BBEEkPzXswMXuiyReUGOP3GxrADc9wPww==
 
+"@types/node@*":
+  version "14.14.20"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.20.tgz#f7974863edd21d1f8a494a73e8e2b3658615c340"
+  integrity sha512-Y93R97Ouif9JEOWPIUyU+eyIdyRqQR0I8Ez1dzku4hDx34NWh4HbtIc3WNzwB1Y9ULvNGeu5B8h8bVL5cAk4/A==
+
 "@types/node@^14.14.16":
   version "14.14.16"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.16.tgz#3cc351f8d48101deadfed4c9e4f116048d437b4b"
@@ -41,6 +53,11 @@ abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
   integrity sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==
+
+adm-zip@^0.5.1:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/adm-zip/-/adm-zip-0.5.1.tgz#32e51c6fe88370f4389b424567b78a345e79ebc6"
+  integrity sha512-a5ABmIFUJ9OxHV5zrXM9Q41JzpRIflFtdgpL4UQM9DsTHHxQzPRaeyAdnMW7kxL0NRWm/NHafJdj6pO+ty7L2g==
 
 ansi-regex@^2.0.0:
   version "2.1.1"
