@@ -12,8 +12,8 @@ glob.sync('./zhquiz-darwin-*').map((f) => {
 
 glob.sync('./zhquiz-*').map((f) => {
   const zip = new AdmZip()
-  zip.addLocalFolder('./assets')
-  zip.addLocalFolder('./public')
+  zip.addLocalFolder('./assets', 'assets')
+  zip.addLocalFolder('./public', 'public')
   zip.addLocalFile(`./${f}`)
 
   if (!fs.existsSync('../../dist')) {
