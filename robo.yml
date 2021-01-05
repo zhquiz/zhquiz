@@ -8,5 +8,9 @@ dev:
     yarn dev
 dist:
   command: |
-    cd packages/nodejs
+    cd submodules/web
+    yarn build
+    cd ../server
+    robo build-all
+    cd ../../packages/nodejs
     yarn ts-node scripts/dist.ts
