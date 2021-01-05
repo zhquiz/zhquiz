@@ -1,37 +1,12 @@
+clone:
+  command: meta git init
+status:
+  command: meta git status
 dev:
   command: |
-    npx concurrently \
-      'cd packages/server && pnpm dev'\
-      'cd packages/nuxt && pnpm dev'
-build:
+    cd submodules/web
+    yarn dev
+dist:
   command: |
-    docker build . --build-arg FIREBASE_CONFIG -t {{.docker.tag}}
-build-local:
-  command: |
-    cd packages/server && pnpm build && cd -
-    cd packages/nuxt && pnpm build && cd -
-    docker build -f Dockerfile.local -t {{.docker.tag}} .
-start:
-  command: |
-    docker run -p 8080:8080 -e MONGO_URI -e SECRET -e FIREBASE_SDK -e FIREBASE_CONFIG {{.docker.tag}}
-deploy:
-  command: |
-    docker push {{.docker.tag}}
-heroku-token:
-  command: |
-    heroku auth:token
-heroku-docker-login:
-  command: |
-    docker login --username=_ --password=${HEROKU_TOKEN} registry.heroku.com
-heroku-release:
-  command: |
-    heroku container:release web
-
-##########
-# Settings
-
-variables:
-  docker:
-    # tag: ${DOCKER_TAG:-zhquiz}
-    # tag: registry.heroku.com/${HEROKU_APP}/web
-    tag: gcr.io/${PROJECT_ID}/zhquiz
+    cd packages/nodejs
+    yarn ts-node scripts/dist.ts
