@@ -1,7 +1,6 @@
 {
   "projects": {
-    "submodules/server": "git@github.com:zhquiz/go-zhquiz.git",
-    "submodules/web": "git@github.com:zhquiz/web.git",
-    "submodules/www": "git@github.com:zhquiz/zhquiz.github.io.git"
+    "submodules/go-zhquiz": "git@github.com:zhquiz/go-zhquiz.git",
+    "submodules/ui": "git@github.com:zhquiz/ui.git"
   }
 }

@@ -4,13 +4,17 @@ status:
   command: meta git status
 dev:
   command: |
-    cd submodules/web
+    cd submodules/ui
     yarn dev
 dist:
   command: |
-    cd submodules/web
+    cd submodules/ui
     yarn build
-    cd ../server
+    cd -
+
+    cd submodules/go-zhquiz
     robo build-all
-    cd ../../packages/nodejs
+    cd -
+
+    cd packages/nodejs
     yarn ts-node scripts/dist.ts

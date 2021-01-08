@@ -1,10 +1,10 @@
 {
   "folders": [
     {
-      "path": "submodules/server"
+      "path": "submodules/go-zhquiz"
     },
     {
-      "path": "submodules/web"
+      "path": "submodules/ui"
     },
     {
       "path": "."
