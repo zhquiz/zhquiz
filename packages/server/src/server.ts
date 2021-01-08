@@ -65,6 +65,11 @@ async function main() {
             .sort({ score: { $meta: 'textScore' } })
             .skip((page - 1) * perPage)
             .limit(perPage)
+            .project({
+              _id: 0,
+              title: 1,
+              entries: 1
+            })
             .toArray(),
           col.countDocuments({ $text: { $search: q } })
         ])

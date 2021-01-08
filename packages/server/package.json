@@ -1,11 +1,14 @@
 {
   "name": "@zhquiz/server",
   "version": "0.1.0",
-  "main": "index.js",
+  "main": "dist/server.js",
   "private": true,
   "license": "MIT",
   "scripts": {
-    "build": "tsc -P src/tsconfig.json"
+    "start": "node .",
+    "build": "tsc -P src/tsconfig.json",
+    "predeploy": "yarn build",
+    "deploy": "gcloud app deploy"
   },
   "dependencies": {
     "fastify": "^3.9.2",

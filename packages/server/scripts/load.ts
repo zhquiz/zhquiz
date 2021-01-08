@@ -11,6 +11,7 @@ async function main() {
   const col = client.db('library').collection<{
     title: string
     entries: string[]
+    source: string
   }>('library')
 
   await col.deleteMany({})
@@ -38,7 +39,8 @@ async function main() {
         return children.map(({ title: t2, entries }) => {
           return {
             title: `${t1} / ${t2}`,
-            entries
+            entries,
+            source: 'library.yaml'
           }
         })
       })
@@ -53,7 +55,8 @@ async function main() {
         return children.map(({ title: t2, entries }) => {
           return {
             title: `${t1} / ${t2}`,
-            entries
+            entries,
+            source: 'libraryx.yaml'
           }
         })
       })
