@@ -33,22 +33,6 @@ async function main() {
   await col.insertMany(
     schema
       .ensure(
-        yaml.load(fs.readFileSync('../../assets/library.yaml', 'utf-8')) as any
-      )
-      .flatMap(({ title: t1, children }) => {
-        return children.map(({ title: t2, entries }) => {
-          return {
-            title: `${t1} / ${t2}`,
-            entries,
-            source: 'library.yaml'
-          }
-        })
-      })
-  )
-
-  await col.insertMany(
-    schema
-      .ensure(
         yaml.load(fs.readFileSync('../../assets/libraryx.yaml', 'utf-8')) as any
       )
       .flatMap(({ title: t1, children }) => {

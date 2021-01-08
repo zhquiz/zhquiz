@@ -1,4 +1,5 @@
 import S from 'jsonschema-definer'
+import cors from 'fastify-cors'
 import fStatic from 'fastify-static'
 import fastify from 'fastify'
 import mongodb from 'mongodb'
@@ -24,6 +25,8 @@ async function main() {
   app.register(fStatic, {
     root: path.resolve('public')
   })
+
+  app.register(cors)
 
   const sQuerystring = S.shape({
     q: S.string().optional(),
@@ -59,17 +62,20 @@ async function main() {
       if (q) {
         const [result, count] = await Promise.all([
           col
-            .find({ $text: { $search: q } }, {
-              score: { $meta: 'textScore' }
-            } as any)
+            .find(
+              { $text: { $search: q } },
+              {
+                projection: {
+                  _id: 0,
+                  title: 1,
+                  entries: 1,
+                  score: { $meta: 'textScore' }
+                }
+              }
+            )
             .sort({ score: { $meta: 'textScore' } })
             .skip((page - 1) * perPage)
             .limit(perPage)
-            .project({
-              _id: 0,
-              title: 1,
-              entries: 1
-            })
             .toArray(),
           col.countDocuments({ $text: { $search: q } })
         ])
@@ -85,6 +91,11 @@ async function main() {
           .find()
           .skip((page - 1) * perPage)
           .limit(perPage)
+          .project({
+            _id: 0,
+            title: 1,
+            entries: 1
+          })
           .toArray(),
         col.countDocuments()
       ])
