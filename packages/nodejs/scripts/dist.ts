@@ -3,7 +3,7 @@ import { execSync } from 'child_process'
 import fs from 'fs-extra'
 import glob from 'fast-glob'
 
-process.chdir('../../submodules/server')
+process.chdir('../../submodules/go-zhquiz')
 
 execSync('rm -rf ../../dist')
 fs.ensureDirSync('../../dist')
