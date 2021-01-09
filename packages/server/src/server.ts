@@ -13,6 +13,7 @@ async function main() {
   const col = client.db('library').collection<{
     title: string
     entries: string[]
+    createdAt: Date
   }>('library')
 
   const app = fastify({
@@ -89,6 +90,7 @@ async function main() {
       const [result, count] = await Promise.all([
         col
           .find()
+          .sort({ createdAt: -1 })
           .skip((page - 1) * perPage)
           .limit(perPage)
           .project({

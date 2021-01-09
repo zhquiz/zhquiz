@@ -15,5 +15,5 @@
 
 # Node.js dependencies:
 node_modules/
-/scripts/
-/src/
+scripts/
+src/

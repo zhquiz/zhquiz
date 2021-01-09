@@ -12,6 +12,7 @@ async function main() {
     title: string
     entries: string[]
     source: string
+    createdAt: Date
   }>('library')
 
   await col.deleteMany({})
@@ -30,6 +31,8 @@ async function main() {
     })
   )
 
+  let now = +new Date()
+
   await col.insertMany(
     schema
       .ensure(
@@ -40,7 +43,8 @@ async function main() {
           return {
             title: `${t1} / ${t2}`,
             entries,
-            source: 'libraryx.yaml'
+            source: 'libraryx.yaml',
+            createdAt: new Date(now++)
           }
         })
       })
