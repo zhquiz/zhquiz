@@ -16,7 +16,7 @@ ZhQuiz, a Chinese quizzing platform
 
 ## Desktop app
 
-See <https://github.com/zhquiz/zhquiz/releases>.
+See <https://github.com/zhquiz/go-zhquiz/releases>.
 
 For Windows, you will also need to install Chinese Language Support.
 
