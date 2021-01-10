@@ -1,0 +1,75 @@
+{
+  "name": "@zhquiz/electron",
+  "version": "0.1.0",
+  "main": "lib/index.js",
+  "author": {
+    "email": "polv@polv.cc",
+    "name": "Pacharapol Withayasakpunt",
+    "url": "https://www.polv.cc"
+  },
+  "description": "ZhQuiz - Hanzi, Vocab and Sentences quizzing on your local machine, fully offline",
+  "license": "MIT",
+  "files": [
+    "public/",
+    "lib/",
+    "assets/"
+  ],
+  "scripts": {
+    "postinstall": "electron-builder install-app-deps",
+    "dev": "ts-node-dev src/server.ts",
+    "build": "tsc -P src/tsconfig.json",
+    "postbuild": "cd ../../submodules/ui && OUTDIR=../../packages/electron/public yarn build --modern",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "better-sqlite3": "^7.1.2",
+    "electron-context-menu": "^2.4.0",
+    "electron-tabs": "^0.15.0",
+    "fastify": "^3.9.2",
+    "fastify-static": "^3.3.1",
+    "get-port": "^5.1.1",
+    "pino": "^6.10.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^5.4.1",
+    "@types/death": "^1.1.1",
+    "@types/pino": "^6.3.5",
+    "death": "^1.1.0",
+    "electron": "^11.1.1",
+    "electron-builder": "^22.9.1",
+    "import-sort-parser-typescript": "^6.0.0",
+    "pino-pretty": "^4.3.0",
+    "prettier": "^2.2.1",
+    "ts-node": "^9.1.1",
+    "ts-node-dev": "^1.1.1",
+    "typescript": "^4.1.3"
+  },
+  "importSort": {
+    ".js, .ts": {
+      "parser": "typescript",
+      "style": "module"
+    }
+  },
+  "build": {
+    "appId": "cc.zhquiz.e-zhquiz",
+    "productName": "ZhQuiz",
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "public/favicon.ico"
+    },
+    "mac": {
+      "icon": "public/favicon.icns",
+      "category": "public.app-category.education"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "public/favicon.png"
+    }
+  }
+}
