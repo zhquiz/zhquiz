@@ -4,23 +4,38 @@ import ON_DEATH from 'death'
 import fastify, { FastifyInstance } from 'fastify'
 import fastifyStatic from 'fastify-static'
 import pino from 'pino'
+import * as sqlite from 'sqlite'
+import sqlite3 from 'sqlite3'
 
 import { g } from './shared'
 
 interface IServerOptions {
   port: number
   userDataDir: string
+  assetsDir: string
 }
 
-export class Server implements IServerOptions {
+interface IServerAssets {
+  logger: pino.Logger
+  zh: sqlite.Database
+}
+
+export class Server implements IServerOptions, IServerAssets {
   static async init(opts: IServerOptions) {
+    const zh = await sqlite.open({
+      filename: path.join(opts.assetsDir, 'zh.db'),
+      mode: sqlite3.OPEN_READONLY,
+      driver: sqlite3.Database
+    })
+
     const logger = pino()
     const app = fastify({
       logger
     })
 
     app.register(fastifyStatic, {
-      root: path.resolve('public')
+      root: g.getPath('public'),
+      redirect: true
     })
 
     await new Promise<void>((resolve, reject) => {
@@ -30,27 +45,34 @@ export class Server implements IServerOptions {
           return
         }
 
-        logger.info(`Server is running at http://localhost:${opts.port}`)
         resolve()
       })
     })
 
-    g.server = new this(app, opts, logger)
+    g.server = new this(app, opts, { logger, zh })
     return g.server
   }
 
   port: number
   userDataDir: string
+  assetsDir: string
+
+  logger: pino.Logger
+  zh: sqlite.Database
 
   private isCleanedUp = false
 
   private constructor(
     private app: FastifyInstance,
     opts: IServerOptions,
-    public logger: pino.Logger
+    assets: IServerAssets
   ) {
     this.port = opts.port
     this.userDataDir = opts.userDataDir
+    this.assetsDir = opts.assetsDir
+
+    this.logger = assets.logger
+    this.zh = assets.zh
 
     ON_DEATH(() => {
       this.cleanup()
@@ -64,12 +86,14 @@ export class Server implements IServerOptions {
     this.isCleanedUp = true
 
     await this.app.close()
+    await this.zh.close()
   }
 }
 
 if (require.main === module) {
   Server.init({
     port: 5000,
-    userDataDir: '.'
+    userDataDir: '.',
+    assetsDir: 'assets'
   })
 }

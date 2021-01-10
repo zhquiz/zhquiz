@@ -1,82 +1,79 @@
-import http from 'http'
-import stream from 'stream'
+import path from 'path'
 
 import { BrowserWindow, app, protocol } from 'electron'
+import contextMenu from 'electron-context-menu'
 import getPort from 'get-port'
 
 import { Server } from './server'
 
+contextMenu()
+
+let server: Server | null = null
+let win: BrowserWindow | null = null
+
+async function initServer() {
+  server = await Server.init({
+    port: await getPort(),
+    userDataDir: app.getPath('userData'),
+    assetsDir: getAsarUnpackedPath('assets')
+  })
+
+  if (win && !win.webContents.getURL().startsWith('app://')) {
+    win.loadURL('app://./random')
+  }
+
+  app.once('before-quit', () => {
+    if (server) {
+      server.cleanup()
+      server = null
+    }
+  })
+}
+initServer()
+
 function createWindow() {
-  const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+  win = new BrowserWindow({
+    width: 1024,
+    height: 768,
     webPreferences: {
       nodeIntegration: true,
-      webviewTag: true
+      webviewTag: true,
+      contextIsolation: false
     }
   })
   win.maximize()
-  win.loadFile('public/loading/index.html')
 
-  const regis = protocol.registerHttpProtocol('app', async () => {
-    try {
-      const server = await Server.init({
-        port: await getPort(),
-        userDataDir: app.getPath('userData')
-      })
+  if (server) {
+    win.loadURL('app://./random')
+  } else {
+    win.loadFile('public/loading/index.html')
+  }
 
-      app.once('before-quit', () => {
-        server.cleanup()
-      })
-
-      protocol.interceptHttpProtocol('app', (req, cb) => {
-        const { uploadData, ...res } = req
-        const s = new stream.Duplex()
-
-        const httpRequest = http.request(
-          {
-            ...req,
-            host: 'localhost',
-            port: server.port,
-            path: req.url.replace('app://.', '')
-          },
-          (res) => {
-            res.pipe(s)
-          }
-        )
-
-        httpRequest.once('error', (err) => {
-          server.logger.error(err.name, err.message)
-
-          cb({
-            ...res,
-            error: 500
-          })
-        })
-
-        httpRequest.end(() => {
-          cb({
-            ...res,
-            data: s
-          })
-        })
-      })
-
-      win.loadURL('app://./random')
-    } catch (e) {
-      throw e
+  win.on('close', () => {
+    if (win) {
+      win.webContents.send('app-close')
+      win = null
     }
   })
-
-  if (!regis) {
-    win.loadURL('app://./random')
-  }
 }
 
 app.whenReady().then(() => {
-  protocol.registerSchemesAsPrivileged([
-    { scheme: 'app', privileges: { bypassCSP: true } }
-  ])
+  const isRegistered = protocol.registerHttpProtocol('app', (req, cb) => {
+    if (server) {
+      const { uploadData, ...res } = req
+      cb({
+        ...res,
+        url: req.url.replace(
+          /^app:\/\/[^/]+/,
+          `http://localhost:${server.port}`
+        )
+      })
+    }
+  })
+
+  if (!isRegistered) {
+    console.error('protocol registration failed')
+  }
 
   createWindow()
 })
@@ -92,3 +89,15 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+function getAsarUnpackedPath(...ps: string[]) {
+  if (!app.isPackaged) {
+    return path.join(__dirname, '..', ...ps)
+  } else {
+    let asarUnpackedPath = __dirname.replace(
+      /\.asar([\\/])/,
+      '.asar.unpacked$1'
+    )
+    return path.join(asarUnpackedPath, '..', ...ps)
+  }
+}
