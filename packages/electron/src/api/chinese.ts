@@ -3,7 +3,7 @@ import Text2Speech from 'gtts'
 import S from 'jsonschema-definer'
 import jieba from 'nodejieba'
 
-const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
+const chineseRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
   {
     const sQuerystring = S.shape({
       q: S.string()
@@ -58,4 +58,4 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
   next()
 }
 
-export default apiRouter
+export default chineseRouter
