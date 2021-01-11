@@ -98,6 +98,88 @@ export class DbLibrary {
     return out
   }
 
+  static update(...items: (Partial<IDbLibrary> & { id: string })[]) {
+    g.server.db.transaction(() => {
+      items.map((it) => {
+        const entries = it.entries || []
+
+        const stmt = g.server.db.prepare<{
+          id: string
+          title: string
+          entries: string
+        }>(/* sql */ `
+          UPDATE [${this.tableName}]
+          SET ${[
+            it.title ? 'title = @title' : '',
+            entries.length ? 'entries = @entries' : ''
+          ]
+            .filter((s) => s)
+            .join(',')}
+          WHERE id = @id
+        `)
+
+        const stmtQ = g.server.db.prepare<{
+          id: string
+          title: string
+          entry: string
+          description: string | null
+          tag: string | null
+        }>(/* sql */ `
+          UPDATE ${this.tableName}_q
+          SET ${[
+            it.title ? 'title = @title' : '',
+            entries.length ? '' : 'entry = @entry',
+            it.description !== null ? '[description] = @description' : '',
+            it.tag !== null ? 'tag = @tag' : ''
+          ]
+            .filter((s) => s)
+            .join(',')}
+          WHERE id = @id
+        `)
+
+        if (it.title || entries.length) {
+          stmt.run({
+            id: it.id,
+            title: it.title || '',
+            entries: JSON.stringify(entries)
+          })
+        }
+
+        stmtQ.run({
+          id: it.id,
+          title: it.title || '',
+          entry: entries.join(' '),
+          description: it.description ?? null,
+          tag: it.tag ?? null
+        })
+      })
+    })()
+  }
+
+  static delete(...ids: string[]) {
+    if (ids.length < 1) {
+      throw new Error('nothing to delete')
+    }
+
+    g.server.db
+      .prepare(
+        /* sql */ `
+    DELETE FROM ${this.tableName}_q
+    WHERE id IN (${Array(ids.length).fill('?')})
+    `
+      )
+      .run(...ids)
+
+    g.server.db
+      .prepare(
+        /* sql */ `
+    DELETE FROM [${this.tableName}]
+    WHERE id IN (${Array(ids.length).fill('?')})
+    `
+      )
+      .run(...ids)
+  }
+
   private constructor(public entry: Partial<IDbLibrary> & { id: string }) {
     if (!entry.id) {
       throw new Error('no entry id')

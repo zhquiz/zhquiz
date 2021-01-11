@@ -133,19 +133,19 @@ export class DbExtra {
         }>(/* sql */ `
           UPDATE ${this.tableName}_q
           SET ${[
-            it.chinese === null
-              ? ''
-              : /* sql */ `
+            it.chinese
+              ? /* sql */ `
             chinese = jieba(@chinese),
             pinyin = COALESCE(
               @pinyin,
               to_pinyin(@chinese)
             )
-            `,
-            it.english === null ? '' : 'english = @english',
-            it.type === null ? '' : '[type] = @type',
-            it.description === null ? '' : '[description] = @description',
-            it.tag === null ? '' : 'tag = @tag'
+            `
+              : '',
+            it.english !== null ? 'english = @english' : '',
+            it.type !== null ? '[type] = @type' : '',
+            it.description !== null ? '[description] = @description' : '',
+            it.tag !== null ? 'tag = @tag' : ''
           ]
             .filter((s) => s)
             .join(',')}
