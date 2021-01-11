@@ -2211,6 +2211,11 @@ napi-build-utils@^1.0.1:
   resolved "https://registry.yarnpkg.com/napi-build-utils/-/napi-build-utils-1.0.2.tgz#b1fddc0b2c46e380a0b7a76f984dd47c41a13806"
   integrity sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==
 
+native-duration@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/native-duration/-/native-duration-0.2.1.tgz#bc8118c72071b2556ba7f201c60e054b058bdd62"
+  integrity sha512-/RnYkAcZt6Gj3ysueBg4CLgPI+RQlpXwVerUVsVs7j+GmVb4NzbdjZ3ZwJqbpa0dpoKpeLo+0eha7gmet3Jn7A==
+
 needle@^2.2.1:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/needle/-/needle-2.6.0.tgz#24dbb55f2509e2324b4a99d61f413982013ccdbe"

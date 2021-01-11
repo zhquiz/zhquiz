@@ -2,6 +2,9 @@ import toPinyin from 'chinese-to-pinyin'
 import jieba from 'nodejieba'
 
 import { g } from '../shared'
+import { DbExtra } from './extra'
+import { DbLibrary } from './library'
+import { DbQuiz } from './quiz'
 import { DbUser } from './user'
 
 export class Database {
@@ -15,5 +18,8 @@ export class Database {
     })
 
     DbUser.init()
+    DbExtra.init()
+    DbLibrary.init()
+    DbQuiz.init()
   }
 }

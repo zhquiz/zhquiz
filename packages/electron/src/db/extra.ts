@@ -19,8 +19,8 @@ export class DbExtra {
     g.server.db.exec(/* sql */ `
       CREATE TABLE IF NOT EXISTS [${this.tableName}] (
         id          TEXT PRIMARY KEY,
-        createdAt   INT strftime('%s','now'),
-        updatedAt   INT strftime('%s','now'),
+        createdAt   TIMESTAMP strftime('%s','now'),
+        updatedAt   TIMESTAMP strftime('%s','now'),
         chinese     TEXT NOT NULL UNIQUE
       );
 

@@ -32,8 +32,8 @@ export class DbUser {
     g.server.db.exec(/* sql */ `
       CREATE TABLE IF NOT EXISTS [${this.tableName}] (
         id          INT PRIMARY KEY DEFAULT 1,
-        createdAt   INT strftime('%s','now'),
-        updatedAt   INT strftime('%s','now'),
+        createdAt   TIMESTAMP strftime('%s','now'),
+        updatedAt   TIMESTAMP strftime('%s','now'),
         meta        JSON DEFAULT '{}'
       );
 

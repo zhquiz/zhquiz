@@ -16,10 +16,10 @@ export class DbLibrary {
     g.server.db.exec(/* sql */ `
       CREATE TABLE IF NOT EXISTS [${this.tableName}] (
         id          TEXT PRIMARY KEY,
-        createdAt   INT strftime('%s','now'),
-        updatedAt   INT strftime('%s','now'),
+        createdAt   TIMESTAMP strftime('%s','now'),
+        updatedAt   TIMESTAMP strftime('%s','now'),
         title       TEXT,
-        entries     JSON
+        entries     JSON DEFAULT '[]'
       );
 
       CREATE TRIGGER IF NOT EXISTS t_${this.tableName}_updatedAt
