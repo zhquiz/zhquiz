@@ -9,6 +9,7 @@ import SecureSessionPlugin from 'fastify-secure-session'
 import fastifyStatic from 'fastify-static'
 import pino from 'pino'
 
+import apiRouter from './api'
 import { Database } from './db'
 import { g } from './shared'
 
@@ -52,6 +53,10 @@ export class Server implements IServerOptions, IServerAssets {
     app.register(fastifyStatic, {
       root: g.getPath('public'),
       redirect: true
+    })
+
+    app.register(apiRouter, {
+      prefix: '/api'
     })
 
     await new Promise<void>((resolve, reject) => {

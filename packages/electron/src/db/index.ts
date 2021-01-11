@@ -5,6 +5,7 @@ import { g } from '../shared'
 import { DbExtra } from './extra'
 import { DbLibrary } from './library'
 import { DbQuiz } from './quiz'
+import { DbSentence } from './sentence'
 import { DbUser } from './user'
 
 export class Database {
@@ -21,5 +22,6 @@ export class Database {
     DbExtra.init()
     DbLibrary.init()
     DbQuiz.init()
+    DbSentence.init()
   }
 }
