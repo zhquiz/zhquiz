@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import S from 'jsonschema-definer'
 
+import { DbExtra } from '../db/extra'
 import { g } from '../shared'
 
 const extraRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
@@ -24,7 +25,7 @@ const extraRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
     })
 
     const sResponse = S.shape({
-      result: S.list(S.object()),
+      result: S.list(S.object().additionalProperties(true)),
       count: S.integer().minimum(0)
     })
 
@@ -147,7 +148,10 @@ const extraRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
       '/',
       {
         schema: {
-          querystring: sQuerystring.valueOf()
+          querystring: sQuerystring.valueOf(),
+          response: {
+            200: S.object().additionalProperties(true).valueOf()
+          }
         }
       },
       async (req, reply) => {
@@ -186,6 +190,229 @@ const extraRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
         }
 
         return result
+      }
+    )
+  }
+
+  {
+    const sQuerystring = S.shape({
+      forced: S.boolean()
+    })
+
+    const sBody = S.shape({
+      chinese: S.string(),
+      pinyin: S.string(),
+      english: S.string(),
+      type: S.string(),
+      description: S.string(),
+      tag: S.string()
+    })
+
+    const sResponseExisting = S.shape({
+      existing: S.shape({
+        type: S.string(),
+        entry: S.string()
+      })
+    })
+
+    const sResponseNew = S.shape({
+      id: S.string()
+    })
+
+    f.put<{
+      Querystring: typeof sQuerystring.type
+      Body: typeof sBody.type
+    }>(
+      '/',
+      {
+        schema: {
+          body: sBody.valueOf(),
+          response: {
+            200: sResponseExisting.valueOf(),
+            201: sResponseNew.valueOf()
+          }
+        }
+      },
+      async (
+        req
+      ): Promise<typeof sResponseNew.type | typeof sResponseExisting.type> => {
+        const { chinese } = req.body
+
+        const checkVocab = () => {
+          const r = g.server.zh
+            .prepare(
+              /* sql */ `
+          SELECT simplified
+          FROM vocab
+          WHERE simplified = @chinese OR traditional = @chinese
+          LIMIT 1
+          `
+            )
+            .get({ chinese })
+
+          if (r) {
+            return {
+              existing: {
+                type: 'vocab',
+                entry: r.simplified
+              }
+            }
+          }
+
+          return null
+        }
+
+        const checkHanzi = () => {
+          if (chinese.length !== 1) {
+            return null
+          }
+
+          const r = g.server.zh
+            .prepare(
+              /* sql */ `
+          SELECT [entry]
+          FROM token
+          WHERE [entry] = @chinese AND english IS NOT NULL
+          LIMIT 1
+          `
+            )
+            .get({ chinese })
+
+          if (r) {
+            return {
+              existing: {
+                type: 'hanzi',
+                entry: r.entry
+              }
+            }
+          }
+
+          return null
+        }
+
+        const checkSentence = () => {
+          if (chinese.length < 3) {
+            return null
+          }
+
+          const r = g.server.zh
+            .prepare(
+              /* sql */ `
+          SELECT chinese
+          FROM sentence
+          WHERE chinese = ?
+          LIMIT 1
+          `
+            )
+            .get({ chinese })
+
+          if (r) {
+            return {
+              existing: {
+                type: 'sentence',
+                entry: r.chinese
+              }
+            }
+          }
+
+          return null
+        }
+
+        if (!req.query.forced) {
+          const r = checkVocab() || checkHanzi() || checkSentence()
+
+          if (r) {
+            return r
+          }
+        }
+
+        const [r] = DbExtra.create(req.body)
+
+        return {
+          id: r.entry.id
+        }
+      }
+    )
+  }
+
+  {
+    const sQuerystring = S.shape({
+      id: S.string()
+    })
+
+    const sBody = S.shape({
+      chinese: S.string(),
+      pinyin: S.string(),
+      english: S.string(),
+      type: S.string(),
+      description: S.string(),
+      tag: S.string()
+    })
+
+    const sResponse = S.shape({
+      result: S.string()
+    })
+
+    f.patch<{
+      Querystring: typeof sQuerystring.type
+      Body: typeof sBody.type
+    }>(
+      '/',
+      {
+        schema: {
+          querystring: sQuerystring.valueOf(),
+          body: sBody.valueOf(),
+          response: {
+            201: sResponse.valueOf()
+          }
+        }
+      },
+      async (req, reply): Promise<typeof sResponse.type> => {
+        const { id } = req.query
+
+        DbExtra.update({
+          ...req.body,
+          id
+        })
+
+        reply.status(201)
+        return {
+          result: 'updated'
+        }
+      }
+    )
+  }
+
+  {
+    const sQuerystring = S.shape({
+      id: S.string()
+    })
+
+    const sResponse = S.shape({
+      result: S.string()
+    })
+
+    f.delete<{
+      Querystring: typeof sQuerystring.type
+    }>(
+      '/',
+      {
+        schema: {
+          querystring: sQuerystring.valueOf(),
+          response: {
+            201: sResponse.valueOf()
+          }
+        }
+      },
+      async (req, reply): Promise<typeof sResponse.type> => {
+        const { id } = req.query
+
+        DbExtra.delete(id)
+
+        reply.status(201)
+        return {
+          result: 'deleted'
+        }
       }
     )
   }
