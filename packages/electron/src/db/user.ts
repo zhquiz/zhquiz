@@ -28,21 +28,21 @@ export type IDbUserMeta = typeof sDbUserMeta.type
 export class DbUser {
   static tableName = 'user'
 
-  static async init() {
-    await g.server.db.exec(/* sql */ `
-    CREATE TABLE IF NOT EXISTS [${this.tableName}] (
-      id          INT PRIMARY KEY DEFAULT 1,
-      createdAt   INT strftime('%s','now'),
-      updatedAt   INT,
-      meta        JSON DEFAULT '{}'
-    );
+  static init() {
+    g.server.db.exec(/* sql */ `
+      CREATE TABLE IF NOT EXISTS [${this.tableName}] (
+        id          INT PRIMARY KEY DEFAULT 1,
+        createdAt   INT strftime('%s','now'),
+        updatedAt   INT strftime('%s','now'),
+        meta        JSON DEFAULT '{}'
+      );
 
-    CREATE TRIGGER IF NOT EXISTS t_${this.tableName}_updatedAt
-      AFTER UPDATE ON [${this.tableName}]
-      WHEN NEW.updatedAt IS NULL
-      FOR EACH ROW BEGIN
-        UPDATE [${this.tableName}] SET updatedAt = strftime('%s','now') WHERE id = NEW.id
-      END;
+      CREATE TRIGGER IF NOT EXISTS t_${this.tableName}_updatedAt
+        AFTER UPDATE ON [${this.tableName}]
+        WHEN NEW.updatedAt IS NULL
+        FOR EACH ROW BEGIN
+          UPDATE [${this.tableName}] SET updatedAt = strftime('%s','now') WHERE id = NEW.id
+        END;
     `)
   }
 }

@@ -2,13 +2,12 @@ import { spawnSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 
+import sqlite from 'better-sqlite3'
 import ON_DEATH from 'death'
 import fastify, { FastifyInstance } from 'fastify'
 import SecureSessionPlugin from 'fastify-secure-session'
 import fastifyStatic from 'fastify-static'
 import pino from 'pino'
-import * as sqlite from 'sqlite'
-import sqlite3 from 'sqlite3'
 
 import { Database } from './db'
 import { g } from './shared'
@@ -27,17 +26,8 @@ interface IServerAssets {
 
 export class Server implements IServerOptions, IServerAssets {
   static async init(opts: IServerOptions) {
-    const [zh, db] = await Promise.all([
-      sqlite.open({
-        filename: path.join(opts.assetsDir, 'zh.db'),
-        mode: sqlite3.OPEN_READONLY,
-        driver: sqlite3.Database
-      }),
-      sqlite.open({
-        filename: path.join(opts.userDataDir, 'data.db'),
-        driver: sqlite3.Database
-      })
-    ])
+    const zh = sqlite(path.join(opts.assetsDir, 'zh.db'), { readonly: true })
+    const db = sqlite(path.join(opts.userDataDir, 'data.db'))
 
     const logger = pino(
       fs.createWriteStream(path.join(opts.userDataDir, 'server.log'))
@@ -76,8 +66,7 @@ export class Server implements IServerOptions, IServerAssets {
     })
 
     g.server = new this(app, opts, { logger, zh, db })
-
-    await Database.init()
+    Database.init()
 
     return g.server
   }
@@ -117,7 +106,8 @@ export class Server implements IServerOptions, IServerAssets {
     this.isCleanedUp = true
 
     await this.app.close()
-    await Promise.all([this.zh.close(), this.db.close()])
+    this.db.close()
+    this.zh.close()
   }
 }
 
