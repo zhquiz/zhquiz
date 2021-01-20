@@ -40,13 +40,12 @@ glob.sync('./zhquiz-*').map((f) => {
 
     fs.ensureDirSync(`../../dist/${f}.app/Contents/Resources`)
 
-    // sudo apt-get install icnsutils
-    execSync(
-      `png2icns ../../dist/${f}.app/Contents/Resources/favicon.icns public/icon.png`
-    )
-
     fs.copySync('./assets', `../../dist/${f}.app/Contents/MacOS/assets`)
     fs.copySync('./public', `../../dist/${f}.app/Contents/MacOS/public`)
+    fs.copyFileSync(
+      './public/favicon.icns',
+      `../../dist/${f}.app/Contents/Resources/favicon.icns`
+    )
     fs.copyFileSync(f, `../../dist/${f}.app/Contents/MacOS/${f}`)
 
     const zip = new AdmZip()

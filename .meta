@@ -1,6 +1,6 @@
 {
   "projects": {
-    "submodules/e-zhquiz": "git@github.com:zhquiz/e-zhquiz.git",
+    "submodules/go-zhquiz": "git@github.com:zhquiz/go-zhquiz.git",
     "submodules/ui": "git@github.com:zhquiz/ui.git"
   }
 }
