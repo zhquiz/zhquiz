@@ -4,7 +4,7 @@
       "path": "submodules/go-zhquiz"
     },
     {
-      "path": "submodules/ui"
+      "path": "submodules/go-zhquiz/__packages__/ui"
     },
     {
       "path": "."
