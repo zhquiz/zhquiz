@@ -10,6 +10,9 @@ fastapi = "^0.63.0"
 uvicorn = "^0.13.2"
 wordfreq = "^2.3.2"
 jieba = "^0.42.1"
+mecab-python3 = "^1.0.3"
+unidic-lite = "^1.0.8"
+regex = "^2020.11.13"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"
