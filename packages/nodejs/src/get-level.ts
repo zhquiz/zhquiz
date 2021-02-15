@@ -6,15 +6,13 @@ import runes from 'runes2'
 import sqlite from 'better-sqlite3'
 import yaml from 'js-yaml'
 
-interface IEntry {
+export interface IEntry {
   frequency?: number
   hLevel?: number
   vLevel?: number
 }
 
-async function main() {
-  const itMap = new Map<string, IEntry>()
-
+export function getHanziLevel(itMap = new Map<string, IEntry>()) {
   const zHanzi = z.record(
     z
       .object({
@@ -24,19 +22,21 @@ async function main() {
   )
 
   Object.entries(
-    zHanzi.parse(
-      yaml.safeLoad(fs.readFileSync('../../assets/hanzi.yaml', 'utf-8'))
-    )
+    zHanzi.parse(yaml.load(fs.readFileSync('../../assets/hanzi.yaml', 'utf-8')))
   ).map(([lvString, { hanzi }]) => {
     const lv = parseInt(lvString)
 
     runes(hanzi).map((h) => {
-      itMap.set(h, {
-        hLevel: lv
-      })
+      const v = itMap.get(h) || {}
+      v.hLevel = lv
+      itMap.set(h, v)
     })
   })
 
+  return itMap
+}
+
+export function getVocabLevel(itMap = new Map<string, IEntry>()) {
   const zVocab = z.record(
     z
       .object({
@@ -46,9 +46,7 @@ async function main() {
   )
 
   Object.entries(
-    zVocab.parse(
-      yaml.safeLoad(fs.readFileSync('../../assets/vocab.yaml', 'utf-8'))
-    )
+    zVocab.parse(yaml.load(fs.readFileSync('../../assets/vocab.yaml', 'utf-8')))
   ).map(([lvString, { vocab }]) => {
     const lv = parseInt(lvString)
 
@@ -63,6 +61,16 @@ async function main() {
       }
     })
   })
+
+  return itMap
+}
+
+export function getLevel() {
+  return getVocabLevel(getHanziLevel())
+}
+
+async function main() {
+  const itMap = getLevel()
 
   const db = sqlite('../../submodules/server/assets/zh.db')
 
