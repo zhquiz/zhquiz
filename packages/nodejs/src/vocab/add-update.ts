@@ -5,7 +5,7 @@ import sqlite from 'better-sqlite3'
 import yaml from 'js-yaml'
 
 async function main() {
-  const db = sqlite('../../submodules/e-zhquiz/public/assets/zh.db')
+  const db = sqlite('../../submodules/go-zhquiz/assets/zh.db')
 
   // const zVocab = z.record(
   //   z.object({
@@ -37,17 +37,17 @@ async function main() {
   //   })
   // })()
 
-  // db.exec(/* sql */ `
-  // UPDATE vocab
-  // SET frequency = NULL
-  // WHERE english LIKE 'surname %'
-  // `)
+  db.exec(/* sql */ `
+  UPDATE vocab
+  SET frequency = NULL
+  WHERE pinyin < 'a'
+  `)
 
   console.log(
     db
       .prepare(
         /* sql */ `
-  SELECT english, frequency FROM vocab WHERE english LIKE 'Surname %'
+  SELECT english, frequency FROM vocab WHERE pinyin < 'a'
   `
       )
       .all()
