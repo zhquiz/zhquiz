@@ -39,7 +39,7 @@ async function main() {
         children.map(({ title: t2, entries }) => {
           stmt.run({
             title: `${t1} / ${t2}`,
-            entries: `\x1f${entries.join('\x1f')}\x1f`
+            entries: JSON.stringify(entries)
           })
         })
       })
