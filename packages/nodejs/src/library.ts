@@ -17,18 +17,22 @@ async function main() {
     })
   )
 
-  const db = sqlite('../../submodules/go-zhquiz/assets/zh.db')
+  const db = sqlite('../jar/app/src/main/resources/zh.db')
 
   db.exec(/* sql */ `
   DROP TABLE library;
   CREATE TABLE library (
-    title       TEXT NOT NULL UNIQUE,
-    entries     TEXT
+    id            INTEGER PRIMARY KEY,
+    title         TEXT NOT NULL UNIQUE,
+    entries       JSON NOT NULL,
+    [description] TEXT NOT NULL DEFAULT '',
+    [type]        TEXT NOT NULL,
+    [tag]         JSON NOT NULL
   );
   `)
 
   const stmt = db.prepare(/* sql */ `
-  INSERT INTO library (title, entries) VALUES (@title, @entries)
+  INSERT INTO library (title, entries, [type], tag) VALUES (@title, @entries, @type, @tag)
   ON CONFLICT DO NOTHING
   `)
 
@@ -39,7 +43,9 @@ async function main() {
         children.map(({ title: t2, entries }) => {
           stmt.run({
             title: `${t1} / ${t2}`,
-            entries: JSON.stringify(entries)
+            entries: JSON.stringify(entries),
+            type: 'vocabulary',
+            tag: JSON.stringify([t1, t2])
           })
         })
       })

@@ -1,0 +1,57 @@
+buildscript {
+    ext {
+        exposedVersion = '0.27.1'
+        javalinVersion = '3.13.3'
+    }
+}
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.4.20'
+    id 'com.github.johnrengelman.shadow' version '6.0.0'
+    id 'application'
+}
+
+repositories {
+    jcenter()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    // Align versions of all Kotlin components
+    implementation platform('org.jetbrains.kotlin:kotlin-bom')
+
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation "io.javalin:javalin:$javalinVersion"
+    implementation "io.javalin:javalin-openapi:$javalinVersion"
+    implementation 'org.slf4j:slf4j-simple:1.8.0-beta4'
+    implementation "org.jetbrains.exposed:exposed-core:$exposedVersion"
+    implementation "org.jetbrains.exposed:exposed-dao:$exposedVersion"
+    implementation "org.jetbrains.exposed:exposed-jdbc:$exposedVersion"
+    implementation "org.jetbrains.exposed:exposed-jodatime:$exposedVersion"
+    implementation 'org.xerial:sqlite-jdbc:3.34.0'
+    implementation 'org.postgresql:postgresql:42.2.19'
+    implementation 'com.github.guepardoapps:kulid:1.1.2.0'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.github.salomonbrys.kotson:kotson:2.5.0'
+    implementation 'com.talanlabs:avatar-generator:1.1.0'
+
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+application {
+    mainClassName = 'rep2recall.AppKt'
+}
+
+shadowJar {
+    archiveClassifier = ''
+    archiveVersion = ''
+    destinationDir = file('.')
+}
