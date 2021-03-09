@@ -30,10 +30,9 @@ dependencies {
     implementation "org.jetbrains.exposed:exposed-jodatime:$exposedVersion"
     implementation 'org.xerial:sqlite-jdbc:3.34.0'
     implementation 'org.postgresql:postgresql:42.2.19'
-    implementation 'com.github.guepardoapps:kulid:1.1.2.0'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.github.salomonbrys.kotson:kotson:2.5.0'
-    implementation 'com.talanlabs:avatar-generator:1.1.0'
+    implementation 'at.favre.lib:bcrypt:0.9.0'
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'

@@ -2,6 +2,7 @@ package zhquiz
 
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.path
+import zhquiz.api.Api
 import zhquiz.db.Db
 
 object App {

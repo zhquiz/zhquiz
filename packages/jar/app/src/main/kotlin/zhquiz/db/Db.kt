@@ -23,7 +23,7 @@ object Db {
     }
 
     private const val DEFAULT_SQLITE_DB_NAME = "data.db"
-    private const val SQLITE_DRIVER = "org.sqlite.JDBC"
+    const val SQLITE_DRIVER = "org.sqlite.JDBC"
     const val POSTGRES_DRIVER = "org.postgresql.Driver"
 
     val driver: String
