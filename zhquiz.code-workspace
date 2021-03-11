@@ -1,13 +1,13 @@
 {
   "folders": [
     {
-      "path": "submodules/go-zhquiz"
-    },
-    {
-      "path": "submodules/go-zhquiz/__packages__/ui"
-    },
-    {
       "path": "packages/python"
+    },
+    {
+      "path": "packages/server"
+    },
+    {
+      "path": "packages/ui"
     },
     {
       "path": "."

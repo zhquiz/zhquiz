@@ -1,0 +1,64 @@
+{
+  "name": "@zhquiz/ui",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently 'yarn serve' 'cd ../.. && robo serve-dev'",
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build --dest ../../public",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.34",
+    "@fortawesome/free-brands-svg-icons": "^5.15.2",
+    "@fortawesome/free-solid-svg-icons": "^5.15.2",
+    "@fortawesome/vue-fontawesome": "^2.0.2",
+    "array-shuffle": "^2.0.0",
+    "axios": "^0.21.1",
+    "buefy": "^0.9.4",
+    "chinese-to-pinyin": "^1.3.1",
+    "core-js": "^3.6.5",
+    "lokijs": "^1.5.11",
+    "typed-vuex": "^0.1.22",
+    "vue": "^2.6.11",
+    "vue-class-component": "^7.2.3",
+    "vue-context": "^6.0.0",
+    "vue-property-decorator": "^9.1.2",
+    "vue-router": "^3.2.0",
+    "vuex": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/lokijs": "^1.5.3",
+    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "@typescript-eslint/parser": "^2.33.0",
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-router": "~4.5.0",
+    "@vue/cli-plugin-typescript": "~4.5.0",
+    "@vue/cli-plugin-vuex": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/eslint-config-standard": "^5.1.2",
+    "@vue/eslint-config-typescript": "^5.0.2",
+    "concurrently": "^5.3.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "eslint-plugin-vue": "^6.2.2",
+    "import-sort-parser-typescript": "^6.0.0",
+    "sass": "^1.26.5",
+    "sass-loader": "^8.0.2",
+    "typescript": "~3.9.3",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "resolutions": {
+    "**/elliptic": "^6.5.4"
+  },
+  "importSort": {
+    ".js, .ts": {
+      "parser": "typescript",
+      "style": "module"
+    }
+  }
+}
