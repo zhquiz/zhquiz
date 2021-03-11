@@ -55,7 +55,7 @@ export default (): NuxtConfig => {
       '~/plugins/axios.client.ts',
       '~/plugins/filter.ts',
       '~/plugins/vue-context.client.js',
-      '~/plugins/speak.ts',
+      '~/plugins/speak.client.ts',
     ],
 
     // Auto import components: https://go.nuxtjs.dev/config-components
@@ -65,6 +65,7 @@ export default (): NuxtConfig => {
     buildModules: [
       // https://go.nuxtjs.dev/typescript
       '@nuxt/typescript-build',
+      'nuxt-typed-vuex',
     ],
 
     // Modules: https://go.nuxtjs.dev/config-modules
@@ -128,7 +129,12 @@ export default (): NuxtConfig => {
     },
 
     // Build Configuration: https://go.nuxtjs.dev/config-build
-    build: {},
+    build: {
+      extend(config) {
+        config.node = config.node || {}
+        config.node.fs = 'empty'
+      },
+    },
     server: {
       port: 35594,
     },

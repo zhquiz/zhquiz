@@ -4,30 +4,36 @@
       <div class="columns w-full">
         <div class="column is-6">
           <div class="item-display item-display-top">
-            <b-tooltip :label="hanzi.english">
+            <b-tooltip :label="character.english">
               <div
                 class="font-han hanzi clickable"
                 @contextmenu.prevent="(evt) => openContext(evt, 'hanzi')"
               >
-                {{ hanzi.entry }}
+                {{ character.entry }}
               </div>
             </b-tooltip>
-            <b-loading :active="!hanzi.entry" :is-full-page="false"></b-loading>
+            <b-loading
+              :active="!character.entry"
+              :is-full-page="false"
+            ></b-loading>
           </div>
           <center>Hanzi of the day</center>
         </div>
 
         <div class="column is-6">
           <div class="item-display item-display-top">
-            <b-tooltip :label="vocab.english">
+            <b-tooltip :label="vocabulary.english">
               <div
                 class="font-zh-simp hanzi clickable"
                 @contextmenu.prevent="(evt) => openContext(evt, 'vocab')"
               >
-                {{ vocab.entry }}
+                {{ vocabulary.entry }}
               </div>
             </b-tooltip>
-            <b-loading :active="!vocab.entry" :is-full-page="false"></b-loading>
+            <b-loading
+              :active="!vocabulary.entry"
+              :is-full-page="false"
+            ></b-loading>
           </div>
           <center>Vocab of the day</center>
         </div>
@@ -58,14 +64,10 @@
 
 <script lang="ts">
 import { Component, Ref, Vue } from 'nuxt-property-decorator'
-
-import ContextMenu from '@/components/ContextMenu.vue'
-import { IQuizType } from '~/components/QuizCard.vue'
+import ContextMenu from '../ContextMenu.vue'
+import { IQuizType } from '../cards/QuizCard.vue'
 
 @Component<RandomPage>({
-  components: {
-    ContextMenu,
-  },
   head() {
     return {
       title: 'Random - ZhQuiz',

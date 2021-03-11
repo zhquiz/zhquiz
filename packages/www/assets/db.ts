@@ -1,10 +1,11 @@
 import { api } from '~/plugins/axios.client'
 import toPinyin from 'chinese-to-pinyin'
-import Loki from 'lokijs'
+import Loki, { LokiMemoryAdapter } from 'lokijs'
 
 import { sample } from './util'
 
 export const zh = new Loki('zhlevel', {
+  adapter: new LokiMemoryAdapter(),
   autoload: true,
 })
 

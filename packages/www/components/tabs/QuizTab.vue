@@ -258,7 +258,7 @@
 <script lang="ts">
 import { Component, Ref, Vue, Watch } from 'nuxt-property-decorator'
 
-import QuizCard, { IQuizData, IQuizType } from '@/components/QuizCard.vue'
+import QuizCard, { IQuizData, IQuizType } from '@/components/cards/QuizCard.vue'
 import ContextMenu from '@/components/ContextMenu.vue'
 
 interface ILeechCard {
@@ -270,10 +270,6 @@ interface ILeechCard {
 }
 
 @Component<QuizPage>({
-  components: {
-    QuizCard,
-    ContextMenu,
-  },
   head() {
     return {
       title: 'Quiz - ZhQuiz',

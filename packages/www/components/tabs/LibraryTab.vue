@@ -131,7 +131,6 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'nuxt-property-decorator'
-import LibraryCard from '@/components/LibraryCard.vue'
 
 interface ILocal {
   id: string
@@ -142,9 +141,6 @@ interface ILocal {
 }
 
 @Component<LibraryPage>({
-  components: {
-    LibraryCard,
-  },
   head() {
     return {
       title: 'Library - ZhQuiz',

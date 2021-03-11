@@ -1,13 +1,4 @@
-import {
-  actionTree,
-  getAccessorType,
-  mutationTree,
-  useAccessor,
-} from 'typed-vuex'
-import Vue from 'vue'
-import Vuex from 'vuex'
-
-Vue.use(Vuex)
+import { actionTree, getAccessorType, mutationTree } from 'typed-vuex'
 
 interface ISettings {
   level: number | null
@@ -67,21 +58,6 @@ export const actions = actionTree(
     },
   }
 )
-
-const storePattern = {
-  state,
-  mutations,
-  actions,
-}
-
-const store = new Vuex.Store(storePattern)
-
-export const accessor = useAccessor(store, storePattern)
-
-// Optionally, inject accessor globally
-Vue.prototype.$accessor = accessor
-
-export default store
 
 export const accessorType = getAccessorType({
   state,

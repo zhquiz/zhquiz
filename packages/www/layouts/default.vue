@@ -1,5 +1,7 @@
 <template>
-  <div class="DefaultLayout"></div>
+  <div class="DefaultLayout">
+    <nuxt />
+  </div>
 </template>
 
 <style lang="scss">

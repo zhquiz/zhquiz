@@ -54,19 +54,35 @@
       </template>
     </b-navbar>
 
-    <router-view class="main" />
+    <component
+      :is="component + 'Tab'"
+      class="main"
+      @title="(t) => $emit('title', t)"
+    />
   </section>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'nuxt-property-decorator'
+import { Component, Prop, Vue } from 'nuxt-property-decorator'
 
 @Component<AppLayout>({
   created() {
     this.$store.dispatch('updateSettings')
   },
+  components: {
+    BrowseTab: () => import('./tabs/BrowseTab.vue'),
+    CharacterTab: () => import('./tabs/CharacterTab.vue'),
+    LevelTab: () => import('./tabs/LevelTab.vue'),
+    LibraryTab: () => import('./tabs/LibraryTab.vue'),
+    QuizTab: () => import('./tabs/QuizTab.vue'),
+    RandomTab: () => import('./tabs/RandomTab.vue'),
+    SettingsTab: () => import('./tabs/SettingsTab.vue'),
+    VocabularyTab: () => import('./tabs/VocabularyTab.vue'),
+  },
 })
 export default class AppLayout extends Vue {
+  @Prop({ required: true }) component!: string
+
   get navItems() {
     return [
       {

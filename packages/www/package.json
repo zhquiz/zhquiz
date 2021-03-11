@@ -42,7 +42,7 @@
     "nuxt-typed-vuex": "^0.1.22",
     "prettier": "^2.2.1",
     "sass": "^1.32.8",
-    "sass-loader": "^11.0.1"
+    "sass-loader": "^10.1.1"
   },
   "importSort": {
     ".js, .ts": {
