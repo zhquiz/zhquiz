@@ -11,7 +11,6 @@ export default (): NuxtConfig => {
     // Global page headers: https://go.nuxtjs.dev/config-head
     head: {
       title: 'ZhQuiz - Hanzi, Vocab and Sentences quizzing',
-      titleTemplate: '%s - ZhQuiz',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

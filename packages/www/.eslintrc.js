@@ -15,5 +15,7 @@ module.exports = {
   // add your custom rules here
   rules: {
     'import/order': 0,
+    'no-use-before-define': 0,
+    'vue/no-v-html': 0,
   },
 }
