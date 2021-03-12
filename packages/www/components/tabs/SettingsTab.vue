@@ -67,13 +67,8 @@
 import { Component, Vue } from 'nuxt-property-decorator'
 
 @Component<SettingsPage>({
-  head() {
-    return {
-      title: 'Settings - ZhQuiz',
-    }
-  },
-  layout: 'app',
   created() {
+    this.$emit('title', 'Settings')
     const settings = this.$store.state
 
     this.lv = [

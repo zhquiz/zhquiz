@@ -68,12 +68,9 @@ import ContextMenu from '../ContextMenu.vue'
 import { IQuizType } from '../cards/QuizCard.vue'
 
 @Component<RandomPage>({
-  head() {
-    return {
-      title: 'Random - ZhQuiz',
-    }
+  created() {
+    this.$emit('title', 'Random')
   },
-  layout: 'app',
   mounted() {
     Promise.all([
       this.character.additional[0].handler(),

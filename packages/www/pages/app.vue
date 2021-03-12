@@ -1,7 +1,53 @@
 <template>
-  <section>
+  <section class="AppPage">
+    <b-sidebar v-model="isDrawer" type="is-light" fullheight>
+      <div class="p-2">
+        <aside class="menu">
+          <p class="menu-label">Menu</p>
+
+          <ul class="menu-list">
+            <li v-for="(n, j) in navItems" :key="j">
+              <a
+                role="button"
+                :class="{
+                  'is-active': tabs[activeTab].component === n.component,
+                }"
+                @click="setTab(activeTab, n.component)"
+              >
+                <b-icon v-if="n.icon" :icon="n.icon"></b-icon>
+                <span v-if="n.text" :class="'icon ' + n.className">
+                  {{ n.text }}
+                </span>
+                {{ n.component }}
+              </a>
+            </li>
+
+            <li>
+              <a
+                href="https://github.com/zhquiz/zhquiz"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <b-icon pack="fab" icon="github"></b-icon>
+                About
+              </a>
+            </li>
+          </ul>
+        </aside>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+
+      <div class="p-4">
+        <center>Logged in as DEFAULT</center>
+      </div>
+    </b-sidebar>
+
     <nav class="tabs is-toggle">
       <ul>
+        <li @click="isDrawer = true">
+          <b-icon class="clickable" icon="bars" role="button"></b-icon>
+        </li>
         <li
           v-for="(t, i) in tabs"
           :key="i"
@@ -23,6 +69,7 @@
                 :key="j"
                 :value="n.component"
                 aria-role="menuitem"
+                @click="setTab(i, n.component)"
               >
                 <b-icon v-if="n.icon" :icon="n.icon"></b-icon>
                 <span v-if="n.text" :class="'icon ' + n.className">
@@ -39,17 +86,21 @@
             ></button>
           </a>
         </li>
+
+        <li>
+          <a role="button" @click="addTab('Random')">+</a>
+        </li>
       </ul>
     </nav>
 
     <main>
-      <tab-layout
+      <component
+        :is="t.component + 'Tab'"
         v-for="(t, i) in tabs"
         v-show="activeTab === i"
         :key="i"
-        :component="t.component"
         @title="(t) => setTitle(i, t)"
-      ></tab-layout>
+      />
     </main>
   </section>
 </template>
@@ -58,9 +109,18 @@
 import { Component, Vue } from 'nuxt-property-decorator'
 
 @Component<AppPage>({
+  components: {
+    BrowseTab: () => import('@/components/tabs/BrowseTab.vue'),
+    CharacterTab: () => import('@/components/tabs/CharacterTab.vue'),
+    LevelTab: () => import('@/components/tabs/LevelTab.vue'),
+    LibraryTab: () => import('@/components/tabs/LibraryTab.vue'),
+    QuizTab: () => import('@/components/tabs/QuizTab.vue'),
+    RandomTab: () => import('@/components/tabs/RandomTab.vue'),
+    SettingsTab: () => import('@/components/tabs/SettingsTab.vue'),
+    VocabularyTab: () => import('@/components/tabs/VocabularyTab.vue'),
+  },
   created() {
     this.addTab('Random', true)
-    this.addTab('Random')
   },
 })
 export default class AppPage extends Vue {
@@ -71,6 +131,8 @@ export default class AppPage extends Vue {
   }[] = []
 
   activeTab = 0
+
+  isDrawer = false
 
   get navItems(): {
     component: string
@@ -98,21 +160,16 @@ export default class AppPage extends Vue {
         className: 'font-han',
       },
       {
-        component: 'Sentence',
-        text: '句',
-        className: 'font-han',
+        component: 'Level',
+        text: this.level,
       },
       {
-        component: 'Extra',
-        icon: 'user-edit',
+        component: 'Browse',
+        icon: 'list-ol',
       },
       {
         component: 'Library',
         icon: 'book-reader',
-      },
-      {
-        component: 'Level',
-        text: this.level,
       },
       {
         component: 'Settings',
@@ -137,6 +194,15 @@ export default class AppPage extends Vue {
         permanent,
       },
     ]
+    this.activeTab = this.tabs.length - 1
+  }
+
+  setTab(i: number, component: string) {
+    const tabs = this.clone(this.tabs)
+    tabs[i].component = component
+
+    this.tabs = tabs
+    this.activeTab = i
   }
 
   deleteTab(i: number) {
@@ -162,6 +228,10 @@ export default class AppPage extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.AppPage {
+  height: 100%;
+}
+
 nav.tabs {
   padding-top: 0.5em;
   padding-left: 0.5em;
@@ -204,6 +274,14 @@ main {
 
   &:hover {
     background-color: lightgray !important;
+  }
+}
+
+.clickable {
+  cursor: pointer;
+
+  &:hover {
+    color: blue;
   }
 }
 
