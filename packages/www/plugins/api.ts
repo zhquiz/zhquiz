@@ -1,60 +1,36 @@
 import { Plugin } from '@nuxt/types'
-import { NuxtAxiosInstance } from '@nuxtjs/axios'
+import axios, { AxiosInstance } from 'axios'
 import {
   LoadingProgrammatic as Loading,
   SnackbarProgrammatic as Snackbar,
 } from 'buefy'
 
-function encodeURIMin(s: string) {
-  s = (s || '').toString()
-
-  const re = /(?![\x20-\x7F])[!,]/g
-  const segs = s.match(re)
-  if (segs) {
-    return s
-      .split(re)
-      .map((s0, i) => encodeURIComponent(s0) + (segs[i] || ''))
-      .join('')
-  }
-
-  return s
-}
-
 // eslint-disable-next-line import/no-mutable-exports
-export let api: NuxtAxiosInstance
+export let api: AxiosInstance
 
-const plugin: Plugin = ({ $axios }) => {
-  api = $axios
+let loading: {
+  close(): void
+  requestEnded?: boolean
+} | null = null
+let requestTimeout: any = null
 
-  $axios.defaults.paramsSerializer = (query: Record<string, unknown>) => {
-    const q = Object.entries(query)
-      .map(([k, v]) => {
-        if (!v) {
-          return ''
-        }
+// eslint-disable-next-line require-await
+const plugin: Plugin = async (_, inject) => {
+  api = axios.create({
+    baseURL:
+      typeof location !== 'undefined'
+        ? location.origin
+        : `http://localhost:${process.env.PORT}`,
+  })
 
-        return `${encodeURIMin(k)}=${encodeURIMin(v as string)}`
-      })
-      .filter((s) => s)
-      .join('&')
-
-    return q
-  }
-
-  let loading: {
-    close(): void
-    requestEnded?: boolean
-  } | null = null
-  let requestTimeout: number | null = null
-
-  $axios.interceptors.request.use((config) => {
+  api.interceptors.request.use((config) => {
     if (!loading) {
       if (requestTimeout) {
         clearTimeout(requestTimeout)
         requestTimeout = null
       }
 
-      requestTimeout = window.setTimeout(() => {
+      requestTimeout = setTimeout(() => {
         if (!loading) {
           loading = Loading.open({
             isFullPage: true,
@@ -72,7 +48,7 @@ const plugin: Plugin = ({ $axios }) => {
     return config
   })
 
-  $axios.interceptors.response.use(
+  api.interceptors.response.use(
     (config) => {
       if (loading) {
         loading.requestEnded = true
@@ -105,6 +81,8 @@ const plugin: Plugin = ({ $axios }) => {
       return err
     }
   )
+
+  inject('axios', api)
 }
 
 export default plugin

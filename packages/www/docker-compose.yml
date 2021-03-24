@@ -1,0 +1,22 @@
+services:
+  zhquiz:
+    build: .
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - PORT=35594
+    ports:
+      - 5433:5432
+      - 35594:35594
+    volumes:
+      - zhquiz:/var/lib/postgresql/data
+    #   - ./node_modules:/app/node_modules
+    #   - ./src:/app/src
+    # entrypoint: |
+    #   /bin/bash -c "
+    #     /usr/local/bin/docker-entrypoint.sh postgres &
+    #     yarn dev
+    #   "
+volumes:
+  zhquiz:

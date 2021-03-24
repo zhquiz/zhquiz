@@ -1,4 +1,4 @@
-import { api } from '~/plugins/axios.client'
+import { api } from '~/plugins/api'
 import toPinyin from 'chinese-to-pinyin'
 import Loki, { LokiMemoryAdapter } from 'lokijs'
 

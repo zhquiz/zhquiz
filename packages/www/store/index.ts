@@ -26,7 +26,7 @@ export const actions = actionTree(
   { state, mutations },
   {
     async updateSettings({ commit }) {
-      const r = await this.$axios
+      const r = await this.app.$axios
         .get('/api/user/', {
           params: {
             select: [
@@ -43,7 +43,7 @@ export const actions = actionTree(
         r.level = 3
         r.levelMin = 1
 
-        await this.$axios.patch('/api/user', {
+        await this.app.$axios.patch('/api/user', {
           level: r.level,
           levelMin: r.levelMin,
         })

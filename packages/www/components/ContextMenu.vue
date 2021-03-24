@@ -134,14 +134,6 @@ export default class ContextMenu extends Vue {
     open: (evt: MouseEvent) => void
   }
 
-  openInNewTab = window.parent
-    ? (url: string, title?: string) => {
-        window.parent.open(url, title)
-      }
-    : (url: string) => {
-        open(url, '_blank', 'noopener noreferrer')
-      }
-
   quiz: {
     of?: {
       entries: string[]
