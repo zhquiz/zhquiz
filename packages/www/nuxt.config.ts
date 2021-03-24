@@ -1,6 +1,9 @@
 import { NuxtConfig } from '@nuxt/types'
 
 export default (): NuxtConfig => {
+  const port = parseInt(process.env.PORT!) || 35594
+  process.env.PORT = port.toString()
+
   return {
     // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
     ssr: true,
@@ -48,7 +51,7 @@ export default (): NuxtConfig => {
     },
 
     // Global CSS: https://go.nuxtjs.dev/config-css
-    css: ['~/assets/buefy.scss', '~/assets/app.scss'],
+    css: ['~/styles/buefy.scss', '~/styles/app.scss'],
 
     // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
     plugins: [
@@ -110,7 +113,11 @@ export default (): NuxtConfig => {
           },
         },
       ],
+      '@nuxtjs/proxy',
     ],
+    proxy: process.env.SERVER_PORT ? [
+      `http://localhost:${process.env.SERVER_PORT}/api`,
+    ] : [],
 
     // PWA module configuration: https://go.nuxtjs.dev/pwa
     pwa: {
@@ -126,8 +133,11 @@ export default (): NuxtConfig => {
         config.node.fs = 'empty'
       },
     },
+    server: {
+      port
+    },
     env: {
-      PORT: process.env.PORT!,
+      PORT: process.env.PORT,
     },
   }
 }

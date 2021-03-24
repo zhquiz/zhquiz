@@ -1,16 +1,16 @@
 import { accessorType } from '~/store'
-import { AxiosInstance } from 'axios'
+import { Client } from './types/openapi'
 
 declare module 'vue/types/vue' {
   interface Vue {
     $accessor: typeof accessorType
-    $axios: AxiosInstance
+    $axios: Client
   }
 }
 
 declare module '@nuxt/types' {
   interface NuxtAppOptions {
     $accessor: typeof accessorType
-    $axios: AxiosInstance
+    $axios: Client
   }
 }

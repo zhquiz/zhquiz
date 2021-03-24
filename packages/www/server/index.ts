@@ -2,6 +2,7 @@ import fastify from 'fastify'
 import fastifyExpress from 'fastify-express'
 import { build, loadNuxt } from 'nuxt'
 
+import apiRouter from './api'
 import { isDev } from './shared'
 
 async function main() {
@@ -10,7 +11,9 @@ async function main() {
 
   const nuxt = await loadNuxt(isDev ? 'dev' : 'start')
 
-  const app = fastify()
+  const app = fastify({
+    logger: true
+  })
   await app.register(fastifyExpress)
 
   app.use((req, res, next) => {
@@ -20,6 +23,10 @@ async function main() {
     }
 
     nuxt.render(req, res, next)
+  })
+
+  app.register(apiRouter, {
+    prefix: '/api'
   })
 
   if (isDev) {

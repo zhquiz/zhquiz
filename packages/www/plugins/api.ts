@@ -1,12 +1,23 @@
 import { Plugin } from '@nuxt/types'
-import axios, { AxiosInstance } from 'axios'
+import { Client } from '~/types/openapi'
 import {
   LoadingProgrammatic as Loading,
   SnackbarProgrammatic as Snackbar,
 } from 'buefy'
+import OpenAPIClientAxios from 'openapi-client-axios'
 
 // eslint-disable-next-line import/no-mutable-exports
-export let api: AxiosInstance
+export let api: Client
+
+const apiClient = new OpenAPIClientAxios({
+  definition: require('~/assets/openapi.json'),
+  axiosConfigDefaults: {
+    baseURL:
+      typeof location !== 'undefined'
+        ? location.origin
+        : `http://localhost:${process.env.PORT}`,
+  },
+})
 
 let loading: {
   close(): void
@@ -16,12 +27,7 @@ let requestTimeout: any = null
 
 // eslint-disable-next-line require-await
 const plugin: Plugin = async (_, inject) => {
-  api = axios.create({
-    baseURL:
-      typeof location !== 'undefined'
-        ? location.origin
-        : `http://localhost:${process.env.PORT}`,
-  })
+  api = await apiClient.init()
 
   api.interceptors.request.use((config) => {
     if (!loading) {
