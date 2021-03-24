@@ -29,6 +29,12 @@ let requestTimeout: any = null
 const plugin: Plugin = async (_, inject) => {
   api = await apiClient.init()
 
+  const {
+    data: { csrf },
+  } = await api.settings()
+  api.defaults.headers = api.defaults.headers || {}
+  api.defaults.headers['CSRF-Token'] = csrf
+
   api.interceptors.request.use((config) => {
     if (!loading) {
       if (requestTimeout) {

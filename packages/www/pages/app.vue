@@ -1,6 +1,8 @@
 <template>
   <section class="AppPage">
-    <b-sidebar v-model="isDrawer" type="is-light" fullheight>
+    <b-loading v-if="!isReady" active is-full-page></b-loading>
+
+    <b-sidebar v-if="isReady" v-model="isDrawer" type="is-light" fullheight>
       <div class="p-2">
         <aside class="menu">
           <p class="menu-label">Menu</p>
@@ -43,7 +45,7 @@
       </div>
     </b-sidebar>
 
-    <nav class="tabs is-toggle">
+    <nav v-if="isReady" class="tabs is-toggle">
       <ul>
         <li @click="isDrawer = true">
           <b-icon class="clickable" icon="bars" role="button"></b-icon>
@@ -93,7 +95,7 @@
       </ul>
     </nav>
 
-    <main>
+    <main v-if="isReady">
       <component
         :is="t.component + 'Tab'"
         v-for="(t, i) in tabs"
@@ -119,11 +121,20 @@ import { Component, Vue } from 'nuxt-property-decorator'
     SettingsTab: () => import('@/components/tabs/SettingsTab.vue'),
     VocabularyTab: () => import('@/components/tabs/VocabularyTab.vue'),
   },
-  created() {
-    this.addTab('Random', true)
+  async mounted() {
+    await this.$accessor.setCredentials()
+
+    if (!this.$accessor.isApp) {
+      this.$router.replace('/')
+    } else {
+      this.addTab('Random', true)
+      this.isReady = true
+    }
   },
 })
 export default class AppPage extends Vue {
+  isReady = false
+
   tabs: {
     title: string
     component: string

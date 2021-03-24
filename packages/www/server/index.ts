@@ -1,18 +1,23 @@
 import fastify from 'fastify'
 import fastifyExpress from 'fastify-express'
 import { build, loadNuxt } from 'nuxt'
+import waitOn from 'wait-on'
 
 import apiRouter from './api'
 import { isDev } from './shared'
 
 async function main() {
+  await waitOn({
+    resources: ['tcp:5432'],
+  })
+
   const port = parseInt(process.env.PORT!) || 35594
   process.env.PORT = port.toString()
 
   const nuxt = await loadNuxt(isDev ? 'dev' : 'start')
 
   const app = fastify({
-    logger: true
+    logger: true,
   })
   await app.register(fastifyExpress)
 
@@ -26,7 +31,7 @@ async function main() {
   })
 
   app.register(apiRouter, {
-    prefix: '/api'
+    prefix: '/api',
   })
 
   if (isDev) {
