@@ -40,7 +40,8 @@ RUN npm i -g yarn
 COPY package.json yarn.lock ./
 RUN yarn --frozen-lockfile
 COPY . .
-# COPY initdb.d/ /docker-entrypoint-initdb.d/
+COPY db/initdb.d/ /docker-entrypoint-initdb.d/
+RUN chown postgres /app/db/assets
 RUN yarn build
 RUN jq 'del(.devDependencies)' package.json > tmp.json && mv tmp.json package.json
 RUN yarn --frozen-lockfile

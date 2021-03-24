@@ -90,3 +90,4 @@ sw.*
 *.swp
 
 session.key
+/*-dist/

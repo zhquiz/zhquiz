@@ -16,7 +16,9 @@ services:
       - 35595:35595
     volumes:
       - zhquiz:/var/lib/postgresql/data
-      - .:/app
+      - ./node_modules:/app/node_modules
+      - ./server:/app/server
+      - ./types:/app/types
     entrypoint: |
       /bin/bash -c "
         /usr/local/bin/docker-entrypoint.sh postgres &

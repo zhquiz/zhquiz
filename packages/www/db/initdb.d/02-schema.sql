@@ -1,0 +1,2 @@
+CREATE SCHEMA dict;
+CREATE SCHEMA online;

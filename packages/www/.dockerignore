@@ -2,3 +2,7 @@
 /node_modules/
 .env
 .env.*
+
+# Large, generate-able files
+tatoeba.db
+# cedict.db

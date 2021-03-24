@@ -9,5 +9,10 @@
     {
       "path": "."
     }
-  ]
+  ],
+  "settings": {
+    "files.associations": {
+      "*.sql": "postgres"
+    }
+  }
 }
