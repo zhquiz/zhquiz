@@ -9,6 +9,26 @@ BEGIN
 END;
 $func$ LANGUAGE plpgsql IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION dict."f_hLevel" (TEXT) RETURNS INT AS
+$func$
+DECLARE
+  r       RECORD;
+BEGIN
+  RETURN (
+    SELECT "hLevel" FROM (
+      SELECT "hLevel"
+      FROM dict.zhlevel
+      WHERE "hLevel" IS NOT NULL AND "entry" = $1
+      UNION ALL
+      SELECT 100 "hLevel"
+    ) t1
+    LIMIT 1
+  );
+  
+  RETURN r."hLevel";
+END;
+$func$ LANGUAGE plpgsql;
+
 CREATE TABLE dict.zhlevel (
   "entry"         TEXT NOT NULL,
   "hLevel"        INT,
@@ -23,21 +43,12 @@ CREATE INDEX "idx_zhlevel_vLevel" ON dict.zhlevel ("vLevel");
 CREATE OR REPLACE FUNCTION zhlevel_sentence (TEXT) RETURNS FLOAT AS
 $func$
 DECLARE
-  simp      TEXT[];
   segments  TEXT[];
   seg       TEXT;
 BEGIN
-  simp = (
-    SELECT array_agg(entry)
-    FROM (
-      SELECT entry, 1 g FROM dict.zhlevel WHERE "hLevel" < 50 AND "hLevel" IS NOT NULL
-    ) t1
-    GROUP BY g
-  );
-
   segments = (
     SELECT array_agg(lexeme) FROM (
-      SELECT lexeme, 1 g FROM unnest(to_tsvector('jiebaqry', $1)) WHERE lexeme ~ re_han()
+      SELECT lexeme, 1 g FROM unnest(to_tsvector('jiebaqry', $1)) WHERE lexeme ~ '[⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〻㐀-䶿一-鿼豈-舘並-龎]'
     ) t1
     GROUP BY g
   );
@@ -51,7 +62,7 @@ BEGIN
 END;
 $func$ LANGUAGE plpgsql IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION dict.f_tatoeba_random_zh (
+CREATE OR REPLACE FUNCTION f_sentence_random (
   IN min INT, IN max INT,
   OUT result TEXT, OUT english TEXT, OUT "level" INT
 ) AS $$
@@ -59,13 +70,23 @@ DECLARE
   r   RECORD;
 BEGIN
   FOR r IN (
-    SELECT * FROM dict.tatoeba WHERE cmn IS NOT NULL ORDER BY random()
+    SELECT * FROM (
+      SELECT "entry", s."english" eng FROM sentence s
+      WHERE NOT "isTrad"
+      ORDER BY random()
+    ) t1
+    UNION ALL
+    SELECT * FROM (
+      SELECT "entry", s."english" eng FROM sentence s
+      WHERE "isTrad"
+      ORDER BY random()
+    ) t1
   )
   LOOP
-    "level" = round(zhlevel_sentence(r.cmn));
+    "level" = round(zhlevel_sentence(r.entry));
     IF "level" >= $1 AND "level" <= $2 THEN
-      result = r.cmn;
-      english = r.eng;
+      result = r.entry;
+      english = r.eng[1];
       RETURN;
     END IF;
   END LOOP;

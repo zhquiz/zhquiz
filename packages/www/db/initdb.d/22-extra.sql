@@ -38,7 +38,7 @@ CREATE INDEX "idx_extra_tag" ON "extra" USING gin ("tag");
 
 CREATE MATERIALIZED VIEW "character" AS
   SELECT
-    unnest("entry") "character",
+    unnest("entry") "entry",
     "pinyin",
     "english",
     "userId"
@@ -46,7 +46,7 @@ CREATE MATERIALIZED VIEW "character" AS
   WHERE "type" = 'character'
   UNION ALL
   SELECT
-    "character",
+    "character" "entry",
     "pinyin",
     "english",
     NULL
@@ -60,7 +60,7 @@ CREATE MATERIALIZED VIEW "character" AS
   ) t1;
 
 CREATE INDEX "idx_character_userId" ON "character" ("userId");
-CREATE INDEX "idx_character_character" ON "character" ("character");
+CREATE INDEX "idx_character_entry" ON "character" ("entry");
 CREATE INDEX "idx_character_pinyin" ON "character"
   USING pgroonga (normalize_pinyin("pinyin"));
 CREATE INDEX "idx_character_english" ON "character"
@@ -105,6 +105,54 @@ CREATE INDEX "idx_vocabulary_entry" ON "vocabulary"
 CREATE INDEX "idx_vocabulary_pinyin" ON "vocabulary"
   USING pgroonga (normalize_pinyin("pinyin"));
 CREATE INDEX "idx_vocabulary_english" ON "vocabulary"
+  USING pgroonga("english")
+  WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
+
+CREATE MATERIALIZED VIEW "sentence" AS
+  SELECT
+    unnest("entry") "entry",
+    "english",
+    "userId",
+    NULL "isTrad"
+  FROM "extra"
+  WHERE "type" = 'sentence'
+  UNION ALL
+  SELECT
+    "cmn" "entry",
+    "english",
+    NULL,
+    "isTrad"
+  FROM (
+    SELECT
+      "cmn",
+      array_agg("eng") "english",
+      (max(dict."f_hLevel"(t1."char"[1])) > 50) "isTrad"
+    FROM (
+      SELECT
+        "cmn",
+        "eng",
+        regexp_matches("cmn", '[⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〻㐀-䶿一-鿼豈-舘並-龎]', 'g') "char"
+      FROM (
+        SELECT "chinese" "cmn", "english" "eng"
+        FROM online.jukuu
+        UNION ALL
+        SELECT "cmn", "eng"
+        FROM dict.tatoeba
+        WHERE "cmn" IS NOT NULL
+      ) t0
+      WHERE "cmn" IS NOT NULL
+    ) t1
+    GROUP BY "cmn"
+    ORDER BY "isTrad"
+  ) t2;
+
+CREATE INDEX "idx_sentence_userId" ON "sentence" ("userId");
+CREATE INDEX "idx_sentence_isTrad" ON "sentence" ("isTrad");
+CREATE INDEX "idx_sentence_entry" ON "sentence"
+  USING pgroonga("entry");
+CREATE INDEX "idx_sentence_entry_tsvector" ON "sentence"
+  USING GIN(to_tsvector('jiebaqry', "entry"));
+CREATE INDEX "idx_sentence_english" ON "sentence"
   USING pgroonga("english")
   WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
 
