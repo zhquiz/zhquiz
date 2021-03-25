@@ -12,6 +12,7 @@ import shortUUID from 'short-uuid'
 import waitOn from 'wait-on'
 
 import { db, isDev } from '../shared'
+import characterRouter from './character'
 
 const apiRouter: FastifyPluginAsync = async (f) => {
   const magic = process.env.MAGIC_SECRET
@@ -140,6 +141,8 @@ const apiRouter: FastifyPluginAsync = async (f) => {
       }
     })
   }
+
+  f.register(characterRouter, { prefix: '/character' })
 }
 
 export default apiRouter

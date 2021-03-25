@@ -20,12 +20,12 @@ BEGIN
 END;
 $func$ LANGUAGE plpgsql IMMUTABLE;
 
-CREATE UNIQUE INDEX idx_junda_character ON dict.junda ("character");
+-- CREATE UNIQUE INDEX idx_junda_character ON dict.junda ("character");
 
 CREATE INDEX idx_junda_frequency ON dict.junda ("frequency");
 
-CREATE INDEX idx_junda_pinyin ON dict.junda
-  USING pgroonga (normalize_pinyin("pinyin"));
-CREATE INDEX idx_junda_english ON dict.junda
-  USING pgroonga ("english")
-  WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
+-- CREATE INDEX idx_junda_pinyin ON dict.junda
+--   USING pgroonga (normalize_pinyin("pinyin"));
+-- CREATE INDEX idx_junda_english ON dict.junda
+--   USING pgroonga ("english")
+--   WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
