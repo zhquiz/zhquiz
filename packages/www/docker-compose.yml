@@ -5,15 +5,21 @@ services:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - POSTGRES_DB
+      - PORT=35594
+
       # See https://magic.link for signing in and authorization
       - MAGIC_PUBLIC
       - MAGIC_SECRET
-      - PORT=35594
-      - SERVER_PORT # For development
+
+      # For development
+      - SERVER_PORT
+      - DEFAULT_USER=polv@polv.cc
     ports:
+      - 35594:35594
+
+      # For development
       - 5433:5432
-      # - 35594:35594
-      - 35595:35595
+      - 35595:35595 # $SERVER_PORT:$SERVER_PORT
     volumes:
       - zhquiz:/var/lib/postgresql/data
       - ./node_modules:/app/node_modules

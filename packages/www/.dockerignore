@@ -1,7 +1,23 @@
-/.nuxt/
-/node_modules/
-.env
-.env.*
+**
+
+!/assets/
+!/components/
+!/db/
+!/layouts/
+!/middleware/
+!/pages/
+!/plugins/
+!/server/
+!/static/
+!/store/
+!/styles/
+!/types/
+!/nodemon.json
+!/nuxt.config.*
+!/*.d.ts
+!/package.json
+!/tsconfig.*
+!/yarn.lock
 
 # Large, generate-able files
 tatoeba.db

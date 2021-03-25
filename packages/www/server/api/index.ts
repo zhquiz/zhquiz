@@ -1,5 +1,6 @@
 import { execSync } from 'child_process'
 import fs from 'fs'
+import qs from 'querystring'
 
 import sql from '@databases/sql'
 import { Magic } from '@magic-sdk/admin'
@@ -47,6 +48,14 @@ const apiRouter: FastifyPluginAsync = async (f) => {
     routePrefix: '/doc',
   })
 
+  f.addHook('preHandler', async (req) => {
+    const { body, log } = req
+
+    if (body && typeof body === 'object' && body.constructor === Object) {
+      log.info({ body }, 'parsed body')
+    }
+  })
+
   f.register(csrf, {
     sessionPlugin: 'fastify-secure-session',
   })
@@ -85,59 +94,61 @@ const apiRouter: FastifyPluginAsync = async (f) => {
     )
   }
 
-  f.addHook('onRequest', (req, reply, next) => {
-    if (['/api/doc', '/api/settings'].some((s) => req.url.startsWith(s))) {
-      next()
-      return
-    }
-
-    f.csrfProtection(req, reply, next)
-  })
-
   if (magic) {
     f.addHook('preHandler', async (req) => {
-      if (!magic) {
+      if (req.session.get('userId')) {
         return
       }
 
-      if (['/api/doc', '/api/settings'].some((s) => req.url.startsWith(s))) {
-        return
+      let user = process.env.DEFAULT_USER || ''
+
+      if (!user) {
+        if (!magic) {
+          return
+        }
+
+        if (['/api/doc', '/api/settings'].some((s) => req.url.startsWith(s))) {
+          return
+        }
+
+        const [apiKey] =
+          /^Bearer (.+)$/.exec(req.headers.authorization || '') || []
+
+        if (!apiKey) {
+          throw { statusCode: 401 }
+        }
+
+        try {
+          magic.token.validate(apiKey)
+        } catch (e) {
+          throw { statusCode: 401, message: e }
+        }
+
+        if (apiKey !== req.session.get('apiKey')) {
+          const u = await magic.users.getMetadataByToken(apiKey)
+          user = u.email || ''
+
+          req.session.set('apiKey', apiKey)
+        }
       }
 
-      const [apiKey] =
-        /^Bearer (.+)$/.exec(req.headers.authorization || '') || []
-
-      if (!apiKey) {
-        throw { statusCode: 401 }
-      }
-
-      try {
-        magic.token.validate(apiKey)
-      } catch (e) {
-        throw { statusCode: 401, message: e }
-      }
-
-      if (apiKey !== req.session.get('apiKey')) {
-        const u = await magic.users.getMetadataByToken(apiKey)
-
+      if (user) {
         let [r] = await db.query(sql`
-        SELECT "id" FROM "user" WHERE "identifier" = ${u.email}
-        `)
+          SELECT "id" FROM "user" WHERE "identifier" = ${user}
+          `)
 
         if (!r) {
           const id = shortUUID.uuid()
 
           await db.query(sql`
-          INSERT INTO "user" ("id", "identifier")
-          VALUES (${id}, ${u.email})
-          `)
+            INSERT INTO "user" ("id", "identifier")
+            VALUES (${id}, ${user})
+            `)
 
           req.session.set('userId', id)
         } else {
           req.session.set('userId', r.id)
         }
-
-        req.session.set('apiKey', apiKey)
       }
     })
   }
@@ -154,7 +165,19 @@ async function main() {
 
   const app = fastify({
     logger: {
-      prettyPrint: true,
+      prettyPrint: isDev,
+      serializers: {
+        req(req) {
+          if (!req.url) {
+            return { method: req.method }
+          }
+
+          const [url, q] = req.url.split(/\?(.+)$/)
+          const query = q ? qs.parse(q) : undefined
+
+          return { method: req.method, url, query }
+        },
+      },
     },
   })
 

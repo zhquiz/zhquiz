@@ -1,3 +1,5 @@
+import qs from 'querystring'
+
 import fastify from 'fastify'
 import fastifyExpress from 'fastify-express'
 import { build, loadNuxt } from 'nuxt'
@@ -17,7 +19,21 @@ async function main() {
   const nuxt = await loadNuxt(isDev ? 'dev' : 'start')
 
   const app = fastify({
-    logger: true,
+    logger: {
+      prettyPrint: isDev,
+      serializers: {
+        req(req) {
+          if (!req.url) {
+            return { method: req.method }
+          }
+
+          const [url, q] = req.url.split(/\?(.+)$/)
+          const query = q ? qs.parse(q) : undefined
+
+          return { method: req.method, url, query }
+        },
+      },
+    },
   })
   await app.register(fastifyExpress)
 

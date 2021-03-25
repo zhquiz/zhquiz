@@ -72,7 +72,8 @@ CREATE MATERIALIZED VIEW "vocabulary" AS
     "entry",
     "pinyin",
     "english",
-    "userId"
+    "userId",
+    NULL "frequency"
   FROM "extra"
   WHERE "type" = 'vocabulary'
   UNION ALL
@@ -80,12 +81,14 @@ CREATE MATERIALIZED VIEW "vocabulary" AS
     "entry",
     "pinyin",
     "english",
-    NULL "userId"
+    NULL "userId",
+    "frequency"
   FROM (
     SELECT
       ARRAY["simplified"]||(array_agg(DISTINCT "entry") FILTER (WHERE "entry" IS NOT NULL AND "entry" != "simplified")) "entry",
       (array_agg(DISTINCT "reading") FILTER (WHERE "reading" IS NOT NULL))||'{}'::text[] "pinyin",
-      (array_agg(DISTINCT "english") FILTER (WHERE "english" IS NOT NULL))||'{}'::text[] "english"
+      (array_agg(DISTINCT "english") FILTER (WHERE "english" IS NOT NULL))||'{}'::text[] "english",
+      max("frequency") "frequency"
     FROM (
       SELECT
         "simplified",
