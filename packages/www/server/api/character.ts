@@ -99,7 +99,9 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         const result = await db.query(sql`
         SELECT "entry"[1] "entry"
         FROM vocabulary
-        WHERE frequency > ${fThreshold} AND "entry" &@ ${entry}
+        WHERE (
+          "userId" IS NULL OR "userId" = ${userId}
+        ) AND frequency > ${fThreshold} AND "entry" &@ ${entry}
         ORDER BY RANDOM()
         LIMIT ${limit}
         `)
@@ -113,7 +115,9 @@ const characterRouter: FastifyPluginAsync = async (f) => {
             ...(await db.query(sql`
           SELECT "entry"[1] "entry"
           FROM vocabulary
-          WHERE NOT (frequency > ${fThreshold}) AND "entry" &@ ${entry}
+          WHERE (
+            "userId" IS NULL OR "userId" = ${userId}
+          ) AND NOT (frequency > ${fThreshold}) AND "entry" &@ ${entry}
           ORDER BY RANDOM()
           LIMIT ${limit - result.length}
           `))
@@ -170,10 +174,26 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         const result = await db.query(sql`
         SELECT "entry", "english"[1] "english"
         FROM sentence
-        WHERE "entry" &@ ${entry}
+        WHERE (
+          "userId" IS NULL OR "userId" = ${userId}
+        ) AND "entry" &@ ${entry} AND NOT "isTrad"
         ORDER BY RANDOM()
         LIMIT ${limit}
         `)
+
+        if (result.length < limit) {
+          result.push(
+            ...(await db.query(sql`
+          SELECT "entry", "english"[1] "english"
+          FROM sentence
+          WHERE (
+            "userId" IS NULL OR "userId" = ${userId}
+          ) AND "entry" &@ ${entry} AND "isTrad"
+          ORDER BY RANDOM()
+          LIMIT ${limit - result.length}
+          `))
+          )
+        }
 
         return {
           result,

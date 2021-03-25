@@ -14,6 +14,8 @@ import waitOn from 'wait-on'
 
 import { db, isDev } from '../shared'
 import characterRouter from './character'
+import entryRouter from './entry'
+import vocabularyRouter from './vocabulary'
 
 const apiRouter: FastifyPluginAsync = async (f) => {
   const magic = process.env.MAGIC_SECRET
@@ -154,6 +156,8 @@ const apiRouter: FastifyPluginAsync = async (f) => {
   }
 
   f.register(characterRouter, { prefix: '/character' })
+  f.register(entryRouter, { prefix: '/entry' })
+  f.register(vocabularyRouter, { prefix: '/vocabulary' })
 }
 
 export default apiRouter

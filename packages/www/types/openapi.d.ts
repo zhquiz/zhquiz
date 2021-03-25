@@ -64,6 +64,24 @@ declare namespace Paths {
       }
     }
   }
+  namespace VocabularySentence {
+    namespace Parameters {
+      export type Entry = string;
+      export type Limit = number;
+    }
+    export interface QueryParameters {
+      entry: Parameters.Entry;
+      limit?: Parameters.Limit;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: {
+          entry: string;
+          english: string;
+        }[];
+      }
+    }
+  }
 }
 
 export interface OperationMethods {
@@ -99,6 +117,14 @@ export interface OperationMethods {
     data?: any,
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.CharacterSentence.Responses.$200>
+  /**
+   * vocabularySentence
+   */
+  'vocabularySentence'(
+    parameters?: Parameters<Paths.VocabularySentence.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.VocabularySentence.Responses.$200>
 }
 
 export interface PathsDictionary {
@@ -141,6 +167,16 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.CharacterSentence.Responses.$200>
+  }
+  ['/api/vocabulary/sentence']: {
+    /**
+     * vocabularySentence
+     */
+    'get'(
+      parameters?: Parameters<Paths.VocabularySentence.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.VocabularySentence.Responses.$200>
   }
 }
 
