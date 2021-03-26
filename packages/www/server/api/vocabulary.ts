@@ -2,6 +2,7 @@ import sql from '@databases/sql'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 
+import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
 
 const vocabularyRouter: FastifyPluginAsync = async (f) => {
@@ -154,6 +155,122 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         }
 
         return r
+      }
+    )
+  }
+
+  {
+    const makeZh = new QSplit({
+      default(v) {
+        if (/^\p{sc=Han}+$/u.test(v)) {
+          return this.fields.entry[':'](v)
+        }
+
+        return sql`(${sql.join(
+          [this.fields.reading[':'](v), this.fields.english[':'](v)],
+          ' OR '
+        )})`
+      },
+      fields: {
+        entry: { ':': (v) => sql`"entry" &@ ${v}` },
+        pinyin: { ':': (v) => sql`normalize_pinyin("pinyin") &@ ${v}` },
+        reading: { ':': (v) => sql`normalize_pinyin("pinyin") &@ ${v}` },
+        english: { ':': (v) => sql`"english" &@ ${v}` },
+      },
+    })
+
+    const sQuery = S.shape({
+      q: S.string(),
+    })
+
+    const sResult = S.shape({
+      result: S.list(S.string()),
+    })
+
+    f.get<{
+      Querystring: typeof sQuery.type
+    }>(
+      '/q',
+      {
+        schema: {
+          operationId: 'vocabQuery',
+          querystring: sQuery.valueOf(),
+          response: {
+            200: sResult.valueOf(),
+          },
+        },
+      },
+      async (req): Promise<typeof sResult.type> => {
+        let { q } = req.query
+
+        const userId: string = req.session.get('userId')
+        if (!userId) {
+          throw { statusCode: 401 }
+        }
+
+        q = q.trim()
+        if (!q) {
+          return { result: [] }
+        }
+
+        const qCond = makeQuiz.parse(q)
+        const hCond = makeZh.parse(q)
+        const tagCond = makeTag.parse(q)
+
+        if (!hCond && !qCond && !tagCond) {
+          return { result: [] }
+        }
+
+        let result = await db.query(sql`
+        WITH match_cte AS (
+          SELECT
+            "simplified", "traditional", "frequency"
+          FROM (
+            SELECT unnest("entry") "it", "entry"[1] "simplified", unnest("entry"[2:]) "traditional", "frequency"
+            FROM "vocabulary"
+            WHERE (
+              "userId" IS NULL OR "userId" = ${userId}
+            ) ${hCond ? sql` AND ${hCond}` : sql``} ${
+          qCond
+            ? sql` AND "entry" IN (
+              SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'vocabulary' AND ${qCond}
+            )`
+            : sql``
+        }
+          ) t2
+          ${
+            tagCond
+              ? sql`WHERE "it" IN (
+            SELECT "entry"
+            FROM entry_tag
+            WHERE (
+              "userId" IS NULL OR "userId" = ${userId}
+            ) AND ${tagCond}
+          )`
+              : sql``
+          }
+        )
+
+        SELECT "entry", min("isTrad") "isTrad" FROM (
+          SELECT "simplified" "entry", "frequency", 0 "isTrad"
+          FROM match_cte
+          UNION ALL
+          SELECT "traditional" "entry", "frequency", 1 "isTrad"
+          FROM match_cte
+        ) t1
+        WHERE "entry" IS NOT NULL
+        GROUP BY "entry"
+        ORDER BY min("isTrad"), max("frequency") DESC NULLS FIRST
+        LIMIT 20
+        `)
+
+        if (result.length && !result[0].isTrad) {
+          result = result.filter((r) => !r.isTrad)
+        }
+
+        return {
+          result: result.map((r) => r.entry),
+        }
       }
     )
   }

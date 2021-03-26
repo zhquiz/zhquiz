@@ -272,9 +272,7 @@ export const makeQuiz = new QSplit({
 })
 
 export const makeTag = new QSplit({
-  default(v) {
-    return this.fields.tag[':'](v)
-  },
+  default: () => null,
   fields: {
     tag: { ':': (v) => sql`entry_tag."tag" &@ ${v}` },
     type: { ':': (v) => sql`entry_tag."type" = ${v}` },

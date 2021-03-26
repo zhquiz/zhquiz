@@ -107,28 +107,28 @@ $$ LANGUAGE plpgsql;
 
 CREATE MATERIALIZED VIEW dict.entry_tag AS
   SELECT
-    ARRAY["entry"] "entry",
-    ARRAY['HSK', (CASE
+    "entry",
+    unnest(ARRAY['HSK', (CASE
       WHEN "vLevel" <= 5 THEN 'HSK1'
       WHEN "vLevel" <= 10 THEN 'HSK2'
       WHEN "vLevel" <= 20 THEN 'HSK3'
       WHEN "vLevel" <= 30 THEN 'HSK4'
       WHEN "vLevel" <= 40 THEN 'HSK5'
       ELSE 'HSK6'
-    END)] "tag",
+    END)]) "tag",
     'vocabulary' "type"
   FROM dict.zhlevel WHERE "vLevel" IS NOT NULL
   UNION ALL
   SELECT
-    ARRAY["entry"] "entry",
-    ARRAY['HSK', (CASE
+    "entry",
+    unnest(ARRAY['HSK', (CASE
       WHEN "vLevel" <= 5 THEN 'HSK1'
       WHEN "vLevel" <= 10 THEN 'HSK2'
       WHEN "vLevel" <= 20 THEN 'HSK3'
       WHEN "vLevel" <= 30 THEN 'HSK4'
       WHEN "vLevel" <= 40 THEN 'HSK5'
       ELSE 'HSK6'
-    END)] "tag",
+    END)]) "tag",
     'character' "type"
   FROM dict.zhlevel WHERE length("entry") = 1 AND "vLevel" IS NOT NULL;
 

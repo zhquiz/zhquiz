@@ -26,7 +26,8 @@ CREATE VIEW "vocabulary" AS
     "entry",
     "pinyin",
     "english",
-    "userId"
+    "userId",
+    NULL "frequency"
   FROM "extra"
   WHERE "type" = 'vocabulary'
   UNION ALL
@@ -34,7 +35,8 @@ CREATE VIEW "vocabulary" AS
     "entry",
     "pinyin",
     "english",
-    NULL "userId"
+    NULL "userId",
+    "frequency"
   FROM dict.cedict_view;
 
 CREATE VIEW "sentence" AS
@@ -62,8 +64,8 @@ CREATE VIEW "sentence" AS
 
 CREATE VIEW "entry_tag" AS
   SELECT
-    "entry",
-    "tag",
+    unnest("entry") "entry",
+    unnest("tag") "tag",
     "type",
     "userId"
   FROM "extra"

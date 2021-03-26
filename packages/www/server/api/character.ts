@@ -359,11 +359,11 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         }
 
         const result = await db.query(sql`
-        SELECT "entry"
+        SELECT DISTINCT "entry"
         FROM "character"
         WHERE (
           "userId" IS NULL OR "userId" = ${userId}
-        ) ${hCond ? sql` AND TRUE` : sql``} ${
+        ) ${hCond ? sql` AND ${hCond}` : sql``} ${
           radCond
             ? sql` AND "entry" IN (
           SELECT "entry" FROM dict.radical WHERE ${radCond}
@@ -372,7 +372,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         } ${
           tagCond
             ? sql` AND "entry" IN (
-            SELECT unnest("entry")
+            SELECT "entry"
             FROM entry_tag
             WHERE (
               "userId" IS NULL OR "userId" = ${userId}

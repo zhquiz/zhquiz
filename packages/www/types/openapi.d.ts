@@ -218,6 +218,19 @@ declare namespace Paths {
       }
     }
   }
+  namespace SentenceQuery {
+    namespace Parameters {
+      export type Q = string;
+    }
+    export interface QueryParameters {
+      q: Parameters.Q;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: string[];
+      }
+    }
+  }
   namespace SentenceRandom {
     namespace Responses {
       export interface $200 {
@@ -231,6 +244,19 @@ declare namespace Paths {
     namespace Responses {
       export interface $200 {
         csrf: string;
+      }
+    }
+  }
+  namespace VocabQuery {
+    namespace Parameters {
+      export type Q = string;
+    }
+    export interface QueryParameters {
+      q: Parameters.Q;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: string[];
       }
     }
   }
@@ -394,6 +420,14 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.SentenceGetByEntry.Responses.$200>
   /**
+   * sentenceQuery
+   */
+  'sentenceQuery'(
+    parameters?: Parameters<Paths.SentenceQuery.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.SentenceQuery.Responses.$200>
+  /**
    * sentenceRandom
    */
   'sentenceRandom'(
@@ -417,6 +451,14 @@ export interface OperationMethods {
     data?: any,
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.VocabularyGetByEntry.Responses.$200>
+  /**
+   * vocabQuery
+   */
+  'vocabQuery'(
+    parameters?: Parameters<Paths.VocabQuery.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.VocabQuery.Responses.$200>
   /**
    * entryRandom
    */
@@ -572,6 +614,16 @@ export interface PathsDictionary {
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.SentenceGetByEntry.Responses.$200>
   }
+  ['/api/sentence/q']: {
+    /**
+     * sentenceQuery
+     */
+    'get'(
+      parameters?: Parameters<Paths.SentenceQuery.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.SentenceQuery.Responses.$200>
+  }
   ['/api/sentence/random']: {
     /**
      * sentenceRandom
@@ -601,6 +653,16 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.VocabularyGetByEntry.Responses.$200>
+  }
+  ['/api/vocabulary/q']: {
+    /**
+     * vocabQuery
+     */
+    'get'(
+      parameters?: Parameters<Paths.VocabQuery.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.VocabQuery.Responses.$200>
   }
   ['/api/vocabulary/random']: {
     /**
