@@ -141,12 +141,11 @@ interface ILocal {
 }
 
 @Component<LibraryPage>({
-  head() {
-    return {
-      title: 'Library - ZhQuiz',
-    }
+  created() {
+    this.$emit('title', 'Library')
+    this.updateLocal()
+    this.updateOnline()
   },
-  layout: 'app',
 })
 export default class LibraryPage extends Vue {
   q0 = ''

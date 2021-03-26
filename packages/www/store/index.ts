@@ -16,6 +16,14 @@ export const state = () => ({
     sentenceMax: null,
   } as ISettings,
   isApp: false,
+  tabs: [] as {
+    title: string
+    component: string
+    permanent?: boolean
+    query: Record<string, string>
+  }[],
+  activeTab: 0,
+  identifier: '',
 })
 
 export const mutations = mutationTree(state, {
@@ -24,6 +32,51 @@ export const mutations = mutationTree(state, {
   },
   SET_IS_APP(state, isApp: boolean) {
     state.isApp = isApp
+  },
+  SET_TAB_TITLE(state, { i, title }: { i: number; title: string }) {
+    state.tabs[i].title = title
+    state.tabs = JSON.parse(JSON.stringify(state.tabs))
+  },
+  ADD_TAB(
+    state,
+    {
+      component,
+      query = {},
+      permanent,
+    }: {
+      component: string
+      query?: Record<string, string>
+      permanent?: boolean
+    }
+  ) {
+    state.tabs = [
+      ...state.tabs,
+      {
+        title: component,
+        component,
+        permanent,
+        query,
+      },
+    ]
+    state.activeTab = state.tabs.length - 1
+  },
+  DELETE_TAB(state, { i }: { i: number }) {
+    state.tabs.splice(i, 1)
+
+    if (state.activeTab >= state.tabs.length) {
+      state.activeTab = state.tabs.length - 1
+    }
+
+    state.tabs = JSON.parse(JSON.stringify(state.tabs))
+  },
+  SET_TAB_COMPONENT(state, { i, component }: { i: number; component: string }) {
+    state.tabs[i].component = component
+
+    state.tabs = JSON.parse(JSON.stringify(state.tabs))
+    state.activeTab = i
+  },
+  SET_IDENTIFIER(state, name: string) {
+    state.identifier = name
   },
 })
 
@@ -55,9 +108,12 @@ export const actions = actionTree(
     async updateSettings({ commit }) {
       const r = await this.app.$axios
         .userGetSettings({
-          select: 'level,levelMin',
+          select: 'level,levelMin,identifer',
         })
         .then((r) => r.data)
+
+      // @ts-ignore
+      commit('SET_IDENTIFIER', r.identifier)
 
       if (!r.level || !r.levelMin) {
         r.level = 10

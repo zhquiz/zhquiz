@@ -213,7 +213,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         }
 
         const id = await db.tx(async (db) => {
-          const id = shortUUID.generate()
+          const id = shortUUID.uuid()
 
           await db.query(sql`
           INSERT INTO "library" ("id", "userId", "title", "type", "description", "tag", "entry")

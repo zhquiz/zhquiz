@@ -36,7 +36,7 @@ import { Component, Vue } from 'nuxt-property-decorator'
 @Component<SettingsPage>({
   created() {
     this.$emit('title', 'Settings')
-    const settings = this.$store.state
+    const { settings } = this.$store.state
 
     this.lv = [
       settings.levelMin || this.lvRange[0],

@@ -1,7 +1,7 @@
 <template>
   <section>
     <div class="HanziPage">
-      <form class="field" @submit.prevent="q = q0">
+      <form class="field" @submit.prevent="$set(query, 'q', q0)">
         <div class="control">
           <input
             v-model="q0"
@@ -18,7 +18,9 @@
         <div class="column is-6 entry-display">
           <div
             class="hanzi-display clickable font-han"
-            @contextmenu.prevent="(evt) => openContext(evt, current, 'hanzi')"
+            @contextmenu.prevent="
+              (evt) => openContext(evt, current, 'character')
+            "
           >
             {{ current }}
           </div>
@@ -62,7 +64,7 @@
                 v-for="h in sub"
                 :key="h"
                 class="font-han clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, h, 'hanzi')"
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -112,7 +114,7 @@
                 v-for="h in variants"
                 :key="h"
                 class="font-han clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, h, 'hanzi')"
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -137,7 +139,7 @@
                 <span
                   class="clickable"
                   @contextmenu.prevent="
-                    (evt) => openContext(evt, v.entry, 'vocab')
+                    (evt) => openContext(evt, v.entry, 'vocabulary')
                   "
                 >
                   {{ v.entry }}
@@ -196,17 +198,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Ref, Vue, Watch } from 'nuxt-property-decorator'
+import { Component, Prop, Ref, Vue, Watch } from 'nuxt-property-decorator'
 import ContextMenu from '@/components/ContextMenu.vue'
 
-@Component<HanziPage>({
-  components: {
-    ContextMenu,
-  },
+@Component<CharacterTab>({
   async created() {
     this.$emit('title', 'Hanzi')
 
-    this.q0 = this.q
+    this.q0 = this.query.q || ''
 
     if (this.additionalContext[0]) {
       await this.additionalContext[0].handler()
@@ -215,7 +214,11 @@ import ContextMenu from '@/components/ContextMenu.vue'
     this.onQChange(this.q0)
   },
 })
-export default class HanziPage extends Vue {
+export default class CharacterTab extends Vue {
+  @Prop({ default: () => ({}) }) query!: {
+    q?: string
+  }
+
   @Ref() context!: ContextMenu
 
   entries: string[] = []
@@ -245,21 +248,12 @@ export default class HanziPage extends Vue {
 
   q0 = ''
 
-  get q() {
-    const q = this.$route.query.q
-    return (Array.isArray(q) ? q[0] : q) || ''
-  }
-
-  set q(q: string) {
-    this.$router.push({ query: { q } })
-  }
-
   get current() {
     return this.entries[this.i]
   }
 
   get additionalContext() {
-    if (!this.q) {
+    if (!this.query.q) {
       return [
         {
           name: 'Reload',
@@ -286,7 +280,7 @@ export default class HanziPage extends Vue {
     this.context.open(evt)
   }
 
-  @Watch('q')
+  @Watch('query.q')
   async onQChange(q: string) {
     this.$emit('title', (q ? q + ' - ' : '') + 'Hanzi')
 
@@ -299,7 +293,6 @@ export default class HanziPage extends Vue {
     }
 
     this.i = 0
-    this.load()
   }
 
   @Watch('current')

@@ -547,6 +547,7 @@ export default class QuizCard extends Vue {
         } else {
           q = {
             ...r,
+            id: r.id!,
             type: r.type as IQuizType,
           }
         }

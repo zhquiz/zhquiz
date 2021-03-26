@@ -43,58 +43,62 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         }
 
         const result = await db.query(sql`
-        SELECT "entry", "english"[1] "english"
-        FROM sentence
-        WHERE (
-          "userId" IS NULL OR "userId" = ${userId}
-        ) AND to_tsvector('jiebaqry', "entry") @@ to_tsquery('jiebaqry', ${entry}) AND NOT "isTrad"
-        ORDER BY RANDOM()
+        WITH match_cte AS (
+          SELECT DISTINCT ON ("entry")
+            "entry", "english"[1] "english", "isTrad"
+          FROM sentence
+          WHERE (
+            "userId" IS NULL OR "userId" = ${userId}
+          ) AND to_tsvector('jiebaqry', "entry") @@ to_tsquery('jiebaqry', ${entry})
+        )
+
+        SELECT *
+        FROM (
+          SELECT * FROM (
+            SELECT "entry", "english"
+            FROM match_cte WHERE NOT "isTrad"
+            ORDER BY RANDOM()
+          ) t1
+          UNION
+          SELECT * FROM (
+            SELECT "entry", "english"
+            FROM match_cte WHERE "isTrad"
+            ORDER BY RANDOM()
+          ) t1
+        ) t2
         LIMIT ${limit}
         `)
 
         if (result.length < limit) {
           result.push(
             ...(await db.query(sql`
-          SELECT "entry", "english"[1] "english"
-          FROM sentence
-          WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
-          ) AND to_tsvector('jiebaqry', "entry") @@ to_tsquery('jiebaqry', ${entry}) AND "isTrad"
-          ORDER BY RANDOM()
-          LIMIT ${limit - result.length}
-          `))
-          )
-        }
-
-        if (result.length < limit) {
-          result.push(
-            ...(await db.query(sql`
-          SELECT "entry", "english"[1] "english"
-          FROM sentence
-          WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
-          ) AND "entry" &@ ${entry} AND NOT "isTrad" AND NOT "entry" = ANY(${result.map(
+            WITH match_cte AS (
+              SELECT DISTINCT ON ("entry")
+                "entry", "english"[1] "english", "isTrad"
+              FROM sentence
+              WHERE (
+                "userId" IS NULL OR "userId" = ${userId}
+              ) AND "entry" &@ ${entry} AND "entry" != ANY(${result.map(
               (r) => r.entry
             )})
-          ORDER BY RANDOM()
-          LIMIT ${limit - result.length}
-          `))
-          )
-        }
-
-        if (result.length < limit) {
-          result.push(
-            ...(await db.query(sql`
-          SELECT "entry", "english"[1] "english"
-          FROM sentence
-          WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
-          ) AND "entry" &@ ${entry} AND "isTrad" AND NOT "entry" = ANY(${result.map(
-              (r) => r.entry
-            )})
-          ORDER BY RANDOM()
-          LIMIT ${limit - result.length}
-          `))
+            )
+    
+            SELECT *
+            FROM (
+              SELECT * FROM (
+                SELECT "entry", "english"
+                FROM match_cte WHERE NOT "isTrad"
+                ORDER BY RANDOM()
+              ) t1
+              UNION
+              SELECT * FROM (
+                SELECT "entry", "english"
+                FROM match_cte WHERE "isTrad"
+                ORDER BY RANDOM()
+              ) t1
+            ) t2
+            LIMIT ${limit - result.length}
+            `))
           )
         }
 

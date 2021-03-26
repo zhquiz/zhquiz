@@ -44,41 +44,23 @@
         <a></a>
       </li>
       <li v-if="entries.length === 1">
-        <a
-          role="button"
-          @click="
-            openInNewTab(
-              `/#/hanzi?q=${encodeURIComponent(entries[0])}`,
-              entries[0] + ' - Hanzi'
-            )
-          "
-        >
+        <a role="button" @click="openInNewTab('Character', { q: entries[0] })">
           Search as Hanzi
         </a>
       </li>
       <li v-if="entries.length === 1 && type !== 'hanzi'">
-        <a
-          role="button"
-          @click="
-            openInNewTab(
-              `/#/vocab?${
-                type === 'vocab' ? 'entry' : 'q'
-              }=${encodeURIComponent(entries[0])}`,
-              entries[0] + ' - Vocab'
-            )
-          "
-        >
+        <a role="button" @click="openInNewTab('Vocabulary', { q: entries[0] })">
           Search as Vocab
         </a>
       </li>
       <li v-if="entries.length === 1 && type !== 'sentence'">
         <a
           role="button"
-          @click="
-            openInNewTab(
-              `https://en.wiktionary.org/wiki/${encodeURIComponent(entries[0])}`
-            )
-          "
+          :href="`https://en.wiktionary.org/wiki/${encodeURIComponent(
+            entries[0]
+          )}`"
+          target="_blank"
+          rel="noopener noreferrer"
         >
           Open in wiktionary
         </a>
@@ -86,13 +68,11 @@
       <li v-if="entries.length === 1">
         <a
           role="button"
-          @click="
-            openInNewTab(
-              `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${encodeURIComponent(
-                type === 'hanzi' ? `*${entries[0]}*` : entries[0]
-              )}`
-            )
-          "
+          :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${encodeURIComponent(
+            type === 'hanzi' ? `*${entries[0]}*` : entries[0]
+          )}`"
+          target="_blank"
+          rel="noopener noreferrer"
         >
           Open in MDBG
         </a>
@@ -167,9 +147,9 @@ export default class ContextMenu extends Vue {
 
       const entryMap = new Map<string, string[]>()
       result.map(({ id, entry }) => {
-        const c = entryMap.get(entry) || []
-        c.push(id)
-        return entryMap.set(entry, c)
+        const c = entryMap.get(entry!) || []
+        c.push(id!)
+        return entryMap.set(entry!, c)
       })
 
       this.quiz = {
@@ -267,6 +247,13 @@ export default class ContextMenu extends Vue {
       entries: this.entries,
       type: this.type,
       db,
+    })
+  }
+
+  openInNewTab(component: string, query: Record<string, string>) {
+    this.$accessor.ADD_TAB({
+      component,
+      query,
     })
   }
 }

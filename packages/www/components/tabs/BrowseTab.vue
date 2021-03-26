@@ -47,28 +47,34 @@
         <div class="card-content">
           <b-field label="Chinese">
             <b-input
-              v-model="selected.chinese"
+              :value="selected.entry.join(' ')"
+              @input="(ev) => (selected.entry = ev.split(' '))"
               placeholder="Must not be empty"
             ></b-input>
           </b-field>
           <b-field label="Pinyin">
             <b-input
-              v-model="selected.pinyin"
+              :value="selected.reading.join(' ')"
+              @input="(ev) => (selected.reading = ev.split(' '))"
               placeholder="Must not be empty"
             ></b-input>
           </b-field>
           <b-field label="English">
             <b-input
-              v-model="selected.english"
+              :value="selected.english.join(' ')"
+              @input="(ev) => (selected.english = ev.split(' '))"
               type="textarea"
               placeholder="Must not be empty"
             ></b-input>
           </b-field>
           <b-field label="Type">
             <b-select v-model="selected.type">
-              <option value="vocab">Vocab</option>
+              <option value="vocabulary">Vocabulary</option>
               <option value="sentence">Sentence</option>
-              <option v-if="selected.chinese.length === 1" value="hanzi">
+              <option
+                v-if="selected.entry.every((el) => el.length === 1)"
+                value="character"
+              >
                 Hanzi
               </option>
             </b-select>
@@ -104,8 +110,8 @@
     <ContextMenu
       :id="selected.id"
       ref="context"
-      :entry="selected.chinese"
-      :type="selected.type || 'vocab'"
+      :entry="selected.entry[0]"
+      :type="selected.type || 'vocabulary'"
       :description="selected.description"
       source="extra"
       :additional="additionalContext"
@@ -132,6 +138,10 @@ interface IExtra {
 @Component<ExtraPage>({
   components: {
     ContextMenu,
+  },
+  created() {
+    this.$emit('title', 'Browse')
+    this.load()
   },
 })
 export default class ExtraPage extends Vue {

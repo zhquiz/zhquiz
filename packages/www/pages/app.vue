@@ -41,7 +41,7 @@
       <div style="flex-grow: 1"></div>
 
       <div class="p-4">
-        <center>Logged in as DEFAULT</center>
+        <center>Logged in as {{ $store.state.identifier }}</center>
       </div>
     </b-sidebar>
 
@@ -101,6 +101,7 @@
         v-for="(t, i) in tabs"
         v-show="activeTab === i"
         :key="i"
+        :query="t.query"
         @title="(t) => setTitle(i, t)"
       />
     </main>
@@ -128,22 +129,16 @@ import { Component, Vue } from 'nuxt-property-decorator'
     if (!this.$accessor.isApp) {
       this.$router.replace('/')
     } else {
-      this.addTab('Random', true)
+      this.$accessor.ADD_TAB({
+        component: 'Random',
+        permanent: true,
+      })
       this.isReady = true
     }
   },
 })
 export default class AppPage extends Vue {
   isReady = false
-
-  tabs: {
-    title: string
-    component: string
-    permanent?: boolean
-  }[] = []
-
-  activeTab = 0
-
   isDrawer = false
 
   get navItems(): {
@@ -190,51 +185,33 @@ export default class AppPage extends Vue {
     ]
   }
 
-  setTitle(i: number, t: string) {
-    const tabs = this.clone(this.tabs)
-    tabs[i].title = t
-
-    this.tabs = tabs
-  }
-
-  addTab(component: string, permanent?: boolean) {
-    this.tabs = [
-      ...this.tabs,
-      {
-        title: component,
-        component,
-        permanent,
-      },
-    ]
-    this.activeTab = this.tabs.length - 1
-  }
-
-  setTab(i: number, component: string) {
-    const tabs = this.clone(this.tabs)
-    tabs[i].component = component
-
-    this.tabs = tabs
-    this.activeTab = i
-  }
-
-  deleteTab(i: number) {
-    const tabs = this.clone(this.tabs)
-    tabs.splice(i, 1)
-
-    if (this.activeTab >= tabs.length) {
-      this.activeTab = tabs.length - 1
-    }
-
-    this.tabs = tabs
-  }
-
-  clone<T>(o: T): T {
-    return JSON.parse(JSON.stringify(o))
-  }
-
   get level() {
     const { level } = this.$store.state.settings
     return level ? level.toString() : ' '
+  }
+
+  get tabs() {
+    return this.$store.state.tabs
+  }
+
+  get activeTab() {
+    return this.$store.state.activeTab
+  }
+
+  setTab(i: number, component: string) {
+    this.$accessor.SET_TAB_COMPONENT({ i, component })
+  }
+
+  addTab(component: string) {
+    this.$accessor.ADD_TAB({ component })
+  }
+
+  deleteTab(i: number) {
+    this.$accessor.DELETE_TAB({ i })
+  }
+
+  setTitle(i: number, title: string) {
+    this.$accessor.SET_TAB_TITLE({ i, title })
   }
 }
 </script>

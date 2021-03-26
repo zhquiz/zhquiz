@@ -84,13 +84,9 @@ import ContextMenu from '@/components/ContextMenu.vue'
   components: {
     ContextMenu,
   },
-  head() {
-    return {
-      title: 'Level - ZhQuiz',
-    }
-  },
-  layout: 'app',
   created() {
+    this.$emit('title', 'Level')
+
     this.init()
   },
   watch: {
@@ -185,7 +181,7 @@ export default class LevelPage extends Vue {
 
   async init() {
     const {
-      data: { levelBrowser: whatToShow = [] },
+      data: { levelBrowser: whatToShow },
     } = await this.$axios.userGetSettings({
       select: 'levelBrowser',
     })
@@ -213,7 +209,6 @@ export default class LevelPage extends Vue {
         return entry
       })
 
-      this.$set(this, 'pinyinMap', this.pinyinMap)
       this.$set(this, 'allData', this.allData)
     }
 
@@ -227,7 +222,7 @@ export default class LevelPage extends Vue {
 
       // eslint-disable-next-line array-callback-return
       entries.map((entry) => {
-        this.srsLevel[entry] = -1
+        delete this.srsLevel[entry]
       })
 
       // eslint-disable-next-line array-callback-return

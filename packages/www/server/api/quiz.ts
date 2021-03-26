@@ -29,7 +29,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           entry: S.string(),
           type: S.string(),
           direction: S.string(),
-        })
+        }).partial()
       ),
     })
 
@@ -259,8 +259,8 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         }
 
         let cond = sql`(${sql.join([...orCond, sql`TRUE`], ' OR ')})`
-        if (stageSet.has('leech')) {
-          cond = sql`${cond} AND "wrongStreak" <= 2`
+        if (!stageSet.has('leech')) {
+          cond = sql`${cond} AND ("wrongStreak" <= 2 OR "wrongStreak" IS NULL)`
         }
 
         const result = await db.query(
@@ -502,7 +502,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
                 (it) =>
                   sql`(${[it.entry]}, ${[it.reading]}, ${[
                     userId,
-                  ]}, ${shortUUID.generate()})`
+                  ]}, ${shortUUID.uuid()})`
               ),
               ','
             )}
@@ -523,7 +523,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
             entries
               .flatMap((el) => dirs.map((dir) => ({ dir, el })))
               .map(({ dir, el }) => {
-                const id = shortUUID.generate()
+                const id = shortUUID.uuid()
 
                 const v = ids.get(el) || []
                 v.push(id)
@@ -595,9 +595,9 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         SELECT
           "id",
           "entry",
-          "srsLevel"
+          COALESCE("srsLevel", -1) "srsLevel"
         FROM "quiz"
-        WHERE "userId" = ${userId} AND ${cond} AND "srsLevel" IS NOT NULL
+        WHERE "userId" = ${userId} AND ${cond}
         `)
 
         return { result }
@@ -666,11 +666,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
     const makeExtra = new QSplit({
       default(v) {
         return sql`(${sql.join(
-          [
-            this.fields.entry[':'](v),
-            this.fields.description[':'](v),
-            this.fields.tag[':'](v),
-          ],
+          [this.fields.entry[':'](v), this.fields.description[':'](v)],
           ' OR '
         )})`
       },
@@ -679,7 +675,6 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           ':': (v) => sql`"entry" &@ ${v}`,
         },
         description: { ':': (v) => sql`"description" &@ ${v}` },
-        tag: { ':': (v) => sql`${v} = ANY("tag")` },
       },
     })
 

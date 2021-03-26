@@ -318,10 +318,10 @@ declare namespace Paths {
     namespace Responses {
       export interface $200 {
         result: {
-          id: string;
-          entry: string;
-          type: string;
-          direction: string;
+          id?: string;
+          entry?: string;
+          type?: string;
+          direction?: string;
         }[];
       }
     }

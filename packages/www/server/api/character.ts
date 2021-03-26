@@ -187,28 +187,30 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         }
 
         const result = await db.query(sql`
-        SELECT "entry", "english"[1] "english"
-        FROM sentence
-        WHERE (
-          "userId" IS NULL OR "userId" = ${userId}
-        ) AND "entry" &@ ${entry} AND NOT "isTrad"
-        ORDER BY RANDOM()
-        LIMIT ${limit}
-        `)
-
-        if (result.length < limit) {
-          result.push(
-            ...(await db.query(sql`
-          SELECT "entry", "english"[1] "english"
+        WITH match_cte AS (
+          SELECT "entry", "english"[1] "english", "isTrad"
           FROM sentence
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND "entry" &@ ${entry} AND "isTrad"
-          ORDER BY RANDOM()
-          LIMIT ${limit - result.length}
-          `))
-          )
-        }
+          ) AND "entry" &@ ${entry}
+        )
+
+        SELECT *
+        FROM (
+          SELECT * FROM (
+            SELECT "entry", "english"
+            FROM match_cte WHERE NOT "isTrad"
+            ORDER BY RANDOM()
+          ) t1
+          UNION
+          SELECT * FROM (
+            SELECT "entry", "english"
+            FROM match_cte WHERE "isTrad"
+            ORDER BY RANDOM()
+          ) t1
+        ) t2
+        LIMIT ${limit}
+        `)
 
         return {
           result,

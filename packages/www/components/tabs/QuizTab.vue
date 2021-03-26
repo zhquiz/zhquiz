@@ -8,14 +8,14 @@
             <b-field class="flex-wrap">
               <b-checkbox-button
                 v-model="type"
-                native-value="hanzi"
+                native-value="character"
                 type="is-success"
               >
                 Hanzi
               </b-checkbox-button>
               <b-checkbox-button
                 v-model="type"
-                native-value="vocab"
+                native-value="vocabulary"
                 type="is-success"
               >
                 Vocab
@@ -69,7 +69,6 @@
           <div class="field">
             <label class="label">Extras</label>
             <div class="control">
-              <b-switch v-model="includeExtra">User items</b-switch>
               <b-switch v-model="includeUndue">Include undue</b-switch>
             </div>
           </div>
@@ -80,21 +79,14 @@
             <b-field class="flex-wrap">
               <b-checkbox-button
                 v-model="direction"
-                native-value="se"
+                native-value="entry-first"
                 type="is-success"
               >
                 Simplified-English
               </b-checkbox-button>
               <b-checkbox-button
                 v-model="direction"
-                native-value="te"
-                type="is-success"
-              >
-                Traditional-English
-              </b-checkbox-button>
-              <b-checkbox-button
-                v-model="direction"
-                native-value="ec"
+                native-value="english-first"
                 type="is-success"
               >
                 English-Chinese
@@ -107,7 +99,7 @@
             <b-field label="Filter">
               <b-input
                 v-model="q"
-                placeholder="Try level:>10,<=20 or tag:HSK4"
+                placeholder="Try level>10, level<=20 or tag:HSK4"
                 type="search"
               />
             </b-field>
@@ -267,9 +259,9 @@ export default class QuizPage extends Vue {
 
   q = ''
 
-  type: IQuizType[] = ['character', 'vocabulary', 'sentence']
+  type: IQuizType[] = ['character', 'vocabulary']
   stage = ['new', 'leech', 'learning']
-  direction = ['se']
+  direction = ['entry-first']
 
   includeExtra = true
   includeUndue = false
