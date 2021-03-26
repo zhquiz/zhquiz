@@ -13,7 +13,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
     const sResult = S.shape({
       level: S.integer().optional(),
       levelMin: S.integer().optional(),
-      quizSettings: S.object().additionalProperties(true),
+      quizSettings: S.object().additionalProperties(true).optional(),
       levelBrowser: S.list(S.string()).optional(),
     })
 
@@ -63,7 +63,12 @@ const userRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
-        return r
+        return {
+          level: r.level || undefined,
+          levelMin: r.levelMin || undefined,
+          quizSettings: r.quizSettings || undefined,
+          levelBrowser: r.levelBrowser || undefined,
+        }
       }
     )
   }

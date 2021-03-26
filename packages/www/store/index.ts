@@ -24,7 +24,7 @@ export const mutations = mutationTree(state, {
   },
   SET_IS_APP(state, isApp: boolean) {
     state.isApp = isApp
-  }
+  },
 })
 
 export const actions = actionTree(
@@ -34,7 +34,8 @@ export const actions = actionTree(
       let isApp = true
 
       if (process.browser && process.env.MAGIC_PUBLIC) {
-        this.app.$axios.defaults.headers = this.app.$axios.defaults.headers || {}
+        this.app.$axios.defaults.headers =
+          this.app.$axios.defaults.headers || {}
 
         const magic = new Magic(process.env.MAGIC_PUBLIC)
         isApp = await magic.user
@@ -53,33 +54,23 @@ export const actions = actionTree(
     },
     async updateSettings({ commit }) {
       const r = await this.app.$axios
-        .get('/api/user/', {
-          params: {
-            select: [
-              'level',
-              'levelMin',
-              'settings.sentence.min',
-              'settings.sentence.max',
-            ],
-          },
+        .userGetSettings({
+          select: 'level,levelMin',
         })
         .then((r) => r.data)
 
       if (!r.level || !r.levelMin) {
-        r.level = 3
+        r.level = 10
         r.levelMin = 1
 
-        await this.app.$axios.patch('/api/user', {
-          level: r.level,
-          levelMin: r.levelMin,
-        })
+        await this.app.$axios.userUpdateSettings(null, r)
       }
 
       commit('SET_SETTINGS', {
         level: r.level,
         levelMin: r.levelMin,
-        sentenceMin: r['settings.sentence.min'] || null,
-        sentenceMax: r['settings.sentence.max'] || null,
+        sentenceMin: null,
+        sentenceMax: null,
       })
     },
   }

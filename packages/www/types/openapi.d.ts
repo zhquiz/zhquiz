@@ -100,6 +100,9 @@ declare namespace Paths {
       export interface $200 {
         result: {
           entry: string;
+          alt: string[];
+          reading: string[];
+          english: string[];
         }[];
       }
     }
@@ -488,7 +491,7 @@ declare namespace Paths {
       export interface $200 {
         level?: number;
         levelMin?: number;
-        quizSettings: {
+        quizSettings?: {
           [name: string]: any;
         };
         levelBrowser?: string[];

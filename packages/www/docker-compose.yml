@@ -23,6 +23,7 @@ services:
     volumes:
       - zhquiz:/var/lib/postgresql/data
       - ./node_modules:/app/node_modules
+      - ./assets:/app/assets
       - ./server:/app/server
       - ./types:/app/types
     entrypoint: |

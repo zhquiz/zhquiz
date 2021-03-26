@@ -66,6 +66,9 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       result: S.list(
         S.shape({
           entry: S.string(),
+          alt: S.list(S.string()),
+          reading: S.list(S.string()),
+          english: S.list(S.string()),
         })
       ),
     })
@@ -97,32 +100,43 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         const fThreshold = 1
 
-        const result = await db.query(sql`
-        SELECT "entry"[1] "entry"
-        FROM vocabulary
-        WHERE (
-          "userId" IS NULL OR "userId" = ${userId}
-        ) AND frequency > ${fThreshold} AND "entry" &@ ${entry}
-        ORDER BY RANDOM()
-        LIMIT ${limit}
-        `)
-
-        if (result.length < limit) {
-          req.log.info(
-            `result.length = ${result.length}. Getting rarer entries.`
-          )
-
-          result.push(
-            ...(await db.query(sql`
-          SELECT "entry"[1] "entry"
+        let result = await db.query(sql`
+        WITH match_cte AS (
+          SELECT
+            "entry"[1] "entry",
+            "entry"[2:]||'{}'::text[] "alt",
+            "pinyin" "reading",
+            "english",
+            "frequency"
           FROM vocabulary
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND NOT (frequency > ${fThreshold}) AND "entry" &@ ${entry}
+          ) AND "entry" &@ ${entry}
           ORDER BY RANDOM()
-          LIMIT ${limit - result.length}
-          `))
-          )
+        )
+
+        SELECT *
+        FROM (
+          SELECT * FROM (
+            SELECT * FROM match_cte
+            WHERE "frequency" > ${fThreshold}
+          ) t2
+          UNION ALL
+          SELECT * FROM (
+            SELECT * FROM match_cte
+            WHERE "frequency" < ${fThreshold}
+          ) t2
+          UNION ALL
+          SELECT * FROM (
+            SELECT * FROM match_cte
+            WHERE "frequency" IS NULL
+          ) t2
+        ) t1
+        LIMIT ${limit}
+        `)
+
+        if (result[0] && result[0].frequency) {
+          result = result.filter((r) => r.frequency)
         }
 
         return {

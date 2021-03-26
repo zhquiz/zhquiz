@@ -192,6 +192,8 @@ interface ILeechCard {
 
 @Component<QuizPage>({
   async created() {
+    this.$emit('title', 'Quiz')
+
     const { data: r } = await this.$axios.userGetSettings({
       select: 'quizSettings',
     })

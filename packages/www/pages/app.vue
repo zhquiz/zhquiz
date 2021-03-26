@@ -95,7 +95,7 @@
       </ul>
     </nav>
 
-    <main v-if="isReady">
+    <main class="container mt-3" v-if="isReady">
       <component
         :is="t.component + 'Tab'"
         v-for="(t, i) in tabs"
@@ -123,6 +123,7 @@ import { Component, Vue } from 'nuxt-property-decorator'
   },
   async mounted() {
     await this.$accessor.setCredentials()
+    await this.$accessor.updateSettings()
 
     if (!this.$accessor.isApp) {
       this.$router.replace('/')
@@ -161,12 +162,12 @@ export default class AppPage extends Vue {
         icon: 'chalkboard-teacher',
       },
       {
-        component: 'Hanzi',
+        component: 'Character',
         text: '字',
         className: 'font-han',
       },
       {
-        component: 'Vocab',
+        component: 'Vocabulary',
         text: '词',
         className: 'font-han',
       },
