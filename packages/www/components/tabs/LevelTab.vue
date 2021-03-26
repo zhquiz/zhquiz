@@ -79,7 +79,6 @@
 <script lang="ts">
 import { Component, Ref, Vue } from 'vue-property-decorator'
 import ContextMenu from '@/components/ContextMenu.vue'
-import toPinyin from 'chinese-to-pinyin'
 
 @Component<LevelPage>({
   components: {
@@ -186,15 +185,13 @@ export default class LevelPage extends Vue {
 
   async init() {
     const {
-      data: { 'settings.level.whatToShow': whatToShow = null },
-    } = await this.$axios.get('/api/user', {
-      params: {
-        select: ['settings.level.whatToShow'],
-      },
+      data: { levelBrowser: whatToShow = [] },
+    } = await this.$axios.userGetSettings({
+      select: 'levelBrowser',
     })
 
     if (whatToShow) {
-      this.whatToShow = (whatToShow as unknown) as string
+      this.whatToShow = whatToShow[0]
     }
 
     await this.reload([])
@@ -205,22 +202,9 @@ export default class LevelPage extends Vue {
     if (this.currentData.length === 0) {
       const {
         data: { result },
-      } = await this.$axios.get<{
-        result: {
-          entry: string
-          source?: string
-          level: number
-        }[]
-      }>('/api/vocab/level')
+      } = await this.$axios.vocabularyListLevel()
 
-      entries = result.map(({ entry, source, level }) => {
-        if (source && source !== 'cedict') {
-          this.pinyinMap[entry] = toPinyin(entry, {
-            keepRest: true,
-            toneToNumber: true,
-          })
-        }
-
+      entries = result.map(({ entry, level }) => {
         const lv = level.toString()
         const levelData = this.allData[lv] || []
         levelData.push(entry)
@@ -236,25 +220,19 @@ export default class LevelPage extends Vue {
     if (entries.length > 0) {
       const {
         data: { result = [] },
-      } = await this.$axios.post<{
-        result: {
-          entry: string
-          srsLevel: number | null
-        }[]
-      }>('/api/quiz/srsLevel', {
-        entries,
-        type: 'vocab',
-        select: ['entry', 'srsLevel'],
+      } = await this.$axios.quizGetSrsLevel(null, {
+        entry: entries,
+        type: 'vocabulary',
       })
 
       // eslint-disable-next-line array-callback-return
       entries.map((entry) => {
-        delete this.srsLevel[entry]
+        this.srsLevel[entry] = -1
       })
 
       // eslint-disable-next-line array-callback-return
       result.map(({ entry, srsLevel }) => {
-        this.srsLevel[entry] = typeof srsLevel === 'number' ? srsLevel : -1
+        this.srsLevel[entry] = srsLevel
       })
 
       this.$set(this, 'srsLevel', this.srsLevel)
@@ -264,9 +242,8 @@ export default class LevelPage extends Vue {
 
   async onWhatToShowChanged() {
     this.setCurrentData()
-
-    await this.$axios.patch('/api/user', {
-      'settings.level.whatToShow': this.whatToShow,
+    await this.$axios.userUpdateSettings(null, {
+      levelBrowser: [this.whatToShow],
     })
   }
 }

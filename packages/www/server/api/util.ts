@@ -94,5 +94,5 @@ const utilRouter: FastifyPluginAsync = async (f) => {
 export default utilRouter
 
 export async function makeReading(el: string) {
-  return toPinyin(el, { keepRest: true })
+  return toPinyin(el, { keepRest: true, toneToNumber: true })
 }

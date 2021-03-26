@@ -158,19 +158,11 @@ export default class ContextMenu extends Vue {
     if (this.entry && this.type) {
       const {
         data: { result },
-      } = await this.$axios.get<{
-        result: {
-          id: string
-          entry: string
-        }[]
-      }>('/api/quiz/many', {
-        params: {
-          entries: this.entries,
-          select: ['id', 'entry'],
-          type: this.type,
-          source: this.source,
-          direction: this.direction,
-        },
+      } = await this.$axios.quizGetMany(null, {
+        entry: this.entries,
+        select: ['id', 'entry'],
+        type: this.type,
+        direction: this.direction,
       })
 
       const entryMap = new Map<string, string[]>()
@@ -211,10 +203,8 @@ export default class ContextMenu extends Vue {
 
   async doDelete() {
     if (this.id) {
-      await this.$axios.delete('/api/extra', {
-        params: {
-          id: this.id,
-        },
+      await this.$axios.extraDelete({
+        id: this.id,
       })
     }
 
@@ -231,18 +221,9 @@ export default class ContextMenu extends Vue {
     if (this.entries.length && this.type) {
       const {
         data: { result },
-      } = await this.$axios.put<{
-        result: {
-          ids: string[]
-          entry: string
-        }[]
-      }>('/api/quiz', {
-        entries: this.entries,
-        type: this.type,
-        source: this.source,
-        description: this.description,
-        pinyin: this.pinyin,
-        english: this.english,
+      } = await this.$axios.quizCreate(null, {
+        entry: this.entries,
+        type: this.type as any,
       })
 
       this.$buefy.snackbar.open(
@@ -265,34 +246,28 @@ export default class ContextMenu extends Vue {
   }
 
   async removeFromQuiz() {
-    const ids = this.quiz.db.reduce(
-      (prev, c) => [...prev, ...c.ids],
-      [] as string[]
+    await this.$axios.quizDeleteMany(null, {
+      entry: this.entries,
+      type: this.type as any,
+    })
+
+    this.$buefy.snackbar.open(
+      `Removed ${this.type}: ${this.entries.slice(0, 3).join(', ')}${
+        this.entries.length > 3 ? '...' : ''
+      }  from quiz`
     )
 
-    if (this.entries.length && this.type && ids.length) {
-      await this.$axios.post('/api/quiz/delete', {
-        ids,
-      })
-
-      this.$buefy.snackbar.open(
-        `Removed ${this.type}: ${this.entries.slice(0, 3).join(', ')}${
-          this.entries.length > 3 ? '...' : ''
-        }  from quiz`
-      )
-
-      const { db } = this.quiz
-      this.quiz = {
-        ...this.quiz,
-        db: [],
-      }
-
-      this.$emit('quiz:removed', {
-        entries: this.entries,
-        type: this.type,
-        db,
-      })
+    const { db } = this.quiz
+    this.quiz = {
+      ...this.quiz,
+      db: [],
     }
+
+    this.$emit('quiz:removed', {
+      entries: this.entries,
+      type: this.type,
+      db,
+    })
   }
 }
 </script>

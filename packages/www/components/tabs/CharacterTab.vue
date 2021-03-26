@@ -309,9 +309,7 @@ export default class HanziPage extends Vue {
           handler: async () => {
             const {
               data: { result },
-            } = await this.$axios.get<{
-              result: string
-            }>('/api/hanzi/random')
+            } = await this.$axios.characterRandom()
 
             this.q0 = result
           },
@@ -339,16 +337,8 @@ export default class HanziPage extends Vue {
       const qs = q.split('').filter((h) => /\p{sc=Han}/u.test(h))
       this.entries = qs.filter((h, i) => qs.indexOf(h) === i)
     } else {
-      const r = await this.$axios.get<{
-        result: {
-          entry: string
-        }[]
-      }>('/api/hanzi/q', {
-        params: {
-          q,
-        },
-      })
-      this.entries = r.data.result.map(({ entry }) => entry)
+      const r = await this.$axios.characterQuery({ q })
+      this.entries = r.data.result
     }
 
     this.i = 0
@@ -369,26 +359,20 @@ export default class HanziPage extends Vue {
   }
 
   async loadHanzi() {
-    const r = await this.$axios
-      .get('/api/character/radical', {
-        params: {
-          entry: this.current,
-        },
-      })
-      .then((r) => r.data)
+    const { data: r } = await this.$axios.characterRadical({
+      entry: this.current,
+    })
 
-    this.sub = [...r.sub]
-    this.sup = [...r.sup]
-    this.variants = [...r.variants]
+    this.sub = r.sub
+    this.sup = r.sup
+    this.variants = r.var
   }
 
   async loadVocab() {
     const {
       data: { result },
-    } = await this.$axios.get('/api/vocabulary/q', {
-      params: {
-        q: this.current,
-      },
+    } = await this.$axios.characterVocabulary({
+      entry: this.current,
     })
     this.vocabs = result
   }

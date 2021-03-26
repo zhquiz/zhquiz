@@ -343,12 +343,9 @@ export interface IQuizData {
   id: string
   type?: IQuizType
   direction?: string
-  srsLevel?: number
+  entry?: string
   nextReview?: string
   wrongStreak?: number
-  stat?: unknown
-  entry?: string
-  tag?: string[]
 }
 
 @Component
@@ -370,8 +367,21 @@ export default class QuizCard extends Vue {
   } = {}
 
   dictionaryData = {
-    character: {} as Record<string, Record<string, unknown>>,
-    vocabulary: {} as Record<string, Record<string, unknown>>,
+    character: {} as Record<
+      string,
+      {
+        reading: string[]
+        english: string[]
+      }
+    >,
+    vocabulary: {} as Record<
+      string,
+      {
+        alt: string[]
+        reading: string[]
+        english: string[]
+      }
+    >,
   }
 
   current: Record<string, unknown> = {}
@@ -402,11 +412,13 @@ export default class QuizCard extends Vue {
     const id = this.quizArray[this.quizIndex] as string | undefined
 
     if (id) {
-      await this.$axios.patch('/api/quiz/mark', undefined, {
-        params: {
-          id,
-          type,
-        },
+      this.$axios.quizUpdateSrsLevel({
+        id,
+        dLevel: {
+          right: 1,
+          wrong: -1,
+          repeat: 0,
+        }[type],
       })
     }
     this.initNextQuizItem()
@@ -524,28 +536,19 @@ export default class QuizCard extends Vue {
         data: {
           result: [r],
         },
-      } = await this.$axios.get<{
-        result: IQuizData[]
-      }>('/api/quiz/many', {
-        params: {
-          ids: [quizId],
-          select: [
-            'entry',
-            'type',
-            'source',
-            'direction',
-            'front',
-            'back',
-            'mnemonic',
-          ],
-        },
+      } = await this.$axios.quizGetMany(null, {
+        id: [quizId],
+        select: ['entry', 'type', 'direction'],
       })
 
       if (r) {
         if (q) {
           Object.assign(q, r)
         } else {
-          q = r
+          q = {
+            ...r,
+            type: r.type as IQuizType,
+          }
         }
 
         q.id = quizId
@@ -565,26 +568,19 @@ export default class QuizCard extends Vue {
 
     if (type === 'sentence') {
       await this.$axios
-        .get<{
-          id: string
-          chinese: string
-          english: string
-        }>('/api/sentence', {
-          params: {
-            entry,
-            select: 'chinese,english',
-          },
+        .sentenceGetByEntry({
+          entry,
         })
         .then(({ data: r }) => {
-          const oldSentence = zhSentence.findOne({ chinese: r.chinese })
+          const oldSentence = zhSentence.findOne({ chinese: r.entry })
 
           if (!oldSentence) {
             zhSentence.insert({
-              chinese: r.chinese,
-              pinyin: toPinyin(r.chinese, {
+              chinese: r.entry,
+              pinyin: toPinyin(r.entry, {
                 keepRest: true,
               }),
-              english: r.english.split('\x1F')[0],
+              english: r.english[0],
             })
           }
         })
@@ -598,15 +594,7 @@ export default class QuizCard extends Vue {
         character: async () => {
           const {
             data: { reading, english },
-          } = await this.$axios.get<{
-            reading: string
-            english: string
-          }>('/api/character', {
-            params: {
-              entry,
-              select: 'reading,english',
-            },
-          })
+          } = await this.$axios.characterGetByEntry({ entry })
 
           this.dictionaryData.character[entry] = {
             reading,
@@ -620,37 +608,13 @@ export default class QuizCard extends Vue {
           }
         },
         vocabulary: async () => {
-          const { traditional, pinyin, english } =
+          const { alt, reading, english } =
             this.dictionaryData.vocabulary[entry] ||
-            (await this.$axios
-              .get<{
-                result: {
-                  traditional?: string
-                  pinyin: string
-                  english: string
-                }[]
-              }>('/api/vocabulary', {
-                params: {
-                  entry,
-                  select: 'traditional,pinyin,english',
-                },
-              })
-              .then(({ data: { result } }) => {
-                return {
-                  traditional: result
-                    .map(({ traditional }) => traditional || '')
-                    .filter((r) => r)
-                    .filter((a, i, arr) => arr.indexOf(a) === i),
-                  pinyin: result
-                    .map(({ pinyin }) => pinyin)
-                    .filter((a, i, arr) => arr.indexOf(a) === i),
-                  english: result.map(({ english }) => english),
-                }
-              }))
+            (await this.$axios.vocabularyGetByEntry({ entry }))
 
           this.dictionaryData.vocabulary[entry] = {
-            traditional,
-            pinyin,
+            alt,
+            reading,
             english,
           }
 

@@ -72,7 +72,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
     const sBody = S.shape({
       level: S.integer().optional(),
       levelMin: S.integer().optional(),
-      quizSettings: S.object().additionalProperties(true),
+      quizSettings: S.object().additionalProperties(true).optional(),
       levelBrowser: S.list(S.string()).optional(),
     })
 

@@ -14,33 +14,40 @@ import { lookupVocabulary } from './vocabulary'
 
 const quizRouter: FastifyPluginAsync = async (f) => {
   {
-    const sQueryQ = S.shape({
-      id: S.string(),
-      entry: S.string(),
-      type: S.string(),
-      direction: S.string(),
-      select: S.string(),
+    const sBody = S.shape({
+      id: S.list(S.string()).optional(),
+      entry: S.list(S.string()).optional(),
+      type: S.string().optional(),
+      direction: S.string().optional(),
+      select: S.list(S.string()),
     })
 
     const sResult = S.shape({
-      result: S.list(S.object()),
+      result: S.list(
+        S.shape({
+          id: S.string(),
+          entry: S.string(),
+          type: S.string(),
+          direction: S.string(),
+        })
+      ),
     })
 
-    f.get<{
-      Querystring: typeof sQueryQ.type
+    f.post<{
+      Body: typeof sBody.type
     }>(
-      '/',
+      '/getMany',
       {
         schema: {
-          operationId: 'quizGetOne',
-          querystring: sQueryQ.valueOf(),
+          operationId: 'quizGetMany',
+          body: sBody.valueOf(),
           response: {
             200: sResult.valueOf(),
           },
         },
       },
       async (req): Promise<typeof sResult.type> => {
-        const { id, entry, type, direction, select } = req.query
+        const { id, entry, type, direction, select } = req.body
 
         const userId: string = req.session.get('userId')
         if (!userId) {
@@ -54,10 +61,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           direction: sql`"direction"`,
         }
 
-        const sel = select
-          .split(',')
-          .map((s) => selMap[s])
-          .filter((s) => s)
+        const sel = select.map((s) => selMap[s]).filter((s) => s)
 
         if (!sel.length || !(id || entry || type || direction)) {
           throw { statusCode: 400, message: 'not enough select' }
@@ -188,11 +192,11 @@ const quizRouter: FastifyPluginAsync = async (f) => {
   }
 
   {
-    const sQuerystring = S.shape({
+    const sBody = S.shape({
       q: S.string().optional(),
-      type: S.string(),
-      stage: S.string(),
-      direction: S.string(),
+      type: S.list(S.string()),
+      stage: S.list(S.string()),
+      direction: S.list(S.string()),
       includeUndue: S.boolean(),
     })
 
@@ -213,29 +217,37 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       ),
     })
 
-    f.get<{
-      Querystring: typeof sQuerystring.type
+    f.post<{
+      Body: typeof sBody.type
     }>(
       '/init',
       {
         schema: {
           operationId: 'quizInit',
-          querystring: sQuerystring.valueOf(),
+          body: sBody.valueOf(),
           response: {
             200: sResult.valueOf(),
           },
         },
       },
       async (req): Promise<typeof sResult.type> => {
-        const { q = '', type, stage, direction, includeUndue } = req.query
+        const { q = '', type, stage, direction, includeUndue } = req.body
 
         const userId: string = req.session.get('userId')
         if (!userId) {
           throw { statusCode: 401 }
         }
 
+        db.query(
+          sql`
+        UPDATE "user"
+        SET "quiz.settings" = ${req.body}
+        WHERE "id" = ${userId}
+        `
+        )
+
         const orCond: SQLQuery[] = []
-        const stageSet = new Set(stage.split(','))
+        const stageSet = new Set(stage)
         if (stageSet.has('new')) {
           orCond.push(sql`"srsLevel" IS NULL`)
         }
@@ -260,8 +272,8 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           "id"
         FROM "quiz"
         WHERE "userId" = ${userId}
-          AND "type" = ANY(${type.split(',')})
-          AND "direction" = ANY(${direction.split(',')})
+          AND "type" = ANY(${type})
+          AND "direction" = ANY(${direction})
           AND ${cond}
           AND ${parseQ(q, userId)}
         `
@@ -321,7 +333,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
   {
     const sQuery = S.shape({
       id: S.string(),
-      dLevel: S.integer().enum(0, 1, -1),
+      dLevel: S.integer(),
     })
 
     const sResult = S.shape({
@@ -427,37 +439,40 @@ const quizRouter: FastifyPluginAsync = async (f) => {
   }
 
   {
-    const sQuery = S.shape({
-      entry: S.string(),
+    const sBody = S.shape({
+      entry: S.list(S.string()),
       type: S.string().enum('character', 'vocabulary', 'sentence'),
     })
 
     const sResult = S.shape({
-      ids: S.list(S.string()),
+      result: S.list(
+        S.shape({
+          ids: S.list(S.string()),
+          entry: S.string(),
+        })
+      ),
     })
 
     f.put<{
-      Querystring: typeof sQuery.type
+      Body: typeof sBody.type
     }>(
       '/',
       {
         schema: {
           operationId: 'quizCreate',
-          querystring: sQuery.valueOf(),
+          body: sBody.valueOf(),
           response: {
             201: sResult.valueOf(),
           },
         },
       },
       async (req, reply): Promise<typeof sResult.type> => {
-        const { entry, type } = req.query
+        const { entry: entries, type } = req.body
 
         const userId: string = req.session.get('userId')
         if (!userId) {
           throw { statusCode: 401 }
         }
-
-        const entries = entry.split(',')
 
         const missingEntries = await Promise.all(
           entries.map(async (el) => {
@@ -495,7 +510,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           })
         }
 
-        const ids: string[] = []
+        const ids = new Map<string, string[]>()
         let dirs = ['entry-first', 'reading-first', 'english-first']
         if (type === 'sentence') {
           dirs = ['entry-first', 'english-first']
@@ -509,7 +524,11 @@ const quizRouter: FastifyPluginAsync = async (f) => {
               .flatMap((el) => dirs.map((dir) => ({ dir, el })))
               .map(({ dir, el }) => {
                 const id = shortUUID.generate()
-                ids.push(id)
+
+                const v = ids.get(el) || []
+                v.push(id)
+                ids.set(el, v)
+
                 return sql`(${el}, ${type}, ${dir}, ${userId}, ${id})`
               }),
             ','
@@ -518,16 +537,18 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         })
 
         reply.status(201)
-        return { ids }
+        return {
+          result: Array.from(ids).map(([entry, ids]) => ({ entry, ids })),
+        }
       }
     )
   }
 
   {
-    const sQuery = S.shape({
-      id: S.string().optional(),
-      entry: S.string().optional(),
-      type: S.string().enum('character', 'vocabulary', 'sentence'),
+    const sBody = S.shape({
+      id: S.list(S.string()).optional(),
+      entry: S.list(S.string()).optional(),
+      type: S.string().enum('character', 'vocabulary', 'sentence').optional(),
     })
 
     const sResult = S.shape({
@@ -540,21 +561,21 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       ),
     })
 
-    f.get<{
-      Querystring: typeof sQuery.type
+    f.post<{
+      Body: typeof sBody.type
     }>(
-      '/srsLevel',
+      '/getSrsLevel',
       {
         schema: {
           operationId: 'quizGetSrsLevel',
-          querystring: sQuery.valueOf(),
+          body: sBody.valueOf(),
           response: {
             200: sResult.valueOf(),
           },
         },
       },
       async (req): Promise<typeof sResult.type> => {
-        const { id, entry, type } = req.query
+        const { id, entry, type } = req.body
 
         const userId: string = req.session.get('userId')
         if (!userId) {
@@ -563,10 +584,9 @@ const quizRouter: FastifyPluginAsync = async (f) => {
 
         let cond: SQLQuery
         if (id) {
-          cond = sql`"id" = ANY(${id.split(',')})`
-        } else if (entry) {
-          const entries = entry.split(',')
-          cond = sql`"type" = ${type} AND "entry" = ANY(${entries})`
+          cond = sql`"id" = ANY(${id})`
+        } else if (entry && type) {
+          cond = sql`"type" = ${type} AND "entry" = ANY(${entry})`
         } else {
           throw { statusCode: 400, message: 'either id or entry must exists' }
         }
@@ -586,28 +606,28 @@ const quizRouter: FastifyPluginAsync = async (f) => {
   }
 
   {
-    const sQuery = S.shape({
-      id: S.string().optional(),
-      entry: S.string().optional(),
-      type: S.string().enum('character', 'vocabulary', 'sentence'),
+    const sBody = S.shape({
+      id: S.list(S.string()).optional(),
+      entry: S.list(S.string()).optional(),
+      type: S.string().enum('character', 'vocabulary', 'sentence').optional(),
     })
 
     const sResult = S.shape({
       result: S.string(),
     })
 
-    f.delete<{
-      Querystring: typeof sQuery.type
+    f.post<{
+      Body: typeof sBody.type
     }>(
-      '/',
+      '/deleteMany',
       {
         schema: {
-          operationId: 'quizDelete',
-          querystring: sQuery.valueOf(),
+          operationId: 'quizDeleteMany',
+          body: sBody.valueOf(),
         },
       },
       async (req, reply): Promise<typeof sResult.type> => {
-        const { id, entry, type } = req.query
+        const { id, entry, type } = req.body
 
         const userId: string = req.session.get('userId')
         if (!userId) {
@@ -616,10 +636,9 @@ const quizRouter: FastifyPluginAsync = async (f) => {
 
         let cond: SQLQuery
         if (id) {
-          cond = sql`"id" = ANY(${id.split(',')})`
-        } else if (entry) {
-          const entries = entry.split(',')
-          cond = sql`"type" = ${type} AND "entry" = ANY(${entries})`
+          cond = sql`"id" = ANY(${id})`
+        } else if (entry && type) {
+          cond = sql`"type" = ${type} AND "entry" = ANY(${entry})`
         } else {
           throw { statusCode: 400, message: 'either id or entry must exists' }
         }

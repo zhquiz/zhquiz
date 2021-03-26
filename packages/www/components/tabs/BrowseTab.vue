@@ -121,24 +121,18 @@ import toPinyin from 'chinese-to-pinyin'
 
 interface IExtra {
   id?: string
-  chinese: string
-  pinyin: string
-  english: string
+  entry: string[]
+  reading: string[]
+  english: string[]
   type: 'character' | 'vocabulary' | 'sentence'
-  description: string
-  tag: string
+  description?: string
+  tag: string[]
 }
 
 @Component<ExtraPage>({
   components: {
     ContextMenu,
   },
-  head() {
-    return {
-      title: 'Browse - ZhQuiz',
-    }
-  },
-  layout: 'app',
 })
 export default class ExtraPage extends Vue {
   @Ref() context!: ContextMenu
@@ -149,9 +143,9 @@ export default class ExtraPage extends Vue {
   page = 1
   tableData: IExtra[] = []
   readonly tableHeader = [
-    { field: 'chinese', label: 'Chinese', sortable: true },
-    { field: 'pinyin', label: 'Pinyin', sortable: true },
-    { field: 'english', label: 'English', sortable: true, width: '40vw' },
+    { field: 'entry', label: 'Entry' },
+    { field: 'reading', label: 'Pinyin' },
+    { field: 'english', label: 'English', width: '40vw' },
   ]
 
   isEditModal = false
@@ -163,12 +157,12 @@ export default class ExtraPage extends Vue {
 
   selected: IExtra = {
     id: '',
-    chinese: '',
-    pinyin: '',
-    english: '',
+    entry: [],
+    reading: [],
+    english: [],
     type: 'vocabulary',
     description: '',
-    tag: '',
+    tag: [],
   }
 
   additionalContext = [
@@ -196,11 +190,17 @@ export default class ExtraPage extends Vue {
   }
 
   openEditModal() {
-    if (!this.selected.pinyin) {
-      this.selected.pinyin = toPinyin(this.selected.chinese, {
-        keepRest: true,
-        toneToNumber: true,
-      })
+    if (!this.selected.reading.length && this.selected.reading.length) {
+      this.selected.reading = [
+        toPinyin(this.selected.entry[0], {
+          keepRest: true,
+          toneToNumber: true,
+        }),
+      ]
+    }
+
+    if (!this.selected.description) {
+      this.$set(this.selected, 'description', '')
     }
 
     this.isEditModal = true
@@ -212,22 +212,10 @@ export default class ExtraPage extends Vue {
   async load() {
     const {
       data: { result, count },
-    } = await this.$axios.get('/api/extra/q', {
-      params: {
-        q: this.q,
-        page: this.page,
-        perPage: this.perPage,
-        sort: [`${this.sort.type === 'desc' ? '-' : ''}${this.sort.key}`],
-        select: [
-          'id',
-          'chinese',
-          'pinyin',
-          'english',
-          'type',
-          'description',
-          'tag',
-        ],
-      },
+    } = await this.$axios.extraQuery({
+      q: this.q,
+      page: this.page,
+      limit: this.perPage,
     })
 
     this.tableData = result
@@ -235,70 +223,58 @@ export default class ExtraPage extends Vue {
   }
 
   async doCreate() {
-    this.selected.description = this.selected.description || ' '
-    this.selected.tag = this.selected.tag || ' '
-
     const {
-      data: { existing, id },
-    } = await this.$axios.put('/api/extra', this.selected)
+      data: { id },
+    } = await this.$axios.extraCreate(null, {
+      ...this.selected,
+      description: this.selected.description || '',
+    })
 
-    if (id) {
-      await this.context.addToQuiz()
-      this.$buefy.snackbar.open(`Added extra: ${this.selected.chinese} to quiz`)
+    this.selected.id = id
 
-      await this.load()
-    } else if (existing) {
-      const { type, entry } = existing
-      await this.$axios.put('/api/quiz', {
-        entries: [entry],
-        type,
-        source: 'extra',
-      })
-
-      this.$buefy.snackbar.open(`Added ${type}: ${entry} to quiz`)
-    }
+    await this.context.addToQuiz()
+    this.$buefy.snackbar.open(`Added extra: ${this.selected.entry[0]} to quiz`)
 
     this.isEditModal = false
     await this.load()
   }
 
   async doUpdate() {
-    this.selected.description = this.selected.description || ' '
-    this.selected.tag = this.selected.tag || ' '
+    const { id } = this.selected
 
-    await this.$axios.patch('/api/extra', this.selected, {
-      params: {
-        id: this.selected.id,
-      },
-    })
+    if (id) {
+      await this.$axios.extraUpdate(id, {
+        ...this.selected,
+        description: this.selected.description || '',
+      })
 
-    this.$buefy.snackbar.open(`Updated extra: ${this.selected.chinese}`)
+      this.$buefy.snackbar.open(`Updated extra: ${this.selected.entry[0]}`)
+    }
 
     this.isEditModal = false
     await this.load()
   }
 
   async doDelete() {
-    await this.$axios.delete('/api/extra', {
-      params: {
-        id: this.selected.id,
-      },
-    })
+    const { id } = this.selected
 
-    this.$buefy.snackbar.open(`Deleted extra: ${this.selected.chinese}`)
+    if (id) {
+      this.$axios.extraDelete({ id })
 
-    await this.load()
+      this.$buefy.snackbar.open(`Deleted extra: ${this.selected.entry[0]}`)
+      await this.load()
+    }
   }
 
   onNewItem() {
     this.selected = {
       id: '',
-      chinese: '',
-      pinyin: '',
-      english: '',
+      entry: [],
+      reading: [],
+      english: [],
       type: 'vocabulary',
       description: '',
-      tag: '',
+      tag: [],
     }
 
     this.isEditModal = true
@@ -308,7 +284,7 @@ export default class ExtraPage extends Vue {
     evt.preventDefault()
 
     this.selected = row
-    await this.context.open(evt)
+    this.context.open(evt)
   }
 
   async onSort(key: string, type: string) {

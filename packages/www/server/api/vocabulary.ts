@@ -183,7 +183,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
       '/q',
       {
         schema: {
-          operationId: 'vocabQuery',
+          operationId: 'vocabularyQuery',
           querystring: sQuery.valueOf(),
           response: {
             200: sResult.valueOf(),
@@ -276,7 +276,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
       '/random',
       {
         schema: {
-          operationId: 'entryRandom',
+          operationId: 'vocabularyRandom',
           response: { 200: sResult.valueOf() },
         },
       },

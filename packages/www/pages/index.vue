@@ -57,7 +57,6 @@ export default class HomePage extends Vue {
 
   async login() {
     if (this.magic) {
-      console.log('Logging in')
       this.magic.auth
         .loginWithMagicLink({ email: this.email })
         .then((token) => {

@@ -104,15 +104,6 @@ declare namespace Paths {
       }
     }
   }
-  namespace EntryRandom {
-    namespace Responses {
-      export interface $200 {
-        result: string;
-        english: string;
-        level: number;
-      }
-    }
-  }
   namespace ExtraCreate {
     export interface RequestBody {
       entry: string[];
@@ -204,65 +195,139 @@ declare namespace Paths {
       }
     }
   }
-  namespace QuizCreate {
-    namespace Parameters {
-      export type Entry = string;
-      export type Type = "character" | "vocabulary" | "sentence";
-    }
-    export interface QueryParameters {
-      entry: Parameters.Entry;
-      type: Parameters.Type;
+  namespace LibraryCreate {
+    export interface RequestBody {
+      entry: string[];
+      title: string;
+      type: string;
+      description: string;
+      tag: string[];
     }
     namespace Responses {
       export interface $201 {
-        ids: string[];
+        id: string;
       }
     }
   }
-  namespace QuizDelete {
+  namespace LibraryDelete {
     namespace Parameters {
-      export type Entry = string;
       export type Id = string;
-      export type Type = "character" | "vocabulary" | "sentence";
-    }
-    export interface QueryParameters {
-      id?: Parameters.Id;
-      entry?: Parameters.Entry;
-      type: Parameters.Type;
-    }
-  }
-  namespace QuizGetOne {
-    namespace Parameters {
-      export type Direction = string;
-      export type Entry = string;
-      export type Id = string;
-      export type Select = string;
-      export type Type = string;
     }
     export interface QueryParameters {
       id: Parameters.Id;
-      entry: Parameters.Entry;
-      type: Parameters.Type;
-      direction: Parameters.Direction;
-      select: Parameters.Select;
+    }
+    namespace Responses {
+      export interface $201 {
+        result: string;
+      }
+    }
+  }
+  namespace LibraryGetOne {
+    namespace Parameters {
+      export type Id = string;
+    }
+    export interface QueryParameters {
+      id: Parameters.Id;
+    }
+    namespace Responses {
+      export interface $200 {
+        entry: string[];
+        title: string;
+        type: string;
+        description: string;
+        tag: string[];
+      }
+    }
+  }
+  namespace LibraryQuery {
+    namespace Parameters {
+      export type Limit = number;
+      export type Page = number;
+      export type Q = string;
+    }
+    export interface QueryParameters {
+      q: Parameters.Q;
+      page?: Parameters.Page;
+      limit?: Parameters.Limit;
     }
     namespace Responses {
       export interface $200 {
         result: {
+          id?: string;
+          entry: string[];
+          title: string;
+          type: string;
+          description: string;
+          tag: string[];
+        }[];
+      }
+    }
+  }
+  namespace LibraryUpdate {
+    namespace Parameters {
+      export type Id = string;
+    }
+    export interface QueryParameters {
+      id: Parameters.Id;
+    }
+    export interface RequestBody {
+      entry?: string[];
+      title?: string;
+      type?: string;
+      description?: string;
+      tag?: string[];
+    }
+    namespace Responses {
+      export interface $201 {
+        result: string;
+      }
+    }
+  }
+  namespace QuizCreate {
+    export interface RequestBody {
+      entry: string[];
+      type: "character" | "vocabulary" | "sentence";
+    }
+    namespace Responses {
+      export interface $201 {
+        result: {
+          ids: string[];
+          entry: string;
+        }[];
+      }
+    }
+  }
+  namespace QuizDeleteMany {
+    export interface RequestBody {
+      id?: string[];
+      entry?: string[];
+      type?: "character" | "vocabulary" | "sentence";
+    }
+  }
+  namespace QuizGetMany {
+    export interface RequestBody {
+      id?: string[];
+      entry?: string[];
+      type?: string;
+      direction?: string;
+      select: string[];
+    }
+    namespace Responses {
+      export interface $200 {
+        result: {
+          id: string;
+          entry: string;
+          type: string;
+          direction: string;
         }[];
       }
     }
   }
   namespace QuizGetSrsLevel {
-    namespace Parameters {
-      export type Entry = string;
-      export type Id = string;
-      export type Type = "character" | "vocabulary" | "sentence";
-    }
-    export interface QueryParameters {
-      id?: Parameters.Id;
-      entry?: Parameters.Entry;
-      type: Parameters.Type;
+    export interface RequestBody {
+      id?: string[];
+      entry?: string[];
+      type?: "character" | "vocabulary" | "sentence";
     }
     namespace Responses {
       export interface $200 {
@@ -275,19 +340,12 @@ declare namespace Paths {
     }
   }
   namespace QuizInit {
-    namespace Parameters {
-      export type Direction = string;
-      export type IncludeUndue = boolean;
-      export type Q = string;
-      export type Stage = string;
-      export type Type = string;
-    }
-    export interface QueryParameters {
-      q?: Parameters.Q;
-      type: Parameters.Type;
-      stage: Parameters.Stage;
-      direction: Parameters.Direction;
-      includeUndue: Parameters.IncludeUndue;
+    export interface RequestBody {
+      q?: string;
+      type: string[];
+      stage: string[];
+      direction: string[];
+      includeUndue: boolean;
     }
     namespace Responses {
       export interface $200 {
@@ -329,7 +387,7 @@ declare namespace Paths {
   }
   namespace QuizUpdateSrsLevel {
     namespace Parameters {
-      export type DLevel = 0 | 1 | -1;
+      export type DLevel = number;
       export type Id = string;
     }
     export interface QueryParameters {
@@ -441,7 +499,7 @@ declare namespace Paths {
     export interface RequestBody {
       level?: number;
       levelMin?: number;
-      quizSettings: {
+      quizSettings?: {
         [name: string]: any;
       };
       levelBrowser?: string[];
@@ -449,19 +507,6 @@ declare namespace Paths {
     namespace Responses {
       export interface $201 {
         result: string;
-      }
-    }
-  }
-  namespace VocabQuery {
-    namespace Parameters {
-      export type Q = string;
-    }
-    export interface QueryParameters {
-      q: Parameters.Q;
-    }
-    namespace Responses {
-      export interface $200 {
-        result: string[];
       }
     }
   }
@@ -488,6 +533,28 @@ declare namespace Paths {
           entry: string;
           level: number;
         }[];
+      }
+    }
+  }
+  namespace VocabularyQuery {
+    namespace Parameters {
+      export type Q = string;
+    }
+    export interface QueryParameters {
+      q: Parameters.Q;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: string[];
+      }
+    }
+  }
+  namespace VocabularyRandom {
+    namespace Responses {
+      export interface $200 {
+        result: string;
+        english: string;
+        level: number;
       }
     }
   }
@@ -617,29 +684,53 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.ExtraQuery.Responses.$200>
   /**
-   * quizGetOne
+   * libraryGetOne
    */
-  'quizGetOne'(
-    parameters?: Parameters<Paths.QuizGetOne.QueryParameters> | null,
+  'libraryGetOne'(
+    parameters?: Parameters<Paths.LibraryGetOne.QueryParameters> | null,
     data?: any,
     config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.QuizGetOne.Responses.$200>
+  ): OperationResponse<Paths.LibraryGetOne.Responses.$200>
   /**
-   * quizCreate
+   * libraryCreate
    */
-  'quizCreate'(
-    parameters?: Parameters<Paths.QuizCreate.QueryParameters> | null,
-    data?: any,
+  'libraryCreate'(
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: Paths.LibraryCreate.RequestBody,
     config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.QuizCreate.Responses.$201>
+  ): OperationResponse<Paths.LibraryCreate.Responses.$201>
   /**
-   * quizDelete
+   * libraryUpdate
    */
-  'quizDelete'(
-    parameters?: Parameters<Paths.QuizDelete.QueryParameters> | null,
+  'libraryUpdate'(
+    parameters?: Parameters<Paths.LibraryUpdate.QueryParameters> | null,
+    data?: Paths.LibraryUpdate.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.LibraryUpdate.Responses.$201>
+  /**
+   * libraryDelete
+   */
+  'libraryDelete'(
+    parameters?: Parameters<Paths.LibraryDelete.QueryParameters> | null,
     data?: any,
     config?: AxiosRequestConfig  
-  ): OperationResponse<any>
+  ): OperationResponse<Paths.LibraryDelete.Responses.$201>
+  /**
+   * libraryQuery
+   */
+  'libraryQuery'(
+    parameters?: Parameters<Paths.LibraryQuery.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.LibraryQuery.Responses.$200>
+  /**
+   * quizGetMany
+   */
+  'quizGetMany'(
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: Paths.QuizGetMany.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.QuizGetMany.Responses.$200>
   /**
    * quizListLeech
    */
@@ -652,8 +743,8 @@ export interface OperationMethods {
    * quizInit
    */
   'quizInit'(
-    parameters?: Parameters<Paths.QuizInit.QueryParameters> | null,
-    data?: any,
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: Paths.QuizInit.RequestBody,
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.QuizInit.Responses.$200>
   /**
@@ -665,13 +756,29 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.QuizUpdateSrsLevel.Responses.$201>
   /**
+   * quizCreate
+   */
+  'quizCreate'(
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: Paths.QuizCreate.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.QuizCreate.Responses.$201>
+  /**
    * quizGetSrsLevel
    */
   'quizGetSrsLevel'(
-    parameters?: Parameters<Paths.QuizGetSrsLevel.QueryParameters> | null,
-    data?: any,
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: Paths.QuizGetSrsLevel.RequestBody,
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.QuizGetSrsLevel.Responses.$200>
+  /**
+   * quizDeleteMany
+   */
+  'quizDeleteMany'(
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: Paths.QuizDeleteMany.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<any>
   /**
    * sentenceGetByEntry
    */
@@ -769,21 +876,21 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.VocabularyGetByEntry.Responses.$200>
   /**
-   * vocabQuery
+   * vocabularyQuery
    */
-  'vocabQuery'(
-    parameters?: Parameters<Paths.VocabQuery.QueryParameters> | null,
+  'vocabularyQuery'(
+    parameters?: Parameters<Paths.VocabularyQuery.QueryParameters> | null,
     data?: any,
     config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.VocabQuery.Responses.$200>
+  ): OperationResponse<Paths.VocabularyQuery.Responses.$200>
   /**
-   * entryRandom
+   * vocabularyRandom
    */
-  'entryRandom'(
+  'vocabularyRandom'(
     parameters?: Parameters<UnknownParamsObject> | null,
     data?: any,
     config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.EntryRandom.Responses.$200>
+  ): OperationResponse<Paths.VocabularyRandom.Responses.$200>
   /**
    * vocabularyListLevel
    */
@@ -921,31 +1028,59 @@ export interface PathsDictionary {
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.ExtraQuery.Responses.$200>
   }
-  ['/api/quiz/']: {
+  ['/api/library/']: {
     /**
-     * quizGetOne
+     * libraryGetOne
      */
     'get'(
-      parameters?: Parameters<Paths.QuizGetOne.QueryParameters> | null,
+      parameters?: Parameters<Paths.LibraryGetOne.QueryParameters> | null,
       data?: any,
       config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.QuizGetOne.Responses.$200>
+    ): OperationResponse<Paths.LibraryGetOne.Responses.$200>
     /**
-     * quizCreate
+     * libraryCreate
      */
     'put'(
-      parameters?: Parameters<Paths.QuizCreate.QueryParameters> | null,
-      data?: any,
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.LibraryCreate.RequestBody,
       config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.QuizCreate.Responses.$201>
+    ): OperationResponse<Paths.LibraryCreate.Responses.$201>
     /**
-     * quizDelete
+     * libraryUpdate
+     */
+    'patch'(
+      parameters?: Parameters<Paths.LibraryUpdate.QueryParameters> | null,
+      data?: Paths.LibraryUpdate.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.LibraryUpdate.Responses.$201>
+    /**
+     * libraryDelete
      */
     'delete'(
-      parameters?: Parameters<Paths.QuizDelete.QueryParameters> | null,
+      parameters?: Parameters<Paths.LibraryDelete.QueryParameters> | null,
       data?: any,
       config?: AxiosRequestConfig  
-    ): OperationResponse<any>
+    ): OperationResponse<Paths.LibraryDelete.Responses.$201>
+  }
+  ['/api/library/q']: {
+    /**
+     * libraryQuery
+     */
+    'get'(
+      parameters?: Parameters<Paths.LibraryQuery.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.LibraryQuery.Responses.$200>
+  }
+  ['/api/quiz/getMany']: {
+    /**
+     * quizGetMany
+     */
+    'post'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.QuizGetMany.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.QuizGetMany.Responses.$200>
   }
   ['/api/quiz/leech']: {
     /**
@@ -961,9 +1096,9 @@ export interface PathsDictionary {
     /**
      * quizInit
      */
-    'get'(
-      parameters?: Parameters<Paths.QuizInit.QueryParameters> | null,
-      data?: any,
+    'post'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.QuizInit.RequestBody,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.QuizInit.Responses.$200>
   }
@@ -977,15 +1112,35 @@ export interface PathsDictionary {
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.QuizUpdateSrsLevel.Responses.$201>
   }
-  ['/api/quiz/srsLevel']: {
+  ['/api/quiz/']: {
+    /**
+     * quizCreate
+     */
+    'put'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.QuizCreate.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.QuizCreate.Responses.$201>
+  }
+  ['/api/quiz/getSrsLevel']: {
     /**
      * quizGetSrsLevel
      */
-    'get'(
-      parameters?: Parameters<Paths.QuizGetSrsLevel.QueryParameters> | null,
-      data?: any,
+    'post'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.QuizGetSrsLevel.RequestBody,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.QuizGetSrsLevel.Responses.$200>
+  }
+  ['/api/quiz/deleteMany']: {
+    /**
+     * quizDeleteMany
+     */
+    'post'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.QuizDeleteMany.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<any>
   }
   ['/api/sentence/entry']: {
     /**
@@ -1107,23 +1262,23 @@ export interface PathsDictionary {
   }
   ['/api/vocabulary/q']: {
     /**
-     * vocabQuery
+     * vocabularyQuery
      */
     'get'(
-      parameters?: Parameters<Paths.VocabQuery.QueryParameters> | null,
+      parameters?: Parameters<Paths.VocabularyQuery.QueryParameters> | null,
       data?: any,
       config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.VocabQuery.Responses.$200>
+    ): OperationResponse<Paths.VocabularyQuery.Responses.$200>
   }
   ['/api/vocabulary/random']: {
     /**
-     * entryRandom
+     * vocabularyRandom
      */
     'get'(
       parameters?: Parameters<UnknownParamsObject> | null,
       data?: any,
       config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.EntryRandom.Responses.$200>
+    ): OperationResponse<Paths.VocabularyRandom.Responses.$200>
   }
   ['/api/vocabulary/level']: {
     /**

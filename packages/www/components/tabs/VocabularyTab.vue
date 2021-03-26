@@ -202,15 +202,12 @@ import { findSentence, zhSentence } from '@/assets/db'
 export default class VocabPage extends Vue {
   @Ref() context!: ContextMenu
 
-  entries: (
-    | string
-    | {
-        simplified: string
-        traditional?: string
-        pinyin: string
-        english?: string
-      }
-  )[] = []
+  entries: {
+    entry: string
+    alt: string[]
+    reading: string[]
+    english: string[]
+  }[] = []
 
   i = 0
 
@@ -231,10 +228,7 @@ export default class VocabPage extends Vue {
     return zhSentence
       .find({
         chinese: {
-          $containsString:
-            typeof this.current === 'string'
-              ? this.current
-              : this.current.simplified,
+          $containsString: this.simplified,
         },
       })
       .slice(0, 10)
@@ -269,22 +263,9 @@ export default class VocabPage extends Vue {
     this.$router.push({ query: { q } })
   }
 
-  get current() {
-    const r = this.entries[this.i]
-    if (typeof r === 'string') {
-      if (/\p{sc=Han}/u.test(r)) {
-        return r
-      }
-      return ''
-    }
-
-    return r || ''
-  }
-
   get simplified() {
-    return typeof this.current === 'string'
-      ? this.current
-      : this.current.simplified
+    const r = this.entries[this.i]
+    return r?.entry || ''
   }
 
   async created() {
@@ -293,9 +274,7 @@ export default class VocabPage extends Vue {
     if (!(entry || this.q)) {
       const {
         data: { result },
-      } = await this.$axios.get<{
-        result: string
-      }>('/api/vocab/random')
+      } = await this.$axios.vocabularyRandom()
 
       entry = result
     }
@@ -305,7 +284,14 @@ export default class VocabPage extends Vue {
     if (entry) {
       this.title = (entry ? entry + ' - ' : '') + 'Vocab'
 
-      this.entries = [entry]
+      this.entries = [
+        {
+          entry,
+          alt: [],
+          reading: [],
+          english: [],
+        },
+      ]
       await this.loadContent()
     } else {
       await this.onQChange(this.q0)
@@ -320,9 +306,7 @@ export default class VocabPage extends Vue {
           handler: async () => {
             const {
               data: { result },
-            } = await this.$axios.get<{
-              result: string
-            }>('/api/vocab/random')
+            } = await this.$axios.vocabularyRandom()
 
             this.q0 = result
           },
@@ -346,19 +330,27 @@ export default class VocabPage extends Vue {
     this.title = (q ? q + ' - ' : '') + 'Vocab'
 
     if (/\p{sc=Han}+/u.test(q)) {
-      let qs = await this.$axios
-        .get<{
-          result: string[]
-        }>('/api/chinese/jieba', { params: { q } })
-        .then((r) => r.data.result)
+      let qs = await this.$axios.tokenize({ q }).then((r) => r.data.result)
 
       qs = qs
         .filter((h) => /\p{sc=Han}+/u.test(h))
         .filter((h, i, arr) => arr.indexOf(h) === i)
 
-      this.entries = qs
+      this.entries = qs.map((entry) => ({
+        entry,
+        alt: [],
+        reading: [],
+        english: [],
+      }))
     } else {
-      this.entries = [q]
+      this.entries = [
+        {
+          entry: q,
+          alt: [],
+          reading: [],
+          english: [],
+        },
+      ]
     }
 
     await this.loadContent()
@@ -372,29 +364,26 @@ export default class VocabPage extends Vue {
       return
     }
 
-    if (typeof entry === 'string') {
-      if (/\p{sc=Han}/u.test(entry)) {
-        const {
-          data: { result },
-        } = await this.$axios.get('/api/vocab', {
-          params: {
-            entry,
-          },
-        })
+    if (!entry.reading.length) {
+      if (/\p{sc=Han}/u.test(entry.entry)) {
+        const { data } = await this.$axios
+          .vocabularyGetByEntry({ entry: entry.entry })
+          .catch(() => ({ data: null }))
 
-        if (result.length > 0) {
-          entry = result[0].simplified
+        if (data) {
           this.entries = [
             ...this.entries.slice(0, this.i),
-            ...result,
+            data,
             ...this.entries.slice(this.i + 1),
           ]
         } else {
           this.entries = [
             ...this.entries.slice(0, this.i),
             {
-              simplified: entry,
-              pinyin: toPinyin(entry, { keepRest: true, toneToNumber: true }),
+              ...entry,
+              reading: [
+                toPinyin(entry.entry, { keepRest: true, toneToNumber: true }),
+              ],
             },
             ...this.entries.slice(this.i + 1),
           ]
@@ -402,36 +391,26 @@ export default class VocabPage extends Vue {
       } else {
         const {
           data: { result },
-        } = await this.$axios.get('/api/vocab/q', {
-          params: {
-            q: entry,
-          },
-        })
-
-        if (result.length > 0) {
-          entry = result[0].simplified
-        } else {
-          entry = ''
-        }
+        } = await this.$axios.vocabularyQuery({ q: entry.entry })
 
         this.entries = [
           ...this.entries.slice(0, this.i),
-          ...result,
+          ...result.map((entry) => ({
+            entry,
+            alt: [],
+            reading: [],
+            english: [],
+          })),
           ...this.entries.slice(this.i + 1),
         ]
       }
     }
 
-    if (!entry) {
+    if (!/\p{sc=Han}/u.test(entry.entry)) {
       return
     }
 
-    if (
-      await findSentence(
-        typeof entry === 'string' ? entry : entry.simplified,
-        10
-      )
-    ) {
+    if (await findSentence(entry.entry, 10)) {
       this.sentenceKey = Math.random()
     }
   }
