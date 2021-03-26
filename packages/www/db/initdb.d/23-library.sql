@@ -31,4 +31,4 @@ CREATE INDEX "idx_library_title_description" ON "library"
     "description"
   )
   WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
-CREATE INDEX "idx_library_tag" ON "library" USING gin ("tag");
+CREATE INDEX "idx_library_tag" ON "library" USING pgroonga ("tag");

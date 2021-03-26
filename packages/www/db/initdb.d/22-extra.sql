@@ -34,7 +34,7 @@ CREATE INDEX "idx_extra_english_description" ON "extra"
     "description"
   )
   WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
-CREATE INDEX "idx_extra_tag" ON "extra" USING gin ("tag");
+CREATE INDEX "idx_extra_tag" ON "extra" USING pgroonga ("tag");
 
 CREATE MATERIALIZED VIEW "character" AS
   SELECT
@@ -128,7 +128,7 @@ CREATE MATERIALIZED VIEW "sentence" AS
   FROM (
     SELECT
       "cmn",
-      array_agg("eng") "english",
+      array_agg(DISTINCT "eng") "english",
       (max(dict."f_hLevel"(t1."char"[1])) > 50) "isTrad"
     FROM (
       SELECT

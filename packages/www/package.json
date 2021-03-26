@@ -11,7 +11,7 @@
     "build:nuxt": "nuxt build",
     "build:server": "tsc -P server/tsconfig.json",
     "lint": "eslint --ext '.js,.ts,.vue' --ignore-path .gitignore .",
-    "ts": "ts-node -r tsconfig-paths/register -O '{\"module\":\"commonjs\"}'",
+    "ts": "ts-node -r tsconfig-paths/register -O '{\"module\":\"commonjs\",\"noImplicitAny\":false}'",
     "openapi": "wait-on tcp:$SERVER_PORT && curl -s http://localhost:$SERVER_PORT/api/doc/json -o ./assets/openapi.json && typegen ./assets/openapi.json > ./types/openapi.d.ts"
   },
   "dependencies": {
@@ -28,6 +28,7 @@
     "better-sqlite3": "^7.1.2",
     "chinese-to-pinyin": "^1.3.1",
     "core-js": "^3.9.1",
+    "dayjs": "^1.10.4",
     "fastify": "^3.14.0",
     "fastify-csrf": "^3.0.1",
     "fastify-express": "^0.3.2",
@@ -36,6 +37,7 @@
     "jsonschema-definer": "^1.3.2",
     "lokijs": "^1.5.11",
     "magic-sdk": "^4.2.1",
+    "node-gtts": "^2.0.2",
     "nuxt": "^2.15.3",
     "nuxt-buefy": "^0.4.4",
     "nuxt-property-decorator": "^2.9.1",
