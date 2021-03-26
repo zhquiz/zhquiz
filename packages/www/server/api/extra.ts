@@ -337,9 +337,9 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         const tagCond = makeTag.parse(q)
         if (tagCond) {
           $and.push(sql`extra."entry" @> (
-            SELECT array_agg("entry")
+            SELECT array_agg(unnest)
             FROM (
-              SELECT "entry", 1 g
+              SELECT unnest("entry"), 1 g
               FROM entry_tag
               WHERE (
                 "userId" IS NULL OR "userId" = ${userId}
@@ -355,17 +355,16 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         }
 
         const result = await db.query(sql`
-        SELECT
-          array_agg(extra."entry")[1] "entry",
-          array_agg(extra."pinyin")[1] "reading",
-          array_agg(extra."english")[1] "english",
-          array_agg(extra."type")[1] "type",
-          array_agg(extra."tag")[1] "tag"
+        SELECT DISTINCT ON (extra."updatedAt", extra."id")
+          extra."entry" "entry",
+          extra."pinyin" "reading",
+          extra."english" "english",
+          extra."type" "type",
+          extra."tag" "tag"
         FROM extra
         ${quizCond ? sql`LEFT JOIN quiz` : sql``}
         WHERE ${sql.join($and, ' AND ')}
-        GROUP BY extra."id"
-        ORDER BY array_agg(extra."updatedAt")[1] DESC
+        ORDER BY extra."updatedAt" DESC, extra."id"
         LIMIT ${limit} OFFSET ${(page - 1) * limit}
         `)
 

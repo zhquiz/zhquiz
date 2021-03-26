@@ -33,4 +33,8 @@ export async function populate(db: ConnectionPool) {
   })
 
   s3.close()
+
+  await db.query(sql`
+    REFRESH MATERIALIZED VIEW dict.cedict_view;
+  `)
 }

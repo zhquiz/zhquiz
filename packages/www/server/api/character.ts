@@ -358,8 +358,6 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           return { result: [] }
         }
 
-        console.log(tagCond)
-
         const result = await db.query(sql`
         SELECT "entry"
         FROM "character"
@@ -373,13 +371,13 @@ const characterRouter: FastifyPluginAsync = async (f) => {
             : sql``
         } ${
           tagCond
-            ? sql` AND "entry" = ANY((
-            SELECT "entry"
+            ? sql` AND "entry" IN (
+            SELECT unnest("entry")
             FROM entry_tag
             WHERE (
               "userId" IS NULL OR "userId" = ${userId}
-            ) AND ${tagCond}
-          ))`
+            ) AND "type" = 'character' AND ${tagCond}
+          )`
             : sql``
         } ${
           qCond
