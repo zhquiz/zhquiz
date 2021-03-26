@@ -138,17 +138,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
-        const [r] = await db.query(sql`
-        SELECT
-          "entry"[1] "entry",
-          "entry"[2:]||'{}'::text[] "alt",
-          "pinyin" "reading",
-          "english"
-        FROM "vocabulary"
-        WHERE (
-          "userId" IS NULL OR "userId" = ${userId}
-        ) AND ${entry} = ANY("entry")
-        `)
+        const r = await lookupVocabulary(entry, userId)
 
         if (!r) {
           throw { statusCode: 404 }
@@ -374,3 +364,27 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 }
 
 export default vocabularyRouter
+
+export async function lookupVocabulary(
+  entry: string,
+  userId: string
+): Promise<{
+  entry: string
+  alt: string[]
+  reading: string[]
+  english: string[]
+} | null> {
+  const [r] = await db.query(sql`
+  SELECT
+    "entry"[1] "entry",
+    "entry"[2:]||'{}'::text[] "alt",
+    "pinyin" "reading",
+    "english"
+  FROM "vocabulary"
+  WHERE (
+    "userId" IS NULL OR "userId" = ${userId}
+  ) AND ${entry} = ANY("entry")
+  `)
+
+  return r || null
+}

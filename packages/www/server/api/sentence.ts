@@ -37,14 +37,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
-        const [r] = await db.query(sql`
-        SELECT
-          "entry", "english"
-        FROM "sentence"
-        WHERE (
-          "userId" IS NULL OR "userId" = ${userId}
-        ) AND "entry" = ${entry}
-        `)
+        const r = await lookupSentence(entry, userId)
 
         if (!r) {
           throw { statusCode: 404 }
@@ -206,3 +199,22 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
 }
 
 export default sentenceRouter
+
+export async function lookupSentence(
+  entry: string,
+  userId: string
+): Promise<{
+  entry: string
+  english: string[]
+} | null> {
+  const [r] = await db.query(sql`
+  SELECT
+    "entry", "english"
+  FROM "sentence"
+  WHERE (
+    "userId" IS NULL OR "userId" = ${userId}
+  ) AND "entry" = ${entry}
+  `)
+
+  return r || null
+}

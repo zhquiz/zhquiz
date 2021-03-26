@@ -8,6 +8,7 @@ CREATE TABLE "user" (
   "level.min"                 INT,
   "level.max"                 INT,
   "level.vocabulary.showing"  TEXT[],
+  "quiz.settings"             JSONB
   PRIMARY KEY ("id")
 );
 

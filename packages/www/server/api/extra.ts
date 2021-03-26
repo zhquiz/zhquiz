@@ -1,11 +1,11 @@
 import sql from '@databases/sql'
-import toPinyin from 'chinese-to-pinyin'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
 
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
+import { makeReading } from './util'
 
 const extraRouter: FastifyPluginAsync = async (f) => {
   {
@@ -108,7 +108,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         }
 
         if (!reading.length) {
-          reading.push(toPinyin(entry[0], { keepRest: true }))
+          reading.push(await makeReading(entry[0]))
         }
 
         const id = await db.tx(async (db) => {
@@ -180,7 +180,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         }
 
         if (!reading.length) {
-          reading.push(toPinyin(entry[0], { keepRest: true }))
+          reading.push(await makeReading(entry[0]))
         }
 
         await db.tx(async (db) => {

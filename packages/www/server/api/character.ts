@@ -235,17 +235,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
-        if (!/^\p{sc=Han}$/u.test(entry)) {
-          throw { statusCode: 400, message: 'not Character' }
-        }
-
-        const [r] = await db.query(sql`
-        SELECT "entry", "pinyin" "reading", "english"
-        FROM "character"
-        WHERE (
-          "userId" IS NULL OR "userId" = ${userId}
-        ) AND "entry" = ${entry}
-        `)
+        const r = await lookupCharacter(entry, userId)
 
         if (!r) {
           throw { statusCode: 404 }
@@ -495,3 +485,26 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 }
 
 export default characterRouter
+
+export async function lookupCharacter(
+  entry: string,
+  userId: string
+): Promise<{
+  entry: string
+  reading: string[]
+  english: string[]
+} | null> {
+  if (!/^\p{sc=Han}$/u.test(entry)) {
+    throw { statusCode: 400, message: 'not Character' }
+  }
+
+  const [r] = await db.query(sql`
+  SELECT "entry", "pinyin" "reading", "english"
+  FROM "character"
+  WHERE (
+    "userId" IS NULL OR "userId" = ${userId}
+  ) AND "entry" = ${entry}
+  `)
+
+  return r || null
+}

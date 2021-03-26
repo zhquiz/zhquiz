@@ -15,7 +15,10 @@ import waitOn from 'wait-on'
 import { db, isDev } from '../shared'
 import characterRouter from './character'
 import extraRouter from './extra'
+import quizRouter from './quiz'
 import sentenceRouter from './sentence'
+import userRouter from './user'
+import utilRouter from './util'
 import vocabularyRouter from './vocabulary'
 
 const apiRouter: FastifyPluginAsync = async (f) => {
@@ -158,7 +161,10 @@ const apiRouter: FastifyPluginAsync = async (f) => {
 
   f.register(characterRouter, { prefix: '/character' })
   f.register(extraRouter, { prefix: '/extra' })
+  f.register(quizRouter, { prefix: '/quiz' })
   f.register(sentenceRouter, { prefix: '/sentence' })
+  f.register(userRouter, { prefix: '/user' })
+  f.register(utilRouter, { prefix: '/util' })
   f.register(vocabularyRouter, { prefix: '/vocabulary' })
 }
 
