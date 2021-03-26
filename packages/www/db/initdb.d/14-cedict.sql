@@ -18,46 +18,28 @@ $func$ LANGUAGE plpgsql IMMUTABLE;
 CREATE UNIQUE INDEX idx_cedict_unique ON dict.cedict ("simplified", "traditional", "reading");
 CREATE INDEX idx_cedict_frequency ON dict.cedict ("frequency");
 
--- CREATE INDEX idx_cedict_chinese ON dict.cedict
---   USING pgroonga (
---     "simplified",
---     "traditional",
---     normalize_pinyin("reading")
---   );
--- CREATE INDEX idx_cedict_english ON dict.cedict
---   USING pgroonga ("english")
---   WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
+CREATE MATERIALIZED VIEW dict.cedict_view AS
+  SELECT
+    ARRAY["simplified"]||(array_agg(DISTINCT "entry") FILTER (WHERE "entry" IS NOT NULL AND "entry" != "simplified")) "entry",
+    (array_agg(DISTINCT "reading") FILTER (WHERE "reading" IS NOT NULL))||'{}'::text[] "pinyin",
+    (array_agg(DISTINCT "english") FILTER (WHERE "english" IS NOT NULL))||'{}'::text[] "english",
+    max("frequency") "frequency"
+  FROM (
+    SELECT
+      "simplified",
+      unnest(ARRAY["simplified", "traditional"]) "entry",
+      "reading",
+      unnest("english") "english",
+      "frequency"
+    FROM dict.cedict
+  ) t1
+  GROUP BY "simplified"
+  ORDER BY max("frequency") DESC NULLS LAST;
 
--- CREATE MATERIALIZED VIEW cedict_synonyms AS
---   SELECT DISTINCT
---     "entry",
---     array_agg("alt") "alt"
---   FROM (
---     SELECT DISTINCT
---       "entry",
---       unnest("alt") "alt"
---     FROM (
---       SELECT DISTINCT
---         unnest(ARRAY["simplified", "traditional"]) "entry",
---         ARRAY["simplified", "traditional"] "alt"
---       FROM dict.cedict
---     ) t1
---     WHERE "alt" IS NOT NULL
---     ORDER BY "alt"
---   ) t2
---   GROUP BY "entry";
-
--- CREATE INDEX idx_cedict_synonyms ON cedict_synonyms
---   USING pgroonga ("entry" pgroonga_text_term_search_ops_v2);
-
--- CREATE OR REPLACE FUNCTION zh_expand (TEXT) RETURNS TEXT AS
--- $func$
--- DECLARE
---   exp   TEXT := pgroonga_query_expand('cedict_synonyms',
---                   'entry',
---                   'alt',
---                   $1);
--- BEGIN
---   RETURN exp;
--- END;
--- $func$ LANGUAGE plpgsql IMMUTABLE;
+CREATE INDEX "idx_cedict_view_entry" ON dict.cedict_view
+  USING pgroonga("entry");
+CREATE INDEX "idx_cedict_view_pinyin" ON dict.cedict_view
+  USING pgroonga (normalize_pinyin("pinyin"));
+CREATE INDEX "idx_cedict_view_english" ON dict.cedict_view
+  USING pgroonga("english")
+  WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');

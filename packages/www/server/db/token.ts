@@ -256,3 +256,27 @@ export const qParseDate: (
   '>': (v) => sql`${k} > ${toDate(v)}`,
   '<': (v) => sql`${k} < ${toDate(v)}`,
 })
+
+export const makeQuiz = new QSplit({
+  default: () => null,
+  fields: {
+    srsLevel: qParseNum(sql`quiz."srsLevel"`),
+    nextReview: qParseDate(sql`quiz."nextReview"`),
+    lastRight: qParseDate(sql`quiz."lastRight"`),
+    lastWrong: qParseDate(sql`quiz."lastWrong"`),
+    maxRight: qParseNum(sql`quiz."maxRight"`),
+    maxWrong: qParseNum(sql`quiz."maxWrong"`),
+    rightStreak: qParseNum(sql`quiz."rightStreak"`),
+    wrongStreak: qParseNum(sql`quiz."wrongStreak"`),
+  },
+})
+
+export const makeTag = new QSplit({
+  default(v) {
+    return this.fields.tag[':'](v)
+  },
+  fields: {
+    tag: { ':': (v) => sql`entry_tag."tag" &@ ${v}` },
+    type: { ':': (v) => sql`entry_tag."type" = ${v}` },
+  },
+})

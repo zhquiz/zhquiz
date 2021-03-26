@@ -2,6 +2,7 @@ import sql from '@databases/sql'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 
+import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
 
 const characterRouter: FastifyPluginAsync = async (f) => {
@@ -251,6 +252,148 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         }
 
         return r
+      }
+    )
+  }
+
+  {
+    const makeRad = new QSplit({
+      default(v) {
+        if (/^\p{sc=Han}{2,}$/u.test(v)) {
+          const re = /\p{sc=Han}/gu
+          let m = re.exec(v)
+          const out: string[] = []
+          while (m) {
+            out.push(m[0])
+            m = re.exec(v)
+          }
+
+          return sql`(${sql.join(
+            out.map((v) => {
+              return this.fields.entry[':'](v)
+            }),
+            ' OR '
+          )})`
+        } else if (/^\p{sc=Han}$/u.test(v)) {
+          return sql`(${sql.join(
+            [
+              this.fields.entry[':'](v),
+              this.fields.sub[':'](v),
+              this.fields.sup[':'](v),
+              this.fields.var[':'](v),
+            ],
+            ' OR '
+          )})`
+        }
+
+        return null
+      },
+      fields: {
+        entry: { ':': (v) => sql`"entry" &@~ character_expand(${v})` },
+        hanzi: { ':': (v) => sql`"entry" &@~ character_expand(${v})` },
+        sub: { ':': (v) => sql`"sub" &@ ${v}` },
+        sup: { ':': (v) => sql`"sup" &@ ${v}` },
+        var: { ':': (v) => sql`"var" &@ ${v}` },
+      },
+    })
+
+    const makeZh = new QSplit({
+      default(v) {
+        if (/^\p{sc=Han}+$/u.test(v)) {
+          return sql`TRUE`
+        }
+
+        return sql`(${sql.join(
+          [this.fields.reading[':'](v), this.fields.english[':'](v)],
+          ' OR '
+        )})`
+      },
+      fields: {
+        pinyin: { ':': (v) => sql`normalize_pinyin("pinyin") &@ ${v}` },
+        reading: { ':': (v) => sql`normalize_pinyin("pinyin") &@ ${v}` },
+        english: { ':': (v) => sql`"english" &@ ${v}` },
+      },
+    })
+
+    const sQuery = S.shape({
+      q: S.string(),
+    })
+
+    const sResult = S.shape({
+      result: S.list(S.string()),
+    })
+
+    f.get<{
+      Querystring: typeof sQuery.type
+    }>(
+      '/q',
+      {
+        schema: {
+          operationId: 'characterQuery',
+          querystring: sQuery.valueOf(),
+          response: {
+            200: sResult.valueOf(),
+          },
+        },
+      },
+      async (req): Promise<typeof sResult.type> => {
+        let { q } = req.query
+
+        const userId: string = req.session.get('userId')
+        if (!userId) {
+          throw { statusCode: 401 }
+        }
+
+        q = q.trim()
+        if (!q) {
+          return { result: [] }
+        }
+
+        const qCond = makeQuiz.parse(q)
+        const radCond = makeRad.parse(q)
+        const hCond = makeZh.parse(q)
+        const tagCond = makeTag.parse(q)
+
+        if (!hCond && !radCond && !qCond && !tagCond) {
+          return { result: [] }
+        }
+
+        console.log(tagCond)
+
+        const result = await db.query(sql`
+        SELECT "entry"
+        FROM "character"
+        WHERE (
+          "userId" IS NULL OR "userId" = ${userId}
+        ) ${hCond ? sql` AND TRUE` : sql``} ${
+          radCond
+            ? sql` AND "entry" IN (
+          SELECT "entry" FROM dict.radical WHERE ${radCond}
+        )`
+            : sql``
+        } ${
+          tagCond
+            ? sql` AND "entry" = ANY((
+            SELECT "entry"
+            FROM entry_tag
+            WHERE (
+              "userId" IS NULL OR "userId" = ${userId}
+            ) AND ${tagCond}
+          ))`
+            : sql``
+        } ${
+          qCond
+            ? sql` AND "entry" IN (
+          SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'vocabulary' AND ${qCond}
+        )`
+            : sql``
+        }
+        LIMIT 20
+        `)
+
+        return {
+          result: result.map((r) => r.entry),
+        }
       }
     )
   }

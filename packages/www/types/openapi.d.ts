@@ -32,6 +32,19 @@ declare namespace Paths {
       }
     }
   }
+  namespace CharacterQuery {
+    namespace Parameters {
+      export type Q = string;
+    }
+    export interface QueryParameters {
+      q: Parameters.Q;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: string[];
+      }
+    }
+  }
   namespace CharacterRadical {
     namespace Parameters {
       export type Entry = string;
@@ -309,6 +322,14 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.CharacterGetByEntry.Responses.$200>
   /**
+   * characterQuery
+   */
+  'characterQuery'(
+    parameters?: Parameters<Paths.CharacterQuery.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.CharacterQuery.Responses.$200>
+  /**
    * characterRandom
    */
   'characterRandom'(
@@ -464,6 +485,16 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.CharacterGetByEntry.Responses.$200>
+  }
+  ['/api/character/q']: {
+    /**
+     * characterQuery
+     */
+    'get'(
+      parameters?: Parameters<Paths.CharacterQuery.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.CharacterQuery.Responses.$200>
   }
   ['/api/character/random']: {
     /**

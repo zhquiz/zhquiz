@@ -4,7 +4,7 @@ import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
 
-import { QSplit, qParseDate, qParseNum } from '../db/token'
+import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
 
 const extraRouter: FastifyPluginAsync = async (f) => {
@@ -270,20 +270,6 @@ const extraRouter: FastifyPluginAsync = async (f) => {
       count: S.integer(),
     })
 
-    const makeQuiz = new QSplit({
-      default: () => null,
-      fields: {
-        srsLevel: qParseNum(sql`quiz."srsLevel"`),
-        nextReview: qParseDate(sql`quiz."nextReview"`),
-        lastRight: qParseDate(sql`quiz."lastRight"`),
-        lastWrong: qParseDate(sql`quiz."lastWrong"`),
-        maxRight: qParseNum(sql`quiz."maxRight"`),
-        maxWrong: qParseNum(sql`quiz."maxWrong"`),
-        rightStreak: qParseNum(sql`quiz."rightStreak"`),
-        wrongStreak: qParseNum(sql`quiz."wrongStreak"`),
-      },
-    })
-
     const makeExtra = new QSplit({
       default(v) {
         if (/^\p{sc=Han}+$/u.test(v)) {
@@ -311,11 +297,11 @@ const extraRouter: FastifyPluginAsync = async (f) => {
       },
       fields: {
         entry: { ':': (v) => sql`extra."entry" &@ ${v}` },
+        pinyin: { ':': (v) => sql`normalize_pinyin(extra."pinyin") &@ ${v}` },
         reading: { ':': (v) => sql`normalize_pinyin(extra."pinyin") &@ ${v}` },
         english: { ':': (v) => sql`extra."english" &@ ${v}` },
         type: { ':': (v) => sql`extra."type" = ${v}` },
         description: { ':': (v) => sql`extra."description" &@ ${v}` },
-        tag: { ':': (v) => sql`extra."tag" &@ ${v}` },
       },
     })
 
@@ -343,26 +329,43 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         q = q.trim()
 
-        const quizCond = makeQuiz.parse(q)
         const $and = [
           sql`extra."userId" = ${userId}`,
           makeExtra.parse(q) || sql`TRUE`,
         ]
+
+        const tagCond = makeTag.parse(q)
+        if (tagCond) {
+          $and.push(sql`extra."entry" @> (
+            SELECT array_agg("entry")
+            FROM (
+              SELECT "entry", 1 g
+              FROM entry_tag
+              WHERE (
+                "userId" IS NULL OR "userId" = ${userId}
+              ) AND ${tagCond}
+            ) t1
+            GROUP BY g
+          )`)
+        }
+
+        const quizCond = makeQuiz.parse(q)
         if (quizCond) {
           $and.push(quizCond)
         }
 
         const result = await db.query(sql`
         SELECT
-          extra."entry" "entry",
-          extra."pinyin" "reading",
-          extra."english" "english",
-          extra."type" "type",
-          extra."tag" "tag"
+          array_agg(extra."entry")[1] "entry",
+          array_agg(extra."pinyin")[1] "reading",
+          array_agg(extra."english")[1] "english",
+          array_agg(extra."type")[1] "type",
+          array_agg(extra."tag")[1] "tag"
         FROM extra
         ${quizCond ? sql`LEFT JOIN quiz` : sql``}
         WHERE ${sql.join($and, ' AND ')}
-        ORDER BY extra."updatedAt" DESC
+        GROUP BY extra."id"
+        ORDER BY array_agg(extra."updatedAt")[1] DESC
         LIMIT ${limit} OFFSET ${(page - 1) * limit}
         `)
 

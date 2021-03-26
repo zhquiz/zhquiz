@@ -2,32 +2,12 @@ CREATE OR REPLACE FUNCTION dict."f_hLevelCheck" (TEXT, INT) RETURNS BOOLEAN AS
 $func$
 BEGIN
   IF length($1) != 1 THEN
-    RETURN $2 = 0;
+    RETURN $2 IS NULL;
   END IF;
 
   RETURN TRUE;
 END;
 $func$ LANGUAGE plpgsql IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION dict."f_hLevel" (TEXT) RETURNS INT AS
-$func$
-DECLARE
-  r       RECORD;
-BEGIN
-  RETURN (
-    SELECT "hLevel" FROM (
-      SELECT "hLevel"
-      FROM dict.zhlevel
-      WHERE "hLevel" IS NOT NULL AND "entry" = $1
-      UNION ALL
-      SELECT 100 "hLevel"
-    ) t1
-    LIMIT 1
-  );
-  
-  RETURN r."hLevel";
-END;
-$func$ LANGUAGE plpgsql;
 
 CREATE TABLE dict.zhlevel (
   "entry"         TEXT NOT NULL,
@@ -39,6 +19,34 @@ CREATE TABLE dict.zhlevel (
 
 CREATE INDEX "idx_zhlevel_hLevel" ON dict.zhlevel ("hLevel");
 CREATE INDEX "idx_zhlevel_vLevel" ON dict.zhlevel ("vLevel");
+
+CREATE OR REPLACE FUNCTION dict."f_hLevel" (TEXT[]) RETURNS INT AS
+$func$
+DECLARE
+  m   INT := 0;
+  t   TEXT;
+  lv  INT;
+BEGIN
+  FOREACH t IN ARRAY $1
+  LOOP
+    lv = (
+      SELECT "hLevel" FROM (
+        SELECT "hLevel"
+        FROM dict.zhlevel
+        WHERE "hLevel" IS NOT NULL AND "entry" = t
+        UNION ALL
+        SELECT 100 "hLevel"
+      ) t1
+      LIMIT 1
+    );
+    IF lv > m THEN
+      m = lv;
+    END IF;
+  END LOOP;
+  
+  RETURN m;
+END;
+$func$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION zhlevel_sentence (TEXT) RETURNS FLOAT AS
 $func$
