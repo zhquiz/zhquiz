@@ -7,11 +7,18 @@
             <div v-if="current.direction === 'ec'">
               <h4>Hanzi English-Chinese</h4>
 
-              <div v-html="doMask(current.english, current.entry)"></div>
+              <div
+                v-html="
+                  doMask((current.english || []).join(' / '), current.entry)
+                "
+              ></div>
             </div>
             <div v-else>
               <h4>Hanzi Chinese-English</h4>
-              <div class="font-chinese text-w-normal" style="font-size: 3rem">
+              <div
+                class="font-chinese text-w-normal hanzi-display"
+                style="text-align: center"
+              >
                 {{ current.entry }}
               </div>
             </div>
@@ -29,8 +36,8 @@
                     doMask(
                       it,
                       current.entry,
-                      ...(current.pinyin || []),
-                      ...(current.traditional || [])
+                      ...(current.reading || []),
+                      ...(current.alt || [])
                     )
                   "
                 ></li>
@@ -40,10 +47,10 @@
                 v-else
                 v-html="
                   doMask(
-                    current.english,
+                    (current.english || []).join(' / '),
                     current.entry,
-                    ...(current.pinyin || []),
-                    ...(current.traditional || [])
+                    ...(current.reading || []),
+                    ...(current.alt || [])
                   )
                 "
               ></div>
@@ -64,7 +71,11 @@
             <div v-if="current.direction === 'ec'">
               <h4>Sentence English-Chinese</h4>
 
-              {{ current.english }}
+              <ul>
+                <li v-for="(e, i) in current.english" :key="i">
+                  {{ e }}
+                </li>
+              </ul>
             </div>
             <div v-else>
               <h4>Sentence Chinese-English</h4>
@@ -81,19 +92,18 @@
             <div
               class="hanzi-display has-context"
               @contextmenu.prevent="openContext"
+              style="text-align: center"
             >
               {{ current.entry }}
             </div>
 
-            <div>
-              {{ current.reading.join(' | ') }}
+            <div style="text-align: center; margin-bottom: 1rem">
+              {{ (current.reading || []).join(' | ') }}
             </div>
 
-            <ul>
-              <li v-for="(it, i) in current.english" :key="i">
-                {{ it }}
-              </li>
-            </ul>
+            <div style="text-align: center">
+              {{ (current.english || []).join(' / ') }}
+            </div>
 
             <ul v-if="getSentenceByCharacter(current.entry).length">
               <li
@@ -143,7 +153,7 @@
             </div>
 
             <div>
-              {{ current.reading.join(' | ') }}
+              {{ (current.reading || []).join(' | ') }}
             </div>
 
             <ul>
@@ -180,14 +190,11 @@
           <div v-else>
             <h2
               class="font-zh-simp text-w-normal has-context"
+              :title="(current.reading || [])[0]"
               @contextmenu.prevent="openContext"
             >
               {{ current.entry }}
             </h2>
-
-            <div>
-              {{ current.reading[0] }}
-            </div>
 
             <ul>
               <li v-for="(it, i) in current.english" :key="i">
@@ -446,7 +453,7 @@ export default class QuizCard extends Vue {
     this.context.open(ev)
   }
 
-  doMask(s: string, ...ws: string[]) {
+  doMask(s = '', ...ws: string[]) {
     // eslint-disable-next-line array-callback-return
     ws.map((w) => {
       s = s.replace(
@@ -509,10 +516,6 @@ export default class QuizCard extends Vue {
     const entry = q.entry
 
     if (!entry || !type) {
-      return
-    }
-
-    if (type === 'sentence') {
       return
     }
 

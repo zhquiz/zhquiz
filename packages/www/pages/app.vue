@@ -41,7 +41,11 @@
       <div style="flex-grow: 1"></div>
 
       <div class="p-4">
-        <center>Logged in as {{ $store.state.identifier }}</center>
+        <center>
+          <a role="button" title="Click to logout" @click="doLogout">
+            Logged in as {{ $store.state.identifier }}
+          </a>
+        </center>
       </div>
     </b-sidebar>
 
@@ -131,7 +135,7 @@ import { Component, Vue } from 'nuxt-property-decorator'
     } else {
       this.$accessor.ADD_TAB({
         component: 'Random',
-        permanent: true,
+        first: true,
       })
       this.isReady = true
     }
@@ -216,6 +220,16 @@ export default class AppPage extends Vue {
 
   setTitle(i: number, title: string) {
     this.$accessor.SET_TAB_TITLE({ i, title })
+  }
+
+  doLogout() {
+    this.$buefy.dialog.confirm({
+      message: 'Are you sure you want to logout?',
+      onConfirm: async () => {
+        await this.$axios.userSignOut()
+        this.$router.push('/')
+      },
+    })
   }
 }
 </script>

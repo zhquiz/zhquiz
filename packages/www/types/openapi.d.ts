@@ -489,6 +489,7 @@ declare namespace Paths {
     }
     namespace Responses {
       export interface $200 {
+        identifier?: string;
         level?: number;
         levelMin?: number;
         quizSettings?: {

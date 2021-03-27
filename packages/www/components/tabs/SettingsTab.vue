@@ -25,6 +25,16 @@
             Save
           </button>
         </div>
+
+        <div class="card has-background-danger-light mt-4">
+          <div class="card-content">
+            <h3 class="title is-3">Danger zone</h3>
+
+            <b-button type="is-danger" @click="deleteUser">
+              Delete user
+            </b-button>
+          </div>
+        </div>
       </form>
     </div>
   </section>
@@ -73,6 +83,17 @@ export default class SettingsPage extends Vue {
 
     this.$buefy.snackbar.open('Saved')
   }
+
+  deleteUser() {
+    this.$buefy.dialog.confirm({
+      message:
+        'Do you want to delete yourself permanently? This cannot be undone.',
+      onConfirm: async () => {
+        await this.$axios.userDelete()
+        this.$router.push('/')
+      },
+    })
+  }
 }
 </script>
 
@@ -90,16 +111,5 @@ export default class SettingsPage extends Vue {
   width: 5em;
   word-break: keep-all;
   margin-left: 1rem;
-}
-
-.danger-zone {
-  min-height: 150px;
-  border: 1px solid red;
-  border-radius: 0.25rem;
-  padding: 1.5rem;
-}
-
-.danger-zone .title {
-  color: red;
 }
 </style>
