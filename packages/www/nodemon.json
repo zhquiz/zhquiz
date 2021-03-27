@@ -1,0 +1,16 @@
+{
+  "restartable": "rs",
+  "execMap": {
+    "ts": "yarn ts"
+  },
+  "events": {
+    "restart": "yarn openapi || :"
+  },
+  "watch": [
+    "server/"
+  ],
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "ext": "ts"
+}

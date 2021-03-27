@@ -133,20 +133,19 @@
 import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
 interface ILocal {
-  id: string
+  id?: string
   title: string
-  entries: string[]
+  entry: string[]
   description: string
-  tag: string
+  tag: string[]
 }
 
 @Component<LibraryPage>({
-  head() {
-    return {
-      title: 'Library - ZhQuiz',
-    }
+  created() {
+    this.$emit('title', 'Library')
+    this.updateLocal()
+    this.updateOnline()
   },
-  layout: 'app',
 })
 export default class LibraryPage extends Vue {
   q0 = ''
@@ -167,7 +166,7 @@ export default class LibraryPage extends Vue {
   online: {
     result: {
       title: string
-      entries: string[]
+      entry: string[]
     }[]
     count: number
     page: number
@@ -182,9 +181,9 @@ export default class LibraryPage extends Vue {
   edited: ILocal = {
     id: '',
     title: '',
-    entries: [],
+    entry: [],
     description: '',
-    tag: '',
+    tag: [],
   }
 
   get q() {
@@ -197,7 +196,7 @@ export default class LibraryPage extends Vue {
   }
 
   get entryString() {
-    return this.edited.entries.join(' ')
+    return this.edited.entry.join(' ')
   }
 
   set entryString(s) {
@@ -209,7 +208,7 @@ export default class LibraryPage extends Vue {
       out.push(m[0])
     }
 
-    this.edited.entries = out
+    this.edited.entry = out
   }
 
   additionalContext(it: ILocal) {
@@ -227,7 +226,9 @@ export default class LibraryPage extends Vue {
       {
         name: 'Delete list',
         handler: () => {
-          this.doDelete(it.id)
+          if (it.id) {
+            this.doDelete(it.id)
+          }
         },
       },
     ]
@@ -237,9 +238,9 @@ export default class LibraryPage extends Vue {
     this.edited = it || {
       id: '',
       title: '',
-      entries: [],
+      entry: [],
       description: '',
-      tag: '',
+      tag: [],
     }
 
     this.isEditModal = true
@@ -248,15 +249,11 @@ export default class LibraryPage extends Vue {
   @Watch('q')
   @Watch('local.page')
   async updateLocal() {
-    const r = await this.$axios
-      .get('/api/library/q', {
-        params: {
-          q: this.q,
-          page: this.local.page,
-          perPage: this.local.perPage,
-        },
-      })
-      .then((r) => r.data)
+    const { data: r } = await this.$axios.libraryQuery({
+      q: this.q,
+      page: this.local.page,
+      limit: this.local.perPage,
+    })
 
     this.local = {
       ...this.local,
@@ -267,22 +264,24 @@ export default class LibraryPage extends Vue {
   @Watch('q')
   @Watch('online.page')
   async updateOnline() {
-    const r = await this.$axios.get('/api/library/shared', {
-      params: {
-        q: this.q,
-        page: this.online.page,
-        perPage: this.online.perPage,
-      },
+    const { data: r } = await this.$axios.libraryQuery({
+      q: this.q,
+      page: this.local.page,
+      limit: this.local.perPage,
     })
 
     this.online = {
       ...this.online,
-      ...r.data,
+      ...r,
     }
   }
 
   async doCreate() {
-    await this.$axios.put('/api/library', this.edited)
+    await this.$axios.libraryCreate(null, {
+      ...this.edited,
+      type: 'vocabulary',
+    })
+
     this.$buefy.snackbar.open(`Created list: ${this.edited.title}`)
     this.isEditModal = false
 
@@ -291,13 +290,20 @@ export default class LibraryPage extends Vue {
   }
 
   async doUpdate() {
-    await this.$axios.patch('/api/library', this.edited, {
-      params: {
-        id: this.edited.id,
-      },
-    })
+    const { id } = this.edited
 
-    this.$buefy.snackbar.open(`Updated list: ${this.edited.title}`)
+    if (id) {
+      await this.$axios.libraryUpdate(
+        { id },
+        {
+          ...this.edited,
+          type: 'vocabulary',
+        }
+      )
+
+      this.$buefy.snackbar.open(`Updated list: ${this.edited.title}`)
+    }
+
     this.isEditModal = false
 
     this.local.page = 1
@@ -305,11 +311,7 @@ export default class LibraryPage extends Vue {
   }
 
   async doDelete(id: string) {
-    await this.$axios.delete('/api/library', {
-      params: {
-        id,
-      },
-    })
+    await this.$axios.libraryDelete({ id })
 
     this.$buefy.snackbar.open(`Deleted list: ${this.edited.title}`)
 

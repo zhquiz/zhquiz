@@ -20,39 +20,6 @@
           <div class="label-level">{{ lv[0] }} - {{ lv[1] }}</div>
         </div>
 
-        <div class="flex flex-row items-center">
-          <b-field label="Sentence Length" class="flex-grow">
-            <b-slider
-              v-model="sentenceLength"
-              :min="sentenceLengthRange[0]"
-              :max="sentenceLengthRange[1]"
-              lazy
-            >
-              <b-slider-tick :value="sentenceLengthRange[0]">{{
-                sentenceLengthRange[0]
-              }}</b-slider-tick>
-              <template
-                v-for="val in Array(sentenceLengthRange[1] / 5 - 1)
-                  .fill(5)
-                  .map((el, i) => el * (i + 1))"
-              >
-                <b-slider-tick :key="val" :value="val">{{ val }}</b-slider-tick>
-              </template>
-              <b-slider-tick :value="sentenceLengthRange[1]">
-                Inf
-              </b-slider-tick>
-            </b-slider>
-          </b-field>
-          <div class="label-level">
-            {{ sentenceLength[0] }} -
-            {{
-              sentenceLength[1] === sentenceLengthRange[1]
-                ? 'Inf'
-                : sentenceLength[1]
-            }}
-          </div>
-        </div>
-
         <div class="flex flex-row">
           <button class="button is-success" type="submit" aria-label="save">
             Save
@@ -69,15 +36,11 @@ import { Component, Vue } from 'nuxt-property-decorator'
 @Component<SettingsPage>({
   created() {
     this.$emit('title', 'Settings')
-    const settings = this.$store.state
+    const { settings } = this.$store.state
 
     this.lv = [
       settings.levelMin || this.lvRange[0],
       settings.level || this.lvRange[1],
-    ]
-    this.sentenceLength = [
-      settings.sentenceMin || this.sentenceLengthRange[0],
-      settings.sentenceMax || this.sentenceLengthRange[1],
     ]
   },
 })
@@ -98,24 +61,14 @@ export default class SettingsPage extends Vue {
   }
 
   async doSave() {
-    await this.$axios.patch('/api/user/', {
-      levelMin: this.lv[0],
+    await this.$axios.userUpdateSettings(null, {
       level: this.lv[1],
-      sentenceMin: this.sentenceLength[0],
-      sentenceMax:
-        this.sentenceLength[1] === this.sentenceLengthRange[1]
-          ? undefined
-          : this.sentenceLength[1],
+      levelMin: this.lv[0],
     })
 
     this.$store.commit('SET_SETTINGS', {
       levelMin: this.lv[0],
       level: this.lv[1],
-      sentenceMin: this.sentenceLength[0],
-      sentenceMax:
-        this.sentenceLength[1] === this.sentenceLengthRange[1]
-          ? null
-          : this.sentenceLength[1],
     })
 
     this.$buefy.snackbar.open('Saved')

@@ -1,9 +1,6 @@
 {
   "folders": [
     {
-      "path": "packages/python"
-    },
-    {
       "path": "packages/server"
     },
     {
@@ -12,5 +9,10 @@
     {
       "path": "."
     }
-  ]
+  ],
+  "settings": {
+    "files.associations": {
+      "*.sql": "postgres"
+    }
+  }
 }

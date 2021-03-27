@@ -3,21 +3,7 @@
     <div class="card">
       <div v-if="current.id" class="card-content">
         <div v-show="!isQuizShownAnswer" class="content">
-          <div v-if="!!current.source">
-            <div v-if="current.direction === 'ec'">
-              <h4>Extra English-Chinese</h4>
-
-              <div v-html="doMask(current.english, current.entry)"></div>
-            </div>
-            <div v-else>
-              <h4>Extra Chinese-English</h4>
-
-              <div class="font-zh-simp text-w-normal" style="font-size: 2rem">
-                {{ current.entry }}
-              </div>
-            </div>
-          </div>
-          <div v-else-if="current.type === 'hanzi'">
+          <div v-if="current.type === 'character'">
             <div v-if="current.direction === 'ec'">
               <h4>Hanzi English-Chinese</h4>
 
@@ -31,21 +17,8 @@
             </div>
           </div>
 
-          <div v-else-if="current.type === 'vocab'">
-            <div v-if="current.direction === 'te'">
-              <h4>Vocab Traditional-English</h4>
-
-              <div class="font-zh-trad text-w-normal" style="font-size: 1.7rem">
-                <span
-                  v-for="(it, i) in current.traditional || []"
-                  :key="i"
-                  class="traditional"
-                >
-                  {{ it }}
-                </span>
-              </div>
-            </div>
-            <div v-else-if="current.direction === 'ec'">
+          <div v-else-if="current.type === 'vocabulary'">
+            <div v-if="current.direction === 'ec'">
               <h4>Vocab English-Chinese</h4>
 
               <ul v-if="Array.isArray(current.english)">
@@ -76,7 +49,10 @@
               ></div>
             </div>
             <div v-else>
-              <h4>Vocab Simplified-English</h4>
+              <h4 v-if="current.direction === 'te'">
+                Vocabulary Traditional-English
+              </h4>
+              <h4 v-else>Vocab Simplified-English</h4>
 
               <div class="font-zh-simp text-w-normal" style="font-size: 2rem">
                 {{ current.entry }}
@@ -101,44 +77,7 @@
         </div>
 
         <div v-show="isQuizShownAnswer" class="content">
-          <div v-if="!!current.source">
-            <div
-              class="font-zh-simp text-w-normal has-context"
-              style="font-size: 2rem"
-              @contextmenu.prevent="openContext"
-            >
-              {{ current.entry }}
-            </div>
-
-            <div>
-              {{ current.pinyin }}
-            </div>
-
-            <p>
-              {{ current.english }}
-            </p>
-
-            <ul v-if="sentences.length">
-              <li v-for="(it, i) in sentences" :key="i">
-                <span
-                  class="has-context"
-                  :title="it.pinyin"
-                  @contextmenu.prevent="
-                    (ev) => openContext(ev, it.chinese, 'sentence')
-                  "
-                >
-                  {{ it.chinese }}
-                </span>
-                <ul>
-                  <li class="english">
-                    {{ it.english }}
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-
-          <div v-else-if="current.type === 'hanzi'">
+          <div v-if="current.type === 'character'">
             <div
               class="hanzi-display has-context"
               @contextmenu.prevent="openContext"
@@ -147,49 +86,54 @@
             </div>
 
             <div>
-              {{ current.pinyin }}
+              {{ current.reading.join(' | ') }}
             </div>
 
-            <div>
-              {{ current.english }}
-            </div>
+            <ul>
+              <li v-for="(it, i) in current.english" :key="i">
+                {{ it }}
+              </li>
+            </ul>
 
-            <ul v-if="sentences.length">
-              <li v-for="(it, i) in sentences" :key="i">
+            <ul v-if="getSentenceByCharacter(current.entry).length">
+              <li
+                v-for="(it, i) in getSentenceByCharacter(current.entry)"
+                :key="i"
+              >
                 <span
                   class="has-context"
-                  :title="it.pinyin"
+                  :title="it.reading[0]"
                   @contextmenu.prevent="
                     (ev) => openContext(ev, it.chinese, 'sentence')
                   "
                 >
-                  {{ it.chinese }}
+                  {{ it.entry }}
                 </span>
                 <ul>
-                  <li class="english">
-                    {{ it.english }}
+                  <li v-for="(e, j) in it.english" :key="j" class="english">
+                    {{ e }}
                   </li>
                 </ul>
               </li>
             </ul>
           </div>
 
-          <div v-else-if="current.type === 'vocab'">
+          <div v-else-if="current.type === 'vocabulary'">
             <div
               class="font-zh-simp text-w-normal has-context"
               style="font-size: 2rem"
               @contextmenu.prevent="openContext"
             >
-              {{ current.entry }}
+              {{ current.simplified }}
             </div>
 
             <div
-              v-if="current.traditional && current.traditional.length"
+              v-if="current.alt && current.alt.length"
               class="font-zh-trad text-w-normal"
               style="font-size: 1.7rem"
             >
               <span
-                v-for="(it, i) in current.traditional"
+                v-for="(it, i) in current.alt"
                 :key="i"
                 class="traditional has-context"
                 @contextmenu.prevent="(ev) => openContext(ev, it)"
@@ -199,7 +143,7 @@
             </div>
 
             <div>
-              {{ (current.pinyin || []).join(' | ') }}
+              {{ current.reading.join(' | ') }}
             </div>
 
             <ul>
@@ -208,20 +152,25 @@
               </li>
             </ul>
 
-            <ul v-if="sentences.length">
-              <li v-for="(it, i) in sentences" :key="i">
+            <ul
+              v-if="current.sentences.length"
+              :key="dictionaryData.sentence.length"
+            >
+              <li v-for="(it, i) in current.sentences" :key="i">
                 <span
                   class="has-context"
-                  :title="it.pinyin"
-                  @contextmenu.prevent="
-                    (ev) => openContext(ev, it.chinese, 'sentence')
-                  "
+                  :title="dictionaryData.sentence[it].reading[0]"
+                  @contextmenu.prevent="(ev) => openContext(ev, it, 'sentence')"
                 >
-                  {{ it.chinese }}
+                  {{ it }}
                 </span>
                 <ul>
-                  <li class="english">
-                    {{ it.english }}
+                  <li
+                    v-for="(e, j) in dictionaryData.sentence[it].english"
+                    :key="j"
+                    class="english"
+                  >
+                    {{ e }}
                   </li>
                 </ul>
               </li>
@@ -236,15 +185,13 @@
               {{ current.entry }}
             </h2>
 
-            <ul>
-              <li>
-                {{ current.pinyin }}
-              </li>
-            </ul>
+            <div>
+              {{ current.reading[0] }}
+            </div>
 
             <ul>
-              <li>
-                {{ current.english }}
+              <li v-for="(it, i) in current.english" :key="i">
+                {{ it }}
               </li>
             </ul>
           </div>
@@ -322,20 +269,15 @@
       </div>
     </div>
 
-    <ContextMenu
-      ref="context"
-      :entry="ctxEntry"
-      :type="ctxType"
-      :source="ctxSource"
-    />
+    <ContextMenu ref="context" :entry="ctxEntry" :type="ctxType" />
   </b-modal>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop, Ref } from 'vue-property-decorator'
 import toPinyin from 'chinese-to-pinyin'
-import { findSentence, findSentenceSync, zhSentence } from '@/assets/db'
 import ContextMenu from '../ContextMenu.vue'
+import arrayShuffle from 'array-shuffle'
 
 export type IQuizType = 'character' | 'vocabulary' | 'sentence'
 
@@ -343,12 +285,9 @@ export interface IQuizData {
   id: string
   type?: IQuizType
   direction?: string
-  srsLevel?: number
+  entry?: string
   nextReview?: string
   wrongStreak?: number
-  stat?: unknown
-  entry?: string
-  tag?: string[]
 }
 
 @Component
@@ -359,7 +298,6 @@ export default class QuizCard extends Vue {
 
   ctxEntry = ''
   ctxType = ''
-  ctxSource = ''
 
   isQuizShownAnswer = false
   isQuizModal = false
@@ -370,27 +308,61 @@ export default class QuizCard extends Vue {
   } = {}
 
   dictionaryData = {
-    character: {} as Record<string, Record<string, unknown>>,
-    vocabulary: {} as Record<string, Record<string, unknown>>,
+    character: {} as Record<
+      string,
+      {
+        reading: string[]
+        english: string[]
+      }
+    >,
+    vocabulary: {} as Record<
+      string,
+      {
+        simplified: string
+        alt: string[]
+        reading: string[]
+        english: string[]
+        sentences: string[]
+      }
+    >,
+    sentence: {} as Record<
+      string,
+      {
+        reading: string[]
+        english: string[]
+      }
+    >,
   }
 
-  current: Record<string, unknown> = {}
+  get current() {
+    const it = this.quizData[this.quizArray[this.quizIndex]]
 
-  sentenceKey = 0
+    if (!it || !it.type || !it.entry) {
+      return {} as Partial<IQuizData>
+    }
 
-  get sentences(): {
-    chinese: string
-    pinyin: string
-    english: string
-  }[] {
-    return findSentenceSync(this.current.entry as string, 5)
+    return {
+      ...it,
+      ...this.dictionaryData[it.type][it.entry],
+    }
+  }
+
+  getSentenceByCharacter(c: string) {
+    return arrayShuffle(
+      Object.entries(this.dictionaryData.sentence).filter(([entry]) =>
+        entry.includes(c)
+      )
+    )
+      .slice(0, 5)
+      .map(([entry, v]) => ({
+        ...v,
+        entry,
+      }))
   }
 
   async startQuiz() {
     this.quizIndex = -1
     await this.initNextQuizItem()
-
-    this.isQuizModal = true
   }
 
   endQuiz() {
@@ -402,11 +374,13 @@ export default class QuizCard extends Vue {
     const id = this.quizArray[this.quizIndex] as string | undefined
 
     if (id) {
-      await this.$axios.patch('/api/quiz/mark', undefined, {
-        params: {
-          id,
-          type,
-        },
+      this.$axios.quizUpdateSrsLevel({
+        id,
+        dLevel: {
+          right: 1,
+          wrong: -1,
+          repeat: 0,
+        }[type],
       })
     }
     this.initNextQuizItem()
@@ -432,32 +406,20 @@ export default class QuizCard extends Vue {
       await this.cacheQuizItem({ relativePosition: 0 })
     }
 
-    this.current = (() => {
-      let it: IQuizData
-      while (true) {
-        it = this.quizData[this.quizArray[++this.quizIndex]]
+    let it: IQuizData
+    while (true) {
+      it = this.quizData[this.quizArray[++this.quizIndex]]
 
-        if (it && it.entry && it.type) {
-          break
-        }
-
-        if (this.quizIndex >= this.quizArray.length) {
-          return {}
-        }
+      if (it && it.entry && it.type) {
+        break
       }
 
-      if (it.type === 'sentence') {
-        return {
-          ...it,
-          ...(zhSentence.findOne({ chinese: it.entry }) || {}),
-        }
+      if (this.quizIndex >= this.quizArray.length) {
+        break
       }
+    }
 
-      return {
-        ...it,
-        ...this.dictionaryData[it.type][it.entry],
-      }
-    })()
+    this.isQuizModal = true
   }
 
   checkFront(relativePosition: number): boolean {
@@ -474,17 +436,12 @@ export default class QuizCard extends Vue {
       return false
     }
 
-    if (type === 'sentence') {
-      return !!zhSentence.findOne({ chinese: entry })
-    }
-
     return !!this.dictionaryData[type][entry]
   }
 
   openContext(ev: MouseEvent, entry?: string, type?: string) {
-    this.ctxEntry = entry || (this.current.entry as string) || ''
-    this.ctxType = type || (this.current.type as string) || ''
-    this.ctxSource = entry ? '' : (this.current.source as string)
+    this.ctxEntry = entry || this.current.entry || ''
+    this.ctxType = type || this.current.type || ''
 
     this.context.open(ev)
   }
@@ -524,28 +481,20 @@ export default class QuizCard extends Vue {
         data: {
           result: [r],
         },
-      } = await this.$axios.get<{
-        result: IQuizData[]
-      }>('/api/quiz/many', {
-        params: {
-          ids: [quizId],
-          select: [
-            'entry',
-            'type',
-            'source',
-            'direction',
-            'front',
-            'back',
-            'mnemonic',
-          ],
-        },
+      } = await this.$axios.quizGetMany(null, {
+        id: [quizId],
+        select: ['entry', 'type', 'direction'],
       })
 
       if (r) {
         if (q) {
           Object.assign(q, r)
         } else {
-          q = r
+          q = {
+            ...r,
+            id: r.id!,
+            type: r.type as IQuizType,
+          }
         }
 
         q.id = quizId
@@ -564,30 +513,6 @@ export default class QuizCard extends Vue {
     }
 
     if (type === 'sentence') {
-      await this.$axios
-        .get<{
-          id: string
-          chinese: string
-          english: string
-        }>('/api/sentence', {
-          params: {
-            entry,
-            select: 'chinese,english',
-          },
-        })
-        .then(({ data: r }) => {
-          const oldSentence = zhSentence.findOne({ chinese: r.chinese })
-
-          if (!oldSentence) {
-            zhSentence.insert({
-              chinese: r.chinese,
-              pinyin: toPinyin(r.chinese, {
-                keepRest: true,
-              }),
-              english: r.english.split('\x1F')[0],
-            })
-          }
-        })
       return
     }
 
@@ -598,70 +523,124 @@ export default class QuizCard extends Vue {
         character: async () => {
           const {
             data: { reading, english },
-          } = await this.$axios.get<{
-            reading: string
-            english: string
-          }>('/api/character', {
-            params: {
-              entry,
-              select: 'reading,english',
-            },
-          })
+          } = await this.$axios.characterGetByEntry({ entry })
 
           this.dictionaryData.character[entry] = {
             reading,
             english,
           }
 
-          this.$set(this, 'dictionaryData', this.dictionaryData)
+          this.$set(
+            this.dictionaryData,
+            'character',
+            this.dictionaryData.character
+          )
 
-          if (await findSentence(entry, 5)) {
-            this.sentenceKey = Math.random()
+          if (this.getSentenceByCharacter(entry).length < 5) {
+            const {
+              data: { result },
+            } = await this.$axios.characterSentence({ entry })
+            result.map(({ entry, english }) => {
+              if (!this.dictionaryData.sentence[entry]) {
+                this.dictionaryData.sentence[entry] = {
+                  reading: [
+                    toPinyin(entry, {
+                      keepRest: true,
+                      toneToNumber: true,
+                    }),
+                  ],
+                  english: [english],
+                }
+              }
+            })
+
+            this.$set(
+              this.dictionaryData,
+              'sentence',
+              this.dictionaryData.sentence
+            )
           }
         },
         vocabulary: async () => {
-          const { traditional, pinyin, english } =
+          const { simplified, alt, reading, english } =
             this.dictionaryData.vocabulary[entry] ||
             (await this.$axios
-              .get<{
-                result: {
-                  traditional?: string
-                  pinyin: string
-                  english: string
-                }[]
-              }>('/api/vocabulary', {
-                params: {
-                  entry,
-                  select: 'traditional,pinyin,english',
-                },
-              })
-              .then(({ data: { result } }) => {
-                return {
-                  traditional: result
-                    .map(({ traditional }) => traditional || '')
-                    .filter((r) => r)
-                    .filter((a, i, arr) => arr.indexOf(a) === i),
-                  pinyin: result
-                    .map(({ pinyin }) => pinyin)
-                    .filter((a, i, arr) => arr.indexOf(a) === i),
-                  english: result.map(({ english }) => english),
-                }
-              }))
+              .vocabularyGetByEntry({ entry })
+              .then(({ data }) => ({
+                ...data,
+                simplified: data.entry,
+              })))
 
           this.dictionaryData.vocabulary[entry] = {
-            traditional,
-            pinyin,
+            simplified,
+            alt,
+            reading,
             english,
+            sentences: [],
           }
 
-          this.$set(this, 'dictionaryData', this.dictionaryData)
+          this.$set(
+            this.dictionaryData,
+            'vocabulary',
+            this.dictionaryData.vocabulary
+          )
 
-          if (await findSentence(entry, 5)) {
-            this.sentenceKey = Math.random()
+          {
+            const {
+              data: { result },
+            } = await this.$axios.vocabularySentence({ entry })
+            this.dictionaryData.vocabulary[entry].sentences = result.map(
+              ({ entry, english }) => {
+                if (!this.dictionaryData.sentence[entry]) {
+                  this.dictionaryData.sentence[entry] = {
+                    reading: [
+                      toPinyin(entry, {
+                        keepRest: true,
+                        toneToNumber: true,
+                      }),
+                    ],
+                    english: [english],
+                  }
+                }
+                return entry
+              }
+            )
+
+            this.$set(
+              this.dictionaryData,
+              'vocabulary',
+              this.dictionaryData.vocabulary
+            )
+            this.$set(
+              this.dictionaryData,
+              'sentence',
+              this.dictionaryData.sentence
+            )
           }
         },
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        sentence: async () => {},
+        sentence: async () => {
+          await this.$axios
+            .sentenceGetByEntry({
+              entry,
+            })
+            .then(({ data: { english } }) => {
+              this.dictionaryData.sentence[entry] = {
+                reading: [
+                  toPinyin(entry, {
+                    keepRest: true,
+                    toneToNumber: true,
+                  }),
+                ],
+                english,
+              }
+
+              this.$set(
+                this.dictionaryData,
+                'sentence',
+                this.dictionaryData.sentence
+              )
+            })
+        },
       }
 
       await setTemplate[type]()

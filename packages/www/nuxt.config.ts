@@ -1,12 +1,15 @@
 import { NuxtConfig } from '@nuxt/types'
 
 export default (): NuxtConfig => {
+  const port = parseInt(process.env.PORT!) || 35594
+  process.env.PORT = port.toString()
+
   return {
     // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
-    ssr: false,
+    ssr: true,
 
     // Target: https://go.nuxtjs.dev/config-target
-    target: 'static',
+    target: 'server',
 
     // Global page headers: https://go.nuxtjs.dev/config-head
     head: {
@@ -48,11 +51,11 @@ export default (): NuxtConfig => {
     },
 
     // Global CSS: https://go.nuxtjs.dev/config-css
-    css: ['~/assets/buefy.scss', '~/assets/app.scss'],
+    css: ['~/styles/buefy.scss', '~/styles/app.scss'],
 
     // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
     plugins: [
-      '~/plugins/axios.client.ts',
+      '~/plugins/api.ts',
       '~/plugins/filter.ts',
       '~/plugins/vue-context.client.js',
       '~/plugins/speak.client.ts',
@@ -78,8 +81,6 @@ export default (): NuxtConfig => {
           defaultIconComponent: 'fontawesome',
         },
       ],
-      // https://go.nuxtjs.dev/axios
-      '@nuxtjs/axios',
       // https://go.nuxtjs.dev/pwa
       '@nuxtjs/pwa',
       [
@@ -112,15 +113,11 @@ export default (): NuxtConfig => {
           },
         },
       ],
+      '@nuxtjs/proxy',
     ],
-
-    // Axios module configuration: https://go.nuxtjs.dev/config-axios
-    axios: {
-      proxy: true,
-    },
-    proxy: {
-      '/api/': `http://localhost:${process.env.SERVER_PORT || 5000}`,
-    },
+    proxy: process.env.SERVER_PORT ? [
+      `http://localhost:${process.env.SERVER_PORT}/api`,
+    ] : [],
 
     // PWA module configuration: https://go.nuxtjs.dev/pwa
     pwa: {
@@ -137,7 +134,11 @@ export default (): NuxtConfig => {
       },
     },
     server: {
-      port: 35594,
+      port
+    },
+    env: {
+      PORT: process.env.PORT,
+      MAGIC_PUBLIC: process.env.MAGIC_PUBLIC || ''
     },
   }
 }

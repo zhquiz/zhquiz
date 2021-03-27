@@ -1,6 +1,8 @@
 <template>
   <section class="AppPage">
-    <b-sidebar v-model="isDrawer" type="is-light" fullheight>
+    <b-loading v-if="!isReady" active is-full-page></b-loading>
+
+    <b-sidebar v-if="isReady" v-model="isDrawer" type="is-light" fullheight>
       <div class="p-2">
         <aside class="menu">
           <p class="menu-label">Menu</p>
@@ -39,11 +41,11 @@
       <div style="flex-grow: 1"></div>
 
       <div class="p-4">
-        <center>Logged in as DEFAULT</center>
+        <center>Logged in as {{ $store.state.identifier }}</center>
       </div>
     </b-sidebar>
 
-    <nav class="tabs is-toggle">
+    <nav v-if="isReady" class="tabs is-toggle">
       <ul>
         <li @click="isDrawer = true">
           <b-icon class="clickable" icon="bars" role="button"></b-icon>
@@ -57,7 +59,7 @@
             <b-dropdown aria-role="menu" append-to-body :value="t.component">
               <template #trigger>
                 <a class="no-margin" role="button">
-                  <span @click.stop="activeTab = i">
+                  <span @click.stop="setCurrentTab(i)">
                     {{ t.title }}
                   </span>
                   <b-icon icon="caret-down"></b-icon>
@@ -93,12 +95,13 @@
       </ul>
     </nav>
 
-    <main>
+    <main class="container mt-3" v-if="isReady">
       <component
         :is="t.component + 'Tab'"
         v-for="(t, i) in tabs"
         v-show="activeTab === i"
         :key="i"
+        :query="t.query"
         @title="(t) => setTitle(i, t)"
       />
     </main>
@@ -119,19 +122,23 @@ import { Component, Vue } from 'nuxt-property-decorator'
     SettingsTab: () => import('@/components/tabs/SettingsTab.vue'),
     VocabularyTab: () => import('@/components/tabs/VocabularyTab.vue'),
   },
-  created() {
-    this.addTab('Random', true)
+  async mounted() {
+    await this.$accessor.setCredentials()
+    await this.$accessor.updateSettings()
+
+    if (!this.$accessor.isApp) {
+      this.$router.replace('/')
+    } else {
+      this.$accessor.ADD_TAB({
+        component: 'Random',
+        permanent: true,
+      })
+      this.isReady = true
+    }
   },
 })
 export default class AppPage extends Vue {
-  tabs: {
-    title: string
-    component: string
-    permanent?: boolean
-  }[] = []
-
-  activeTab = 0
-
+  isReady = false
   isDrawer = false
 
   get navItems(): {
@@ -150,12 +157,12 @@ export default class AppPage extends Vue {
         icon: 'chalkboard-teacher',
       },
       {
-        component: 'Hanzi',
+        component: 'Character',
         text: '字',
         className: 'font-han',
       },
       {
-        component: 'Vocab',
+        component: 'Vocabulary',
         text: '词',
         className: 'font-han',
       },
@@ -178,51 +185,37 @@ export default class AppPage extends Vue {
     ]
   }
 
-  setTitle(i: number, t: string) {
-    const tabs = this.clone(this.tabs)
-    tabs[i].title = t
-
-    this.tabs = tabs
-  }
-
-  addTab(component: string, permanent?: boolean) {
-    this.tabs = [
-      ...this.tabs,
-      {
-        title: component,
-        component,
-        permanent,
-      },
-    ]
-    this.activeTab = this.tabs.length - 1
-  }
-
-  setTab(i: number, component: string) {
-    const tabs = this.clone(this.tabs)
-    tabs[i].component = component
-
-    this.tabs = tabs
-    this.activeTab = i
-  }
-
-  deleteTab(i: number) {
-    const tabs = this.clone(this.tabs)
-    tabs.splice(i, 1)
-
-    if (this.activeTab >= tabs.length) {
-      this.activeTab = tabs.length - 1
-    }
-
-    this.tabs = tabs
-  }
-
-  clone<T>(o: T): T {
-    return JSON.parse(JSON.stringify(o))
-  }
-
   get level() {
     const { level } = this.$store.state.settings
     return level ? level.toString() : ' '
+  }
+
+  get tabs() {
+    return this.$store.state.tabs
+  }
+
+  get activeTab() {
+    return this.$store.state.activeTab
+  }
+
+  setTab(i: number, component: string) {
+    this.$accessor.SET_TAB_COMPONENT({ i, component })
+  }
+
+  setCurrentTab(i: number) {
+    this.$accessor.SET_TAB_CURRENT({ i })
+  }
+
+  addTab(component: string) {
+    this.$accessor.ADD_TAB({ component })
+  }
+
+  deleteTab(i: number) {
+    this.$accessor.DELETE_TAB({ i })
+  }
+
+  setTitle(i: number, title: string) {
+    this.$accessor.SET_TAB_TITLE({ i, title })
   }
 }
 </script>

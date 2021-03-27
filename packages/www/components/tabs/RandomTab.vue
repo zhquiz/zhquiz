@@ -7,7 +7,7 @@
             <b-tooltip :label="character.english">
               <div
                 class="font-han hanzi clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, 'hanzi')"
+                @contextmenu.prevent="(evt) => openContext(evt, 'character')"
               >
                 {{ character.entry }}
               </div>
@@ -25,7 +25,7 @@
             <b-tooltip :label="vocabulary.english">
               <div
                 class="font-zh-simp hanzi clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, 'vocab')"
+                @contextmenu.prevent="(evt) => openContext(evt, 'vocabulary')"
               >
                 {{ vocabulary.entry }}
               </div>
@@ -90,15 +90,8 @@ export default class RandomPage extends Vue {
       {
         name: 'Reload',
         handler: async () => {
-          const settings = this.$store.state.settings
-
-          const { result, english = '' } = await this.$axios
-            .get('/api/hanzi/random', {
-              params: {
-                levelMin: settings.levelMin,
-                level: settings.level,
-              },
-            })
+          const { result, english } = await this.$axios
+            .characterRandom()
             .then((r) => r.data)
 
           this.character.entry = result
@@ -116,13 +109,8 @@ export default class RandomPage extends Vue {
       {
         name: 'Reload',
         handler: async () => {
-          const { result, english = '' } = await this.$axios
-            .get('/api/vocabulary/random', {
-              params: {
-                levelMin: this.$store.state.settings.levelMin,
-                level: this.$store.state.settings.level,
-              },
-            })
+          const { result, english } = await this.$axios
+            .vocabularyRandom()
             .then((r) => r.data)
 
           this.vocabulary.entry = result
@@ -140,17 +128,12 @@ export default class RandomPage extends Vue {
       {
         name: 'Reload',
         handler: async () => {
-          const { result, english = '' } = await this.$axios
-            .get('/api/sentence/random', {
-              params: {
-                levelMin: this.$store.state.settings.levelMin,
-                level: this.$store.state.settings.level,
-              },
-            })
+          const { result, english } = await this.$axios
+            .sentenceRandom()
             .then((r) => r.data)
 
           this.sentence.entry = result
-          this.sentence.english = english.split('\x1F')[0]
+          this.sentence.english = english
         },
       },
     ],

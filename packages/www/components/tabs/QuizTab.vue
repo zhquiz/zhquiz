@@ -8,14 +8,14 @@
             <b-field class="flex-wrap">
               <b-checkbox-button
                 v-model="type"
-                native-value="hanzi"
+                native-value="character"
                 type="is-success"
               >
                 Hanzi
               </b-checkbox-button>
               <b-checkbox-button
                 v-model="type"
-                native-value="vocab"
+                native-value="vocabulary"
                 type="is-success"
               >
                 Vocab
@@ -67,9 +67,8 @@
         </div>
         <div class="column is-4-fullhd is-5" style="min-width: 350px">
           <div class="field">
-            <label class="label">Extras</label>
+            <label class="label">Options</label>
             <div class="control">
-              <b-switch v-model="includeExtra">User items</b-switch>
               <b-switch v-model="includeUndue">Include undue</b-switch>
             </div>
           </div>
@@ -107,7 +106,7 @@
             <b-field label="Filter">
               <b-input
                 v-model="q"
-                placeholder="Try level:>10,<=20 or tag:HSK4"
+                placeholder="Try level>10, level<=20 or tag:HSK4"
                 type="search"
               />
             </b-field>
@@ -171,86 +170,7 @@
 
       <QuizCard ref="quizCard" :quiz-array="quizArray" @quiz:ended="reload" />
 
-      <b-collapse class="card" animation="slide" :open.sync="leechCard.isOpen">
-        <div
-          slot="trigger"
-          slot-scope="props"
-          class="card-header"
-          role="button"
-        >
-          <p class="card-header-title">Leech list ({{ leechCard.total }})</p>
-          <a role="button" class="card-header-icon">
-            <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
-          </a>
-        </div>
-        <div class="card-content">
-          <form @submit.prevent="onLeechCardSubmit">
-            <b-field label="Search">
-              <b-input v-model="leechCard.q"></b-input>
-            </b-field>
-          </form>
-
-          <b-table
-            :data="leechCard.data"
-            paginated
-            backend-pagination
-            :total="leechCard.total"
-            :current-page.sync="leechCard.page"
-            :per-page="leechCard.perPage"
-            backend-sorting
-            :default-sort="[leechCard.sort.field, leechCard.sort.order]"
-            @sort="onLeechSort"
-            @contextmenu="onLeechContextmenu"
-          >
-            <b-table-column v-slot="props" field="entry" label="Entry" sortable>
-              <span class="hover-blue cursor-pointer">
-                {{ props.row.entry }}
-              </span>
-            </b-table-column>
-
-            <b-table-column v-slot="props" field="type" label="Type" sortable>
-              {{ props.row.type }}
-            </b-table-column>
-
-            <b-table-column
-              v-slot="props"
-              field="direction"
-              label="Direction"
-              sortable
-            >
-              {{ props.row.direction }}
-            </b-table-column>
-
-            <b-table-column
-              v-slot="props"
-              field="wrongStreak"
-              label="Wrong Streak"
-              sortable
-            >
-              {{ props.row.wrongStreak }}
-            </b-table-column>
-
-            <b-table-column
-              v-slot="props"
-              field="lastRight"
-              label="Last Right"
-              sortable
-            >
-              {{ props.row.lastRight | formatDate }}
-            </b-table-column>
-          </b-table>
-        </div>
-      </b-collapse>
-
       <b-loading :active="isLoading" />
-
-      <ContextMenu
-        ref="context"
-        :type="leechCard.current.type"
-        :entry="leechCard.current.entry"
-        :source="leechCard.current.source"
-        :direction="leechCard.current.direction"
-      />
     </div>
   </section>
 </template>
@@ -270,31 +190,18 @@ interface ILeechCard {
 }
 
 @Component<QuizPage>({
-  head() {
-    return {
-      title: 'Quiz - ZhQuiz',
-    }
+  components: {
+    QuizCard,
   },
-  layout: 'app',
   async created() {
-    const r = await this.$axios
-      .get<{
-        'settings.quiz': {
-          type: IQuizType[]
-          stage: string[]
-          direction: string[]
-          includeUndue: boolean
-          includeExtra: boolean
-        }
-      }>('/api/user', {
-        params: {
-          select: ['settings.quiz'],
-        },
-      })
-      .then((r) => r.data)
+    this.$emit('title', 'Quiz')
+
+    const { data: r } = await this.$axios.userGetSettings({
+      select: 'quizSettings',
+    })
 
     const { type, stage, direction, includeUndue, includeExtra } =
-      r['settings.quiz'] || {}
+      r.quizSettings || {}
 
     if (type) {
       this.type = type
@@ -362,7 +269,7 @@ export default class QuizPage extends Vue {
 
   q = ''
 
-  type: IQuizType[] = ['character', 'vocabulary', 'sentence']
+  type: IQuizType[] = ['character', 'vocabulary']
   stage = ['new', 'leech', 'learning']
   direction = ['se']
 
@@ -410,16 +317,12 @@ export default class QuizPage extends Vue {
   }
 
   async init() {
-    const r = await this.$axios
-      .get('/api/user', {
-        params: {
-          select: ['settings.quiz'],
-        },
-      })
-      .then((r) => r.data)
+    const { data: r } = await this.$axios.userGetSettings({
+      select: 'quizSettings',
+    })
 
     const { type, stage, direction, includeExtra, includeUndue, q } =
-      r['settings.quiz'] || {}
+      r.quizSettings || {}
 
     if (type) {
       this.type = type
@@ -446,7 +349,6 @@ export default class QuizPage extends Vue {
     this.isInit = true
     this.isLoading = false
 
-    this.onLeechCardSubmit()
     await this.reload()
   }
 
@@ -456,28 +358,17 @@ export default class QuizPage extends Vue {
   @Watch('includeUndue')
   @Watch('includeExtra')
   async reload() {
-    const {
-      quiz,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      upcoming: [{ nextReview: dueIn } = {} as any] = [],
-    } = await this.$axios
-      .get<{
-        quiz: IQuizData[]
-        upcoming: IQuizData[]
-      }>('/api/quiz/init', {
-        params: {
-          type: this.type,
-          stage: this.stage,
-          direction: this.direction,
-          includeUndue: this.includeUndue,
-          includeExtra: this.includeExtra,
-          q: this.q,
-        },
+    const { quiz, upcoming } = await this.$axios
+      .quizInit(null, {
+        type: this.type,
+        stage: this.stage,
+        direction: this.direction,
+        includeUndue: this.includeUndue,
+        q: this.q,
       })
       .then((r) => r.data)
 
     const quizArray: string[] = []
-    // eslint-disable-next-line array-callback-return,@typescript-eslint/no-explicit-any
     quiz.map((it: any) => {
       quizArray.push(it.id)
       this.quizData[it.id] = it
@@ -486,62 +377,14 @@ export default class QuizPage extends Vue {
     this.quizArray = quizArray
     this.$set(this, 'quizData', this.quizData)
 
-    this.dueIn = dueIn ? new Date(dueIn) : null
+    this.dueIn =
+      upcoming[0] && upcoming[0].nextReview
+        ? new Date(upcoming[0].nextReview)
+        : null
   }
 
   async startQuiz() {
     await this.quizCard.startQuiz()
-  }
-
-  onLeechCardSubmit() {
-    this.leechCard.page = 1
-    this.leechCard.sort = {
-      field: '',
-      order: 'asc',
-    }
-    this.loadLeechCard()
-  }
-
-  @Watch('leechCard.page')
-  async loadLeechCard() {
-    const { result, count } = await this.$axios
-      .get<{
-        result: {
-          id: string
-          entry: string
-          type: string
-          direction: string
-          source?: string
-        }[]
-        count: number
-      }>('/api/quiz/leech', {
-        params: {
-          q: this.leechCard.q,
-          page: this.leechCard.page,
-          perPage: this.leechCard.perPage,
-          sort: this.leechCard.sort.field,
-          order: this.leechCard.sort.order,
-        },
-      })
-      .then((r) => r.data)
-
-    this.leechCard.data = result
-    this.leechCard.total = count
-  }
-
-  onLeechSort(field: string, order: 'desc' | 'asc') {
-    this.leechCard.sort = {
-      field,
-      order,
-    }
-    this.loadLeechCard()
-  }
-
-  onLeechContextmenu(row: ILeechCard, evt: MouseEvent) {
-    evt.preventDefault()
-
-    this.leechCard.current = row
-    this.context.open(evt)
   }
 }
 </script>

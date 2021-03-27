@@ -1,7 +1,7 @@
 <template>
   <section>
     <div class="HanziPage">
-      <form class="field" @submit.prevent="q = q0">
+      <form class="field" @submit.prevent="$set(query, 'q', q0)">
         <div class="control">
           <input
             v-model="q0"
@@ -18,7 +18,9 @@
         <div class="column is-6 entry-display">
           <div
             class="hanzi-display clickable font-han"
-            @contextmenu.prevent="(evt) => openContext(evt, current, 'hanzi')"
+            @contextmenu.prevent="
+              (evt) => openContext(evt, current, 'character')
+            "
           >
             {{ current }}
           </div>
@@ -62,7 +64,7 @@
                 v-for="h in sub"
                 :key="h"
                 class="font-han clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, h, 'hanzi')"
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -112,7 +114,7 @@
                 v-for="h in variants"
                 :key="h"
                 class="font-han clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, h, 'hanzi')"
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -137,35 +139,24 @@
                 <span
                   class="clickable"
                   @contextmenu.prevent="
-                    (evt) => openContext(evt, v.simplified, 'vocab')
+                    (evt) => openContext(evt, v.entry, 'vocabulary')
                   "
                 >
-                  {{ v.simplified }}
+                  {{ v.entry }}
                 </span>
 
-                <span
-                  v-if="v.traditional"
-                  class="clickable"
-                  @contextmenu.prevent="
-                    (evt) => openContext(evt, v.traditional, 'vocab')
-                  "
-                >
-                  {{ v.traditional }}
+                <span v-if="v.alt" class="clickable">
+                  {{ v.alt.join(' ') }}
                 </span>
 
-                <span class="pinyin">[{{ v.pinyin }}]</span>
+                <span class="pinyin">[{{ v.reading.join(' / ') }}]</span>
 
-                <span>{{ v.english }}</span>
+                <span>{{ v.english.join(' / ') }}</span>
               </div>
             </div>
           </b-collapse>
 
-          <b-collapse
-            :key="sentenceKey"
-            class="card"
-            animation="slide"
-            :open="!!sentences().length"
-          >
+          <b-collapse class="card" animation="slide" :open="!!sentences.length">
             <div
               slot="trigger"
               slot-scope="props"
@@ -179,14 +170,14 @@
             </div>
 
             <div class="card-content">
-              <div v-for="(s, i) in sentences()" :key="i" class="long-item">
+              <div v-for="(s, i) in sentences" :key="i" class="long-item">
                 <span
                   class="clickable"
                   @contextmenu.prevent="
-                    (evt) => openContext(evt, s.chinese, 'sentence')
+                    (evt) => openContext(evt, s.entry, 'sentence')
                   "
                 >
-                  {{ s.chinese }}
+                  {{ s.entry }}
                 </span>
 
                 <span>{{ s.english }}</span>
@@ -202,23 +193,19 @@
       :entry="selected.entry"
       :type="selected.type"
       :additional="additionalContext"
-      :pinyin="sentenceDef.pinyin"
-      :english="sentenceDef.english"
     />
   </section>
 </template>
 
 <script lang="ts">
-import { Component, Ref, Vue, Watch } from 'nuxt-property-decorator'
+import { Component, Prop, Ref, Vue, Watch } from 'nuxt-property-decorator'
 import ContextMenu from '@/components/ContextMenu.vue'
-import { findSentence, zhSentence } from '@/assets/db'
 
-@Component<HanziPage>({
-  components: {
-    ContextMenu,
-  },
+@Component<CharacterTab>({
   async created() {
-    this.q0 = this.q
+    this.$emit('title', 'Hanzi')
+
+    this.q0 = this.query.q || ''
 
     if (this.additionalContext[0]) {
       await this.additionalContext[0].handler()
@@ -226,15 +213,12 @@ import { findSentence, zhSentence } from '@/assets/db'
 
     this.onQChange(this.q0)
   },
-  head() {
-    return {
-      title: this.title,
-      titleTemplate: '%s - ZhQuiz',
-    }
-  },
-  layout: 'app',
 })
-export default class HanziPage extends Vue {
+export default class CharacterTab extends Vue {
+  @Prop({ default: () => ({}) }) query!: {
+    q?: string
+  }
+
   @Ref() context!: ContextMenu
 
   entries: string[] = []
@@ -243,7 +227,16 @@ export default class HanziPage extends Vue {
   sub: string[] = []
   sup: string[] = []
   variants: string[] = []
-  vocabs: Record<string, unknown>[] = []
+  vocabs: {
+    entry: string
+    alt: string[]
+    reading: string[]
+    english: string[]
+  }[] = []
+  sentences: {
+    entry: string
+    english: string
+  }[] = []
 
   selected: {
     entry: string
@@ -254,64 +247,20 @@ export default class HanziPage extends Vue {
   }
 
   q0 = ''
-  title = 'Hanzi'
-
-  sentenceKey = 0
-
-  sentences() {
-    return zhSentence
-      .find({
-        chinese: {
-          $containsString: this.current,
-        },
-      })
-      .slice(0, 10)
-  }
-
-  get sentenceDef() {
-    if (this.selected.type !== 'sentence') {
-      return {}
-    }
-
-    const it = zhSentence.findOne({ chinese: this.selected.entry })
-    if (!it) {
-      return {}
-    }
-
-    return {
-      pinyin: {
-        [this.selected.entry]: it.pinyin,
-      },
-      english: {
-        [this.selected.entry]: it.english,
-      },
-    }
-  }
-
-  get q() {
-    const q = this.$route.query.q
-    return (Array.isArray(q) ? q[0] : q) || ''
-  }
-
-  set q(q: string) {
-    this.$router.push({ query: { q } })
-  }
 
   get current() {
     return this.entries[this.i]
   }
 
   get additionalContext() {
-    if (!this.q) {
+    if (!this.query.q) {
       return [
         {
           name: 'Reload',
           handler: async () => {
             const {
               data: { result },
-            } = await this.$axios.get<{
-              result: string
-            }>('/api/hanzi/random')
+            } = await this.$axios.characterRandom()
 
             this.q0 = result
           },
@@ -331,28 +280,19 @@ export default class HanziPage extends Vue {
     this.context.open(evt)
   }
 
-  @Watch('q')
+  @Watch('query.q')
   async onQChange(q: string) {
-    this.title = (q ? q + ' - ' : '') + 'Hanzi'
+    this.$emit('title', (q ? q + ' - ' : '') + 'Hanzi')
 
     if (/\p{sc=Han}/u.test(q)) {
       const qs = q.split('').filter((h) => /\p{sc=Han}/u.test(h))
       this.entries = qs.filter((h, i) => qs.indexOf(h) === i)
     } else {
-      const r = await this.$axios.get<{
-        result: {
-          entry: string
-        }[]
-      }>('/api/hanzi/q', {
-        params: {
-          q,
-        },
-      })
-      this.entries = r.data.result.map(({ entry }) => entry)
+      const r = await this.$axios.characterQuery({ q })
+      this.entries = r.data.result
     }
 
     this.i = 0
-    this.load()
   }
 
   @Watch('current')
@@ -360,43 +300,44 @@ export default class HanziPage extends Vue {
     if (this.current) {
       this.loadHanzi()
       this.loadVocab()
+      this.loadSentences()
     } else {
       this.sub = []
       this.sup = []
       this.variants = []
       this.vocabs = []
+      this.sentences = []
     }
   }
 
   async loadHanzi() {
-    const r = await this.$axios
-      .get('/api/character/radical', {
-        params: {
-          entry: this.current,
-        },
-      })
-      .then((r) => r.data)
+    const { data: r } = await this.$axios.characterRadical({
+      entry: this.current,
+    })
 
-    this.sub = [...r.sub]
-    this.sup = [...r.sup]
-    this.variants = [...r.variants]
+    this.sub = r.sub
+    this.sup = r.sup
+    this.variants = r.var
   }
 
   async loadVocab() {
     const {
       data: { result },
-    } = await this.$axios.get('/api/vocabulary/q', {
-      params: {
-        q: this.current,
-      },
+    } = await this.$axios.characterVocabulary({
+      entry: this.current,
     })
+
     this.vocabs = result
   }
 
   async loadSentences() {
-    if (await findSentence(this.current, 10)) {
-      this.sentenceKey = Math.random()
-    }
+    const {
+      data: { result },
+    } = await this.$axios.characterSentence({
+      entry: this.current,
+    })
+
+    this.sentences = result
   }
 }
 </script>

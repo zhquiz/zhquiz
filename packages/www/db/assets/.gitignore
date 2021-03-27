@@ -1,0 +1,5 @@
+tatoeba.db
+# cedict.db
+*.bz2
+
+zhquiz.db
