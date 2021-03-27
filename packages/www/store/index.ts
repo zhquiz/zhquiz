@@ -75,6 +75,9 @@ export const mutations = mutationTree(state, {
     state.tabs = JSON.parse(JSON.stringify(state.tabs))
     state.activeTab = i
   },
+  SET_TAB_CURRENT(state, { i }: { i: number }) {
+    state.activeTab = i
+  },
   SET_IDENTIFIER(state, name: string) {
     state.identifier = name
   },

@@ -67,7 +67,7 @@
         </div>
         <div class="column is-4-fullhd is-5" style="min-width: 350px">
           <div class="field">
-            <label class="label">Extras</label>
+            <label class="label">Options</label>
             <div class="control">
               <b-switch v-model="includeUndue">Include undue</b-switch>
             </div>
@@ -79,14 +79,21 @@
             <b-field class="flex-wrap">
               <b-checkbox-button
                 v-model="direction"
-                native-value="entry-first"
+                native-value="se"
                 type="is-success"
               >
                 Simplified-English
               </b-checkbox-button>
               <b-checkbox-button
                 v-model="direction"
-                native-value="english-first"
+                native-value="te"
+                type="is-success"
+              >
+                Traditional-English
+              </b-checkbox-button>
+              <b-checkbox-button
+                v-model="direction"
+                native-value="ec"
                 type="is-success"
               >
                 English-Chinese
@@ -183,6 +190,9 @@ interface ILeechCard {
 }
 
 @Component<QuizPage>({
+  components: {
+    QuizCard,
+  },
   async created() {
     this.$emit('title', 'Quiz')
 
@@ -261,7 +271,7 @@ export default class QuizPage extends Vue {
 
   type: IQuizType[] = ['character', 'vocabulary']
   stage = ['new', 'leech', 'learning']
-  direction = ['entry-first']
+  direction = ['se']
 
   includeExtra = true
   includeUndue = false

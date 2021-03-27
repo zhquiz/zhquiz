@@ -474,35 +474,57 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
-        const missingEntries = await Promise.all(
+        const lookups: {
+          entry: string
+          alt?: string[]
+          reading?: string[]
+          english: string[]
+          type: string
+        }[] = await Promise.all(
           entries.map(async (el) => {
             switch (type) {
               case 'character':
-                return lookupCharacter(el, userId).then(async (r) =>
-                  r ? null : { entry: el, reading: await makeReading(el) }
-                )
+                return lookupCharacter(el, userId).then(async (r) => ({
+                  ...(r || {
+                    entry: el,
+                    reading: [await makeReading(el)],
+                    english: [],
+                  }),
+                  type,
+                }))
               case 'sentence':
-                return lookupSentence(el, userId).then(async (r) =>
-                  r ? null : { entry: el, reading: await makeReading(el) }
-                )
+                return lookupSentence(el, userId).then(async (r) => ({
+                  ...(r || {
+                    entry: el,
+                    reading: [await makeReading(el)],
+                    english: [],
+                  }),
+                  type,
+                }))
             }
 
-            return lookupVocabulary(el, userId).then(async (r) =>
-              r ? null : { entry: el, reading: await makeReading(el) }
-            )
+            return lookupVocabulary(el, userId).then(async (r) => ({
+              ...(r || {
+                entry: el,
+                reading: [await makeReading(el)],
+                english: [],
+              }),
+              type,
+            }))
           })
-        ).then((rs) => rs.filter((r) => r).map((r) => r!))
+        )
+        const missingEntries = lookups.filter((r) => !r.english.length)
 
         if (missingEntries.length) {
           await db.tx(async (db) => {
             await db.query(sql`
-            INSERT INTO "extra" ("entry", "pinyin", "userId", "id")
+            INSERT INTO "extra" ("entry", "pinyin", "userId", "id", "type")
             VALUES ${sql.join(
               missingEntries.map(
                 (it) =>
-                  sql`(${[it.entry]}, ${[it.reading]}, ${[
+                  sql`(${[it.entry]}, ${it.reading || []}, ${[
                     userId,
-                  ]}, ${shortUUID.uuid()})`
+                  ]}, ${shortUUID.uuid()}, ${it.type})`
               ),
               ','
             )}
@@ -510,18 +532,29 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           })
         }
 
+        const hasTeMap = new Map<string, string[]>()
+        lookups.map((it) => {
+          if (it.type === 'vocabulary' && it.alt?.length) {
+            hasTeMap.set(it.entry, it.alt || [])
+          }
+        })
+
         const ids = new Map<string, string[]>()
-        let dirs = ['entry-first', 'reading-first', 'english-first']
-        if (type === 'sentence') {
-          dirs = ['entry-first', 'english-first']
-        }
 
         await db.tx(async (db) => {
           await db.query(sql`
           INSERT INTO "quiz" ("entry", "type", "direction", "userId", "id")
           VALUES ${sql.join(
             entries
-              .flatMap((el) => dirs.map((dir) => ({ dir, el })))
+              .flatMap((el) => {
+                const dirs = ['se', 'ec'].map((dir) => ({ dir, el }))
+                const te = hasTeMap.get(el)
+                if (te) {
+                  te.map((it) => dirs.push({ dir: 'te', el: it }))
+                }
+
+                return dirs
+              })
               .map(({ dir, el }) => {
                 const id = shortUUID.uuid()
 
@@ -533,6 +566,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
               }),
             ','
           )}
+          ON CONFLICT DO NOTHING
           `)
         })
 

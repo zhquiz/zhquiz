@@ -4,11 +4,11 @@ CREATE TABLE "extra" (
   "updatedAt"       TIMESTAMPTZ DEFAULT now(),
   "userId"          UUID,
   "type"            TEXT NOT NULL,
-  "entry"           TEXT[],
-  "pinyin"          TEXT[],
-  "english"         TEXT[],
-  "description"     TEXT,
-  "tag"             TEXT[],
+  "entry"           TEXT[] NOT NULL CHECK ("entry"[1] IS NOT NULL),
+  "pinyin"          TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
+  "english"         TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
+  "description"     TEXT NOT NULL DEFAULT '',
+  "tag"             TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
   PRIMARY KEY ("id"),
   CONSTRAINT
     fk_userId

@@ -59,7 +59,7 @@
             <b-dropdown aria-role="menu" append-to-body :value="t.component">
               <template #trigger>
                 <a class="no-margin" role="button">
-                  <span @click.stop="activeTab = i">
+                  <span @click.stop="setCurrentTab(i)">
                     {{ t.title }}
                   </span>
                   <b-icon icon="caret-down"></b-icon>
@@ -200,6 +200,10 @@ export default class AppPage extends Vue {
 
   setTab(i: number, component: string) {
     this.$accessor.SET_TAB_COMPONENT({ i, component })
+  }
+
+  setCurrentTab(i: number) {
+    this.$accessor.SET_TAB_CURRENT({ i })
   }
 
   addTab(component: string) {

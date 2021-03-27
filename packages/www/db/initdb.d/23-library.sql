@@ -4,10 +4,10 @@ CREATE TABLE "library" (
   "updatedAt"       TIMESTAMPTZ DEFAULT now(),
   "userId"          UUID NOT NULL,
   "type"            TEXT NOT NULL,
-  "entry"           TEXT[],
+  "entry"           TEXT[] NOT NULL CHECK ("entry"[1] IS NOT NULL),
   "title"           TEXT NOT NULL,
-  "description"     TEXT,
-  "tag"             TEXT[],
+  "description"     TEXT NOT NULL DEFAULT '',
+  "tag"             TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
   PRIMARY KEY ("id"),
   CONSTRAINT
     fk_userId

@@ -5,8 +5,8 @@ CREATE TABLE "user" (
   "identifier"                TEXT NOT NULL,
   "sentence.length.min"       INT,
   "sentence.length.max"       INT,
-  "level.min"                 INT,
-  "level.max"                 INT,
+  "level.min"                 INT DEFAULT 1,
+  "level.max"                 INT DEFAULT 10,
   "level.vocabulary.showing"  TEXT[],
   "quiz.settings"             JSONB
   PRIMARY KEY ("id")

@@ -84,7 +84,7 @@ const utilRouter: FastifyPluginAsync = async (f) => {
         },
       },
       (req, reply) => {
-        const gtts = Text2Speech('ja')
+        const gtts = Text2Speech('zh')
         reply.send(gtts.stream(req.query.q))
       }
     )

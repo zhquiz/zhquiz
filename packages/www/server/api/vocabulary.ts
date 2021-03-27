@@ -52,7 +52,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           ) AND to_tsvector('jiebaqry', "entry") @@ to_tsquery('jiebaqry', ${entry})
         )
 
-        SELECT *
+        SELECT DISTINCT ON ("entry") *
         FROM (
           SELECT * FROM (
             SELECT "entry", "english"
@@ -78,12 +78,14 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
               FROM sentence
               WHERE (
                 "userId" IS NULL OR "userId" = ${userId}
-              ) AND "entry" &@ ${entry} AND "entry" != ANY(${result.map(
-              (r) => r.entry
-            )})
+              ) AND "entry" &@ ${entry} ${
+              result.length
+                ? sql` AND "entry" != ANY(${result.map((r) => r.entry)})`
+                : sql``
+            }
             )
     
-            SELECT *
+            SELECT DISTINCT ON ("entry") *
             FROM (
               SELECT * FROM (
                 SELECT "entry", "english"
