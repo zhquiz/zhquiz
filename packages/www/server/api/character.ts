@@ -4,6 +4,7 @@ import S from 'jsonschema-definer'
 
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
+import { lookupJukuu } from './sentence'
 
 const characterRouter: FastifyPluginAsync = async (f) => {
   {
@@ -186,7 +187,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 400, message: 'not Character' }
         }
 
-        const result = await db.query(sql`
+        let result = await db.query(sql`
         WITH match_cte AS (
           SELECT "entry", "english"[1] "english", "isTrad"
           FROM sentence
@@ -211,6 +212,15 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         ) t2
         LIMIT ${limit}
         `)
+
+        if (result.length < limit) {
+          result.push(
+            ...(await lookupJukuu(entry).then((rs) =>
+              rs.map((r) => ({ entry: r.c, english: r.e }))
+            ))
+          )
+          result = result.slice(0, limit)
+        }
 
         return {
           result,

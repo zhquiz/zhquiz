@@ -432,10 +432,12 @@ declare namespace Paths {
   }
   namespace SentenceQuery {
     namespace Parameters {
+      export type Limit = number;
       export type Q = string;
     }
     export interface QueryParameters {
       q: Parameters.Q;
+      limit?: Parameters.Limit;
     }
     namespace Responses {
       export interface $200 {

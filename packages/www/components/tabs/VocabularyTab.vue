@@ -78,7 +78,7 @@
           <b-collapse
             class="card"
             animation="slide"
-            :open="!!current.alt.length"
+            :open="!!(current.alt && current.alt.length)"
           >
             <div
               slot="trigger"
@@ -94,7 +94,7 @@
 
             <div class="card-content">
               <div class="font-zh-trad clickable">
-                {{ current.alt.join(' ') }}
+                {{ (current.alt || []).join(' ') }}
               </div>
             </div>
           </b-collapse>
