@@ -34,7 +34,7 @@
                 :id="it.id"
                 :key="i"
                 :title="it.title"
-                :entries="it.entries"
+                :entry="it.entry"
                 :description="it.description"
                 :additional="additionalContext(it)"
               />
@@ -60,7 +60,7 @@
                 v-for="(it, i) in online.result"
                 :key="i"
                 :title="it.title"
-                :entries="it.entries"
+                :entry="it.entry"
                 :description="it.description"
               />
 
@@ -282,6 +282,10 @@ export default class LibraryPage extends Vue {
     this.online = {
       ...this.online,
       ...r,
+      result: (r.result as any[]).map((it) => ({
+        entry: it.entries,
+        ...it,
+      })),
     }
   }
 

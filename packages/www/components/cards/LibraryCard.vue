@@ -43,8 +43,8 @@
       :entry="selected"
       :description="title + ' ' + description"
       :additional="additional"
-      @quiz:added="(evt) => reload(evt.entries)"
-      @quiz:removed="(evt) => reload(evt.entries)"
+      @quiz:added="(evt) => reload(evt.entry)"
+      @quiz:removed="(evt) => reload(evt.entry)"
     />
   </section>
 </template>
@@ -60,14 +60,14 @@ import ContextMenu from '../ContextMenu.vue'
         this.reload(this.currentData)
       }
     },
-    entries() {
+    entry() {
       this.isOpen = false
     },
   },
 })
 export default class LibraryCard extends Vue {
   @Prop() title!: string
-  @Prop() entries!: string[]
+  @Prop() entry!: string[]
   @Prop({ default: '' }) description?: string
 
   @Prop({ default: () => [] }) additional!: {
@@ -91,20 +91,20 @@ export default class LibraryCard extends Vue {
   ]
 
   get currentData() {
-    return this.entries.filter((a, i, arr) => arr.indexOf(a) === i)
+    return this.entry.filter((a, i, arr) => arr.indexOf(a) === i)
   }
 
-  async reload(entries: string[]) {
-    if (entries.length > 0) {
+  async reload(entry: string[]) {
+    if (entry.length > 0) {
       const {
         data: { result = [] },
       } = await this.$axios.quizGetSrsLevel(null, {
-        entry: entries,
+        entry,
         type: 'vocabulary',
       })
 
       // eslint-disable-next-line array-callback-return
-      entries.map((entry) => {
+      entry.map((entry) => {
         delete this.srsLevel[entry]
       })
 

@@ -263,6 +263,7 @@ declare namespace Paths {
           description: string;
           tag: string[];
         }[];
+        count: number;
       }
     }
   }

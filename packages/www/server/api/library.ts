@@ -93,6 +93,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           tag: S.list(S.string()),
         })
       ),
+      count: S.integer(),
     })
 
     const makeZh = new QSplit({
@@ -108,7 +109,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         )})`
       },
       fields: {
-        entry: { ':': (v) => sql`"entry_zh" &@ ${v}` },
+        entry: { ':': (v) => sql`"entry" &@ ${v}` },
         title: { ':': (v) => sql`"title" &@ ${v}` },
         type: {
           ':': (v) => {
@@ -142,22 +143,53 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
+        const [rCount] = await db.query(
+          sql`
+          SELECT
+            COUNT(*) "count"
+          FROM "library"
+          WHERE (
+            "userId" IS NULL OR "userId" = ${userId}
+          ) AND ${makeZh.parse(q) || sql`TRUE`}
+          `
+        )
+        if (!rCount) {
+          return { result: [], count: 0 }
+        }
+
         const result = await db
           .query(
             sql`
-          SELECT
-            "entry",
-            "title",
-            "type",
-            "description",
-            "tag"
-          FROM "library"
-          WHERE "userId" = ${userId} AND "entry" IS NOT NULL AND ${
-              makeZh.parse(q) || sql`TRUE`
-            }
-          ORDER BY "updatedAt" DESC
-          OFFSET ${(page - 1) * limit}
+          WITH match_cte AS (
+            SELECT
+              "entry",
+              "title",
+              "type",
+              "description",
+              "tag",
+              (CASE WHEN "userId" IS NOT NULL THEN "id" END) "id",
+              "updatedAt"
+            FROM "library"
+            WHERE (
+              "userId" IS NULL OR "userId" = ${userId}
+            ) AND ${makeZh.parse(q) || sql`TRUE`}
+          )
+
+          SELECT * FROM (
+            SELECT * FROM (
+              SELECT * FROM match_cte
+              WHERE "id" IS NOT NULL
+              ORDER BY "updatedAt" DESC
+            ) t1
+            UNION ALL
+            SELECT * FROM (
+              SELECT * FROM match_cte
+              WHERE "id" IS NULL
+              ORDER BY "title"
+            ) t1
+          ) t2
           LIMIT ${limit}
+          OFFSET ${(page - 1) * limit}
           `
           )
           .then((rs) =>
@@ -173,7 +205,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
             })
           )
 
-        return { result }
+        return { result, count: rCount.count }
       }
     )
   }
