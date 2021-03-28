@@ -12,35 +12,38 @@ export async function populate(db: ConnectionPool) {
   CREATE TABLE IF NOT EXISTS "cedict" (
     "simplified"    TEXT NOT NULL,
     "traditional"   TEXT CHECK ("simplified" != "traditional"),
-    "pinyin"        TEXT,
+    "reading"      TEXT,
     "english"       JSON
   );
 
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_u_cedict ON "cedict" ("simplified", "traditional", "pinyin");
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_u_cedict ON "cedict" ("simplified", "traditional", "reading");
   `)
 
   try {
     console.log('Downloading the latest CEDICT.')
 
-    const f = fs.createWriteStream('./cedict_1_0_ts_utf-8_mdbg.txt.gz')
-    https.get(
-      'https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz',
-      (res) => {
-        res.pipe(f)
-      }
-    )
+    const zipName = './cedict_1_0_ts_utf-8_mdbg.txt.gz'
+    const urlString =
+      'https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz'
+    if (fs.existsSync(zipName)) {
+      fs.unlinkSync(zipName)
+    }
+    const f = fs.createWriteStream(zipName)
+    https.get(urlString, (res) => {
+      res.pipe(f)
+    })
 
     await new Promise((resolve, reject) => {
       f.once('error', reject).once('finish', resolve)
     })
 
-    execSync(`gzip -d ./cedict_1_0_ts_utf-8_mdbg.txt.gz`)
+    execSync(`gzip -d ${zipName}`)
 
     const f2 = fs.createReadStream('./cedict_1_0_ts_utf-8_mdbg.txt')
     s3.exec('BEGIN')
     const stmt = s3.prepare(/* sql */ `
-    INSERT INTO "cedict" ("simplified", "traditional", "pinyin", "english")
-    VALUES (@simplified, @traditional, @pinyin, @english)
+    INSERT INTO "cedict" ("simplified", "traditional", "reading", "english")
+    VALUES (@simplified, @traditional, @reading, @english)
     ON CONFLICT DO NOTHING
     `)
 
@@ -58,7 +61,7 @@ export async function populate(db: ConnectionPool) {
           stmt.run({
             simplified: m[2],
             traditional: m[2] === m[1] ? null : m[1],
-            pinyin: m[3],
+            reading: m[3],
             english: JSON.stringify(m[4].split('/')),
           })
         }
@@ -75,7 +78,7 @@ export async function populate(db: ConnectionPool) {
           stmt.run({
             simplified: m[2],
             traditional: m[2] === m[1] ? null : m[1],
-            pinyin: m[3],
+            reading: m[3],
             english: JSON.stringify(m[4].split('/')),
           })
         }
@@ -111,6 +114,7 @@ export async function populate(db: ConnectionPool) {
       await db.query(sql`
         INSERT INTO dict.cedict ("simplified", "traditional", "reading", "english")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
+        ON CONFLICT DO NOTHING
       `)
     }
   })

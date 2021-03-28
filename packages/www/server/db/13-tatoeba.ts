@@ -25,19 +25,22 @@ export async function populate(db: ConnectionPool) {
   try {
     console.log('Downloading the latest Tatoeba CMN.')
 
-    const f = fs.createWriteStream('./cmn_sentences.tsv.bz2')
-    https.get(
-      'https://downloads.tatoeba.org/exports/per_language/cmn/cmn_sentences.tsv.bz2',
-      (res) => {
-        res.pipe(f)
-      }
-    )
+    const zipName = './cmn_sentences.tsv.bz2'
+    const urlString =
+      'https://downloads.tatoeba.org/exports/per_language/cmn/cmn_sentences.tsv.bz2'
+    if (fs.existsSync(zipName)) {
+      fs.unlinkSync(zipName)
+    }
+    const f = fs.createWriteStream(zipName)
+    https.get(urlString, (res) => {
+      res.pipe(f)
+    })
 
     await new Promise((resolve, reject) => {
       f.once('error', reject).once('finish', resolve)
     })
 
-    execSync(`bzip2 -d ./cmn_sentences.tsv.bz2`)
+    execSync(`bzip2 -d ${zipName}`)
 
     const f2 = fs.createReadStream('./cmn_sentences.tsv')
     s3.exec('BEGIN')
@@ -87,19 +90,22 @@ export async function populate(db: ConnectionPool) {
   try {
     console.log('Downloading the latest Tatoeba ENG.')
 
-    const f = fs.createWriteStream('./eng_sentences.tsv.bz2')
-    https.get(
-      'https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2',
-      (res) => {
-        res.pipe(f)
-      }
-    )
+    const zipName = './eng_sentences.tsv.bz2'
+    const urlString =
+      'https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2'
+    if (fs.existsSync(zipName)) {
+      fs.unlinkSync(zipName)
+    }
+    const f = fs.createWriteStream(zipName)
+    https.get(urlString, (res) => {
+      res.pipe(f)
+    })
 
     await new Promise((resolve, reject) => {
       f.once('error', reject).once('finish', resolve)
     })
 
-    execSync(`bzip2 -d ./eng_sentences.tsv.bz2`)
+    execSync(`bzip2 -d ${zipName}`)
 
     const f2 = fs.createReadStream('./eng_sentences.tsv')
     s3.exec('BEGIN')
@@ -149,8 +155,13 @@ export async function populate(db: ConnectionPool) {
   try {
     console.log('Downloading the latest Tatoeba Links.')
 
-    const f = fs.createWriteStream('./links.tar.bz2')
-    https.get('https://downloads.tatoeba.org/exports/links.tar.bz2', (res) => {
+    const zipName = './links.tar.bz2'
+    const urlString = 'https://downloads.tatoeba.org/exports/links.tar.bz2'
+    if (fs.existsSync(zipName)) {
+      fs.unlinkSync(zipName)
+    }
+    const f = fs.createWriteStream(zipName)
+    https.get(urlString, (res) => {
       res.pipe(f)
     })
 
@@ -158,7 +169,7 @@ export async function populate(db: ConnectionPool) {
       f.once('error', reject).once('finish', resolve)
     })
 
-    execSync(`tar -xf ./links.tar.bz2`)
+    execSync(`tar -xf ${zipName}`)
 
     const f2 = fs.createReadStream('./links.csv')
 
@@ -235,6 +246,7 @@ export async function populate(db: ConnectionPool) {
       await db.query(sql`
         INSERT INTO dict.tatoeba ("id", "cmn", "eng")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
+        ON CONFLICT DO NOTHING
       `)
     }
   })
