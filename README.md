@@ -18,11 +18,11 @@ Currently, this most updated is [Docker with PostgreSQL](/packages/www), followe
 
 See <https://github.com/zhquiz/go-zhquiz/releases>.
 
-For Windows, you will also need to install Chinese Language Support.
+By default, it will use Google TTS. But if offline, or Google TTS where to fail, then
 
-For macOS, you will need to enable Chinese voice (Ting-Ting) in accessibility.
-
-For Linux, you might need to install `espeak` and `speech-dispatcher`, if not preinstalled already.
+- For Windows, you need to install Chinese Language Support.
+- For macOS, you will need to enable Chinese voice (Ting-Ting) in accessibility.
+- For Linux, you might need to install `espeak` and `speech-dispatcher`, if not preinstalled already.
 
 ## Docker app
 
