@@ -6,19 +6,21 @@ ZhQuiz, a Chinese quizzing platform
 
 <https://youtu.be/iomE0xiYoqY>
 
-Currently, this most updated is [Docker with PostgreSQL](/packages/www), followed by <https://github.com/zhquiz/go-zhquiz>.
+Currently, the most updated is [Docker with PostgreSQL](/packages/www), followed by <https://github.com/zhquiz/go-zhquiz>.
 
 ## Features
 
 - HSK vocabularies made into 60 levels
 - Flashcards showing statuses of success
 - Custom vocabularies input by users
+- Learn vocabulary by sentence, by sentence segmenter, Jieba
+- Searchable, with Hanzi, Pinyin (with or without tone) and English
 
 ## Desktop app
 
 See <https://github.com/zhquiz/go-zhquiz/releases>.
 
-By default, it will use Google TTS. But if offline, or Google TTS where to fail, then
+By default, it will use Google TTS. But if offline, or Google TTS were to fail, then
 
 - For Windows, you need to install Chinese Language Support.
 - For macOS, you will need to enable Chinese voice (Ting-Ting) in accessibility.
