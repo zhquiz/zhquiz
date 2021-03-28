@@ -223,6 +223,10 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           return id
         })
 
+        if (tag.length) {
+          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+        }
+
         reply.status(201)
         return { id }
       }
@@ -293,6 +297,10 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           `)
         })
 
+        if (tag && tag.length) {
+          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+        }
+
         reply.status(201)
         return {
           result: 'updated',
@@ -331,12 +339,25 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
+        const [x] = await db.query(sql`
+        SELECT "tag" FROM "library"
+        WHERE "userId" = ${userId} AND "id" = ${id}
+        `)
+
+        if (!x) {
+          throw { statusCode: 404 }
+        }
+
         await db.tx(async (db) => {
           await db.query(sql`
           DELETE FROM "library"
           WHERE ${userId} = "userId" AND "id" = ${id}
           `)
         })
+
+        if (x.tag.length) {
+          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+        }
 
         reply.status(201)
         return {

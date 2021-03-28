@@ -75,6 +75,7 @@ export async function populate(db: ConnectionPool) {
 
   console.log('Updating materialized view')
   await db.query(sql`
-    REFRESH MATERIALIZED VIEW dict.cedict_view;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY sentence;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view;
   `)
 }

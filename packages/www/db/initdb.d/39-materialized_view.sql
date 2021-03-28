@@ -12,6 +12,8 @@ CREATE MATERIALIZED VIEW dict.tatoeba_view AS
   ) t1
   ORDER BY "isTrad";
 
+CREATE INDEX idx_tatoeba_view_unique ON dict.tatoeba_view ("cmn");
+
 CREATE INDEX "idx_tatoeba_view_isTrad" ON dict.tatoeba_view ("isTrad");
 
 CREATE INDEX idx_tatoeba_view_cmn ON dict.tatoeba_view
