@@ -710,8 +710,31 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       },
     })
 
+    const makeLevel = new QSplit({
+      default: () => null,
+      fields: {
+        level: [':', '>', '<'].reduce(
+          (prev, k) => ({
+            ...prev,
+            [k]: (v: string) =>
+              sql`(${sql.join(
+                [
+                  sql`("type" = 'hanzi' AND ${qParseNum(sql`"hLevel"`)[k](v)})`,
+                  sql`("type" = 'vocabulary' AND ${qParseNum(sql`"vLevel"`)[k](
+                    v
+                  )})`,
+                ],
+                ' OR '
+              )})`,
+          }),
+          {}
+        ),
+      },
+    })
+
     const cond = [makeQuiz.parse(q) || sql`TRUE`]
     const exCond = makeTag.parse(q)
+    const lvCond = makeLevel.parse(q)
 
     if (exCond) {
       cond.push(sql`"type"||'\x1f'||"entry" IN (
@@ -719,6 +742,12 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         FROM "entry_tag" WHERE (
           "userId" IS NULL OR "userId" = ${userId}
         ) AND ${exCond}
+      )`)
+    }
+
+    if (lvCond) {
+      cond.push(sql`"entry" IN (
+        SELECT "entry" FROM dict.zhlevel WHERE ${lvCond}
       )`)
     }
 
