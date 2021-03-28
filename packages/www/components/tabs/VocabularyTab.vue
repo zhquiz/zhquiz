@@ -94,7 +94,7 @@
 
             <div class="card-content">
               <div class="font-zh-trad clickable">
-                {{ current.alt.join(' | ') }}
+                {{ current.alt.join(' ') }}
               </div>
             </div>
           </b-collapse>
@@ -230,7 +230,13 @@ export default class VocabPage extends Vue {
   }
 
   get simplified() {
-    return this.current.entry
+    const { entry = '' } = this.current
+
+    if (/^\p{sc=Han}+$/u.test(entry)) {
+      return entry
+    }
+
+    return ''
   }
 
   async created() {
@@ -344,6 +350,8 @@ export default class VocabPage extends Vue {
             ...this.entries.slice(0, this.i),
             {
               ...data,
+              entry: data.entry || '',
+              reading: data.reading || [],
               sentences: [],
             },
             ...this.entries.slice(this.i + 1),

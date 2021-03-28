@@ -11,6 +11,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
     })
 
     const sResult = S.shape({
+      identifier: S.string().optional(),
       level: S.integer().optional(),
       levelMin: S.integer().optional(),
       quizSettings: S.object().additionalProperties(true).optional(),
@@ -39,6 +40,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
         }
 
         const selMap: Record<keyof typeof sResult.type, SQLQuery> = {
+          identifier: sql`"identifier"`,
           level: sql`"level.max" "level"`,
           levelMin: sql`"level.min" "levelMin"`,
           quizSettings: sql`"quiz.settings" "quizSettings"`,
@@ -64,6 +66,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
         }
 
         return {
+          identifier: r.identifier || undefined,
           level: r.level || undefined,
           levelMin: r.levelMin || undefined,
           quizSettings: r.quizSettings || undefined,

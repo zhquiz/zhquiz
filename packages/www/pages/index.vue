@@ -82,6 +82,7 @@ export default class HomePage extends Vue {
   background-color: rgba(211, 211, 211, 0.3);
   width: 100%;
   height: 100%;
+  overflow: scroll;
 }
 
 .login-card {

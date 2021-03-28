@@ -6,6 +6,7 @@ import sql from '@databases/sql'
 import { Magic } from '@magic-sdk/admin'
 import fastify, { FastifyPluginAsync } from 'fastify'
 import csrf from 'fastify-csrf'
+import rateLimit from 'fastify-rate-limit'
 import fSession from 'fastify-secure-session'
 import fastifySwagger from 'fastify-swagger'
 import S from 'jsonschema-definer'
@@ -33,6 +34,11 @@ const apiRouter: FastifyPluginAsync = async (f) => {
 
   f.register(fSession, {
     key: fs.readFileSync('session.key'),
+  })
+
+  f.register(rateLimit, {
+    max: 10,
+    timeWindow: '1 second',
   })
 
   f.register(fastifySwagger, {
@@ -101,64 +107,62 @@ const apiRouter: FastifyPluginAsync = async (f) => {
     )
   }
 
-  if (magic) {
-    f.addHook('preHandler', async (req) => {
-      if (req.session.get('userId')) {
+  f.addHook('preHandler', async (req) => {
+    if (['/api/doc', '/api/settings'].some((s) => req.url.startsWith(s))) {
+      return
+    }
+
+    if (req.session.get('userId')) {
+      return
+    }
+
+    let user = process.env.DEFAULT_USER || ''
+
+    if (!user) {
+      if (!magic) {
         return
       }
 
-      let user = process.env.DEFAULT_USER || ''
+      const [apiKey] =
+        /^Bearer (.+)$/.exec(req.headers.authorization || '') || []
 
-      if (!user) {
-        if (!magic) {
-          return
-        }
-
-        if (['/api/doc', '/api/settings'].some((s) => req.url.startsWith(s))) {
-          return
-        }
-
-        const [apiKey] =
-          /^Bearer (.+)$/.exec(req.headers.authorization || '') || []
-
-        if (!apiKey) {
-          throw { statusCode: 401 }
-        }
-
-        try {
-          magic.token.validate(apiKey)
-        } catch (e) {
-          throw { statusCode: 401, message: e }
-        }
-
-        if (apiKey !== req.session.get('apiKey')) {
-          const u = await magic.users.getMetadataByToken(apiKey)
-          user = u.email || ''
-
-          req.session.set('apiKey', apiKey)
-        }
+      if (!apiKey) {
+        throw { statusCode: 401 }
       }
 
-      if (user) {
-        let [r] = await db.query(sql`
-          SELECT "id" FROM "user" WHERE "identifier" = ${user}
+      try {
+        magic.token.validate(apiKey)
+      } catch (e) {
+        throw { statusCode: 401, message: e }
+      }
+
+      if (apiKey !== req.session.get('apiKey')) {
+        const u = await magic.users.getMetadataByToken(apiKey)
+        user = u.email || ''
+
+        req.session.set('apiKey', apiKey)
+      }
+    }
+
+    if (user) {
+      let [r] = await db.query(sql`
+        SELECT "id" FROM "user" WHERE "identifier" = ${user}
+        `)
+
+      if (!r) {
+        const id = shortUUID.uuid()
+
+        await db.query(sql`
+          INSERT INTO "user" ("id", "identifier")
+          VALUES (${id}, ${user})
           `)
 
-        if (!r) {
-          const id = shortUUID.uuid()
-
-          await db.query(sql`
-            INSERT INTO "user" ("id", "identifier")
-            VALUES (${id}, ${user})
-            `)
-
-          req.session.set('userId', id)
-        } else {
-          req.session.set('userId', r.id)
-        }
+        req.session.set('userId', id)
+      } else {
+        req.session.set('userId', r.id)
       }
-    })
-  }
+    }
+  })
 
   f.register(characterRouter, { prefix: '/character' })
   f.register(extraRouter, { prefix: '/extra' })

@@ -21,24 +21,7 @@ CREATE VIEW "character" AS
     ORDER BY "frequency" DESC NULLS LAST
   ) t1;
 
-CREATE VIEW "vocabulary" AS
-  SELECT
-    "entry",
-    "pinyin",
-    "english",
-    "userId",
-    NULL "frequency"
-  FROM "extra"
-  WHERE "type" = 'vocabulary'
-  UNION ALL
-  SELECT
-    "entry",
-    "pinyin",
-    "english",
-    NULL "userId",
-    "frequency"
-  FROM dict.cedict_view;
-
+=
 CREATE VIEW "sentence" AS
   SELECT
     unnest("entry") "entry",

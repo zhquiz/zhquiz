@@ -41,7 +41,11 @@
       <div style="flex-grow: 1"></div>
 
       <div class="p-4">
-        <center>Logged in as {{ $store.state.identifier }}</center>
+        <center>
+          <a role="button" title="Click to logout" @click="doLogout">
+            Logged in as {{ $store.state.identifier }}
+          </a>
+        </center>
       </div>
     </b-sidebar>
 
@@ -59,7 +63,7 @@
             <b-dropdown aria-role="menu" append-to-body :value="t.component">
               <template #trigger>
                 <a class="no-margin" role="button">
-                  <span @click.stop="setCurrentTab(i)">
+                  <span class="text" @click.stop="setCurrentTab(i)">
                     {{ t.title }}
                   </span>
                   <b-icon icon="caret-down"></b-icon>
@@ -95,8 +99,9 @@
       </ul>
     </nav>
 
-    <main class="container mt-3" v-if="isReady">
+    <main v-if="isReady">
       <component
+        class="container"
         :is="t.component + 'Tab'"
         v-for="(t, i) in tabs"
         v-show="activeTab === i"
@@ -131,7 +136,7 @@ import { Component, Vue } from 'nuxt-property-decorator'
     } else {
       this.$accessor.ADD_TAB({
         component: 'Random',
-        permanent: true,
+        first: true,
       })
       this.isReady = true
     }
@@ -217,19 +222,33 @@ export default class AppPage extends Vue {
   setTitle(i: number, title: string) {
     this.$accessor.SET_TAB_TITLE({ i, title })
   }
+
+  doLogout() {
+    this.$buefy.dialog.confirm({
+      message: 'Are you sure you want to logout?',
+      onConfirm: async () => {
+        await this.$axios.userSignOut()
+        this.$router.push('/')
+      },
+    })
+  }
 }
 </script>
 
 <style lang="scss" scoped>
 .AppPage {
   height: 100%;
+  display: grid;
+  grid-template-rows: 1fr auto;
 }
 
 nav.tabs {
+  z-index: 5;
+  height: 45px;
   padding-top: 0.5em;
   padding-left: 0.5em;
   margin-bottom: 0 !important;
-  background-color: rgba(211, 211, 211, 0.3);
+  background-color: rgba(230, 230, 230, 0.9);
 
   li:not(.is-active) a {
     background-color: lightgray;
@@ -242,6 +261,13 @@ nav.tabs {
   li a {
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
+
+    span.text {
+      max-width: 10em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0;
+    }
 
     .no-margin {
       padding: 0;
@@ -257,6 +283,10 @@ main {
   border: 0;
   width: 100%;
   max-width: 100vw;
+  overflow-y: scroll;
+  position: absolute;
+  padding-top: 65px;
+  padding-bottom: 100px;
   height: 100%;
 }
 

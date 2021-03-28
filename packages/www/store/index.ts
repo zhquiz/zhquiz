@@ -42,22 +42,33 @@ export const mutations = mutationTree(state, {
     {
       component,
       query = {},
-      permanent,
+      first,
     }: {
       component: string
       query?: Record<string, string>
-      permanent?: boolean
+      first?: boolean
     }
   ) {
-    state.tabs = [
-      ...state.tabs,
-      {
-        title: component,
-        component,
-        permanent,
-        query,
-      },
-    ]
+    if (first) {
+      state.tabs = [
+        {
+          title: component,
+          component,
+          permanent: true,
+          query,
+        },
+      ]
+    } else {
+      state.tabs = [
+        ...state.tabs,
+        {
+          title: component,
+          component,
+          query,
+        },
+      ]
+    }
+
     state.activeTab = state.tabs.length - 1
   },
   DELETE_TAB(state, { i }: { i: number }) {
@@ -111,12 +122,11 @@ export const actions = actionTree(
     async updateSettings({ commit }) {
       const r = await this.app.$axios
         .userGetSettings({
-          select: 'level,levelMin,identifer',
+          select: 'level,levelMin,identifier',
         })
         .then((r) => r.data)
 
-      // @ts-ignore
-      commit('SET_IDENTIFIER', r.identifier)
+      commit('SET_IDENTIFIER', r.identifier!)
 
       if (!r.level || !r.levelMin) {
         r.level = 10

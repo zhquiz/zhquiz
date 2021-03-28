@@ -8,8 +8,8 @@ services:
       - PORT=35594
 
       # See https://magic.link for signing in and authorization
-      - MAGIC_PUBLIC
-      - MAGIC_SECRET
+      # - MAGIC_PUBLIC
+      # - MAGIC_SECRET
 
       # For development
       - SERVER_PORT
