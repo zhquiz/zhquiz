@@ -94,7 +94,7 @@
 
             <div class="card-content">
               <div class="font-zh-trad clickable">
-                {{ current.alt.join(' | ') }}
+                {{ current.alt.join(' ') }}
               </div>
             </div>
           </b-collapse>
