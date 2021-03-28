@@ -18,7 +18,3 @@
 !/package.json
 !/tsconfig.*
 !/yarn.lock
-
-# Large, generate-able files
-tatoeba.db
-# cedict.db

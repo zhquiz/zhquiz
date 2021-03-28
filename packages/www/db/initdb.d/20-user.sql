@@ -18,3 +18,4 @@ CREATE TRIGGER "t_user_updatedAt"
   EXECUTE PROCEDURE "f_updatedAt"();
 
 CREATE INDEX "idx_user_updatedAt" ON "user" ("updatedAt");
+CREATE INDEX "idx_user_identifier" ON "user" ("identifier");

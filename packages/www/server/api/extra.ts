@@ -122,6 +122,18 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           return id
         })
 
+        if (tag.length) {
+          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+        }
+
+        switch (type) {
+          case 'character':
+            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "character"`)
+            break
+          case 'sentence':
+            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`)
+        }
+
         reply.status(201)
         return {
           id,
@@ -197,6 +209,18 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           `)
         })
 
+        if (tag.length) {
+          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+        }
+
+        switch (type) {
+          case 'character':
+            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "character"`)
+            break
+          case 'sentence':
+            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`)
+        }
+
         reply.status(201)
         return {
           result: 'updated',
@@ -235,12 +259,33 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
+        const [x] = await db.query(sql`
+        SELECT "type", "tag" FROM "extra"
+        WHERE "userId" = ${userId} AND "id" = ${id}
+        `)
+
+        if (!x) {
+          throw { statusCode: 404 }
+        }
+
         await db.tx(async (db) => {
           await db.query(sql`
           DELETE FROM "extra"
           WHERE "userId" = ${userId} AND "id" = ${id}
           `)
         })
+
+        if (x.tag.length) {
+          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+        }
+
+        switch (x.type) {
+          case 'character':
+            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "character"`)
+            break
+          case 'sentence':
+            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`)
+        }
 
         reply.status(201)
         return {

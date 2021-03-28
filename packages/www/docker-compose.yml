@@ -6,28 +6,33 @@ services:
       - POSTGRES_PASSWORD
       - POSTGRES_DB
       - PORT=35594
-      - TZ=Asia/Bangkok
-      - PGTZ=Asia/Bangkok
 
       # See https://magic.link for signing in and authorization
       # - MAGIC_PUBLIC
       # - MAGIC_SECRET
 
       # For development
+      - TZ=Asia/Bangkok
+      - PGTZ=Asia/Bangkok
       - SERVER_PORT
       - DEFAULT_USER=polv@polv.cc
     ports:
-      - 35594:35594
+      - 35594:35594 # $PORT:$PORT - Go to http://localhost:$PORT
 
       # For development
-      - 5433:5432
+      - 5433:5432 # pgAdmin connection port
       - 35595:35595 # $SERVER_PORT:$SERVER_PORT
     volumes:
       - zhquiz:/var/lib/postgresql/data
+
+      # For development
       - ./node_modules:/app/node_modules
       - ./assets:/app/assets
+      - ./scripts:/app/scripts
       - ./server:/app/server
       - ./types:/app/types
+
+    # Comment this key out, for production
     entrypoint: |
       /bin/bash -c "
         /usr/local/bin/docker-entrypoint.sh postgres &
