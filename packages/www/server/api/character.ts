@@ -99,7 +99,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 400, message: 'not Character' }
         }
 
-        const fThreshold = 1
+        const fThreshold = 100
 
         let result = await db.query(sql`
         WITH match_cte AS (
@@ -189,24 +189,31 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         let result = await db.query(sql`
         WITH match_cte AS (
-          SELECT "entry", "english"[1] "english", "isTrad"
-          FROM sentence
+          SELECT s.entry "entry", s."english"[1] english, "isTrad"
+          FROM sentence s
+          JOIN "sentence_isTrad" si ON si.entry = s.entry
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND "entry" &@ ${entry}
+          ) AND s."entry" &@ ${entry}
         )
 
         SELECT *
         FROM (
           SELECT * FROM (
             SELECT "entry", "english"
-            FROM match_cte WHERE NOT "isTrad"
+            FROM match_cte WHERE NOT "isTrad" AND length("entry") <= 20
             ORDER BY RANDOM()
           ) t1
           UNION
           SELECT * FROM (
             SELECT "entry", "english"
-            FROM match_cte WHERE "isTrad"
+            FROM match_cte WHERE "isTrad" AND length("entry") <= 20
+            ORDER BY RANDOM()
+          ) t1
+          UNION
+          SELECT * FROM (
+            SELECT "entry", "english"
+            FROM match_cte WHERE length("entry") > 20
             ORDER BY RANDOM()
           ) t1
         ) t2

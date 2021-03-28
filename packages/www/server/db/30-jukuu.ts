@@ -74,8 +74,12 @@ export async function populate(db: ConnectionPool) {
   s3.close()
 
   console.log('Updating materialized view')
-  await db.query(sql`
-    REFRESH MATERIALIZED VIEW CONCURRENTLY sentence;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view;
-  `)
+  await db
+    .query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`)
+    .then(() =>
+      Promise.all([
+        db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "sentence_isTrad"`),
+        db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view`),
+      ])
+    )
 }

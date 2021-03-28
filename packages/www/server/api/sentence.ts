@@ -301,7 +301,14 @@ export async function lookupJukuu(
         db.query(
           sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`
         ).then(() =>
-          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view`)
+          Promise.all([
+            db.query(
+              sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "sentence_isTrad"`
+            ),
+            db.query(
+              sql`REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view`
+            ),
+          ])
         )
       }
 
