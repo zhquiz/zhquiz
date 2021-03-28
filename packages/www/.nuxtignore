@@ -1,5 +1,6 @@
 /server/
 /server-dist/
+/scripts/
 .dockerignore
 Dockerfile
 docker-*

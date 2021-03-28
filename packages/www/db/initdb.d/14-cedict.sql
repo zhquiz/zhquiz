@@ -4,7 +4,6 @@ CREATE TABLE dict.cedict (
   "traditional"     TEXT,
   "reading"         TEXT NOT NULL,
   "english"         TEXT[] NOT NULL,
-  "frequency"       FLOAT,
   PRIMARY KEY ("id")
 );
 

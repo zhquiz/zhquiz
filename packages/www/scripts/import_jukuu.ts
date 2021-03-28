@@ -1,16 +1,9 @@
-import fs from 'fs'
-
-import { ConnectionPool, sql } from '@databases/pg'
+import sql from '@databases/sql'
+import { db } from '~/server/shared'
 import sqlite3 from 'better-sqlite3'
 
-export async function populate(db: ConnectionPool) {
-  if (!fs.existsSync('./jukuu.db')) {
-    return
-  }
-
-  const s3 = sqlite3('./jukuu.db', {
-    readonly: true,
-  })
+async function main() {
+  const s3 = sqlite3('./db/assets/jukuu.db', { readonly: true })
 
   await db.tx(async (db) => {
     const batchSize = 10000
@@ -72,4 +65,9 @@ export async function populate(db: ConnectionPool) {
   })
 
   s3.close()
+  await db.dispose()
+}
+
+if (require.main === module) {
+  main()
 }

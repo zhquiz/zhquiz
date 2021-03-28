@@ -15,7 +15,6 @@ CREATE MATERIALIZED VIEW dict.cedict_view AS
         "reading",
         unnest("english") "english"
       FROM dict.cedict
-      ORDER BY "frequency" DESC NULLS LAST
     ) t1
     GROUP BY "simplified"
   ) t2
