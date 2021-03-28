@@ -114,7 +114,10 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
               rs.map((r) => ({ entry: r.c, english: r.e }))
             ))
           )
-          result = result.slice(0, limit)
+          const entries = result.map((r) => r.entry)
+          result = result
+            .filter((a, i) => entries.indexOf(a.entry) === i)
+            .slice(0, limit)
         }
 
         return {

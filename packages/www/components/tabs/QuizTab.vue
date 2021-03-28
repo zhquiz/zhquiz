@@ -103,12 +103,18 @@
         </div>
         <div class="column" style="min-width: 600px">
           <form @submit.prevent="reload">
-            <b-field label="Filter">
+            <b-field label="Filter" grouped>
               <b-input
                 v-model="q"
                 placeholder="Try level>10, level<=20 or tag:HSK4"
                 type="search"
+                expanded
               />
+              <p class="control" title="Save settings">
+                <b-button type="is-primary is-outlined" @click="doSave">
+                  <b-icon icon="save"></b-icon>
+                </b-button>
+              </p>
             </b-field>
           </form>
         </div>
@@ -385,6 +391,14 @@ export default class QuizPage extends Vue {
 
   async startQuiz() {
     await this.quizCard.startQuiz()
+  }
+
+  doSave() {
+    this.$buefy.dialog.prompt({
+      message: "Settings' name",
+      trapFocus: true,
+      onConfirm: () => {},
+    })
   }
 }
 </script>

@@ -131,6 +131,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'nuxt-property-decorator'
+import LibraryCard from '../cards/LibraryCard.vue'
 
 interface ILocal {
   id?: string
@@ -141,6 +142,9 @@ interface ILocal {
 }
 
 @Component<LibraryPage>({
+  components: {
+    LibraryCard,
+  },
   created() {
     this.$emit('title', 'Library')
     this.updateLocal()
@@ -264,11 +268,16 @@ export default class LibraryPage extends Vue {
   @Watch('q')
   @Watch('online.page')
   async updateOnline() {
-    const { data: r } = await this.$axios.libraryQuery({
-      q: this.q,
-      page: this.local.page,
-      limit: this.local.perPage,
-    })
+    const { data: r } = await this.$axios.get(
+      'https://www.zhquiz.cc/api/library',
+      {
+        params: {
+          q: this.q,
+          page: this.online.page,
+          perPage: this.online.perPage,
+        },
+      }
+    )
 
     this.online = {
       ...this.online,

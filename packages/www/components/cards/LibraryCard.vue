@@ -105,7 +105,7 @@ export default class LibraryCard extends Vue {
 
       // eslint-disable-next-line array-callback-return
       entries.map((entry) => {
-        this.srsLevel[entry] = -1
+        delete this.srsLevel[entry]
       })
 
       // eslint-disable-next-line array-callback-return
@@ -139,7 +139,7 @@ export default class LibraryCard extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .tag {
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
