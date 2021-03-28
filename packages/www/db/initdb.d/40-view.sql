@@ -33,30 +33,26 @@ CREATE MATERIALIZED VIEW "sentence" AS
   SELECT DISTINCT ON ("entry", "userId")
     "entry",
     "english",
-    "userId",
-    "isTrad"
+    "userId"
   FROM (
     SELECT
       unnest("entry") "entry",
       "english",
-      "userId",
-      NULL::BOOLEAN "isTrad"
+      "userId"
     FROM "extra"
     WHERE "type" = 'sentence'
     UNION ALL
     SELECT
       "chinese" "entry",
       ARRAY["english"] "english",
-      NULL,
       NULL
     FROM online.jukuu
     UNION ALL
     SELECT
       "cmn" "entry",
       ARRAY["eng"] "english",
-      NULL,
-      "isTrad"
-    FROM dict.tatoeba_view
+      NULL
+    FROM dict.tatoeba
   ) t1
   ORDER BY "userId" NULLS FIRST, "entry";
 
@@ -69,7 +65,18 @@ CREATE INDEX idx_sentence_english ON "sentence"
   USING pgroonga ("english")
   WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
 CREATE INDEX "idx_sentence_userId" ON "sentence" ("userId");
-CREATE INDEX "idx_sentence_isTrad" ON "sentence" ("isTrad");
+
+CREATE MATERIALIZED VIEW "sentence_isTrad" AS
+  SELECT
+    "entry",
+    ("f_sentence_hLevel"("entry") > 50) "isTrad"
+  FROM (
+    SELECT DISTINCT "entry"
+    FROM sentence
+  ) t1;
+
+CREATE UNIQUE INDEX "idx_sentence_isTrad_unique" ON "sentence_isTrad" ("entry");
+CREATE INDEX "idx_sentence_isTrad_isTrad" ON "sentence_isTrad" ("isTrad");
 
 CREATE MATERIALIZED VIEW "entry_tag" AS
   SELECT

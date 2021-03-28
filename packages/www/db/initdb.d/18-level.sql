@@ -20,34 +20,6 @@ CREATE TABLE dict.zhlevel (
 CREATE INDEX "idx_zhlevel_hLevel" ON dict.zhlevel ("hLevel");
 CREATE INDEX "idx_zhlevel_vLevel" ON dict.zhlevel ("vLevel");
 
-CREATE OR REPLACE FUNCTION dict."f_hLevel" (TEXT[]) RETURNS INT AS
-$func$
-DECLARE
-  m   INT := 0;
-  t   TEXT;
-  lv  INT;
-BEGIN
-  FOREACH t IN ARRAY $1
-  LOOP
-    lv = (
-      SELECT "hLevel" FROM (
-        SELECT "hLevel"
-        FROM dict.zhlevel
-        WHERE "hLevel" IS NOT NULL AND "entry" = t
-        UNION ALL
-        SELECT 100 "hLevel"
-      ) t1
-      LIMIT 1
-    );
-    IF lv > m THEN
-      m = lv;
-    END IF;
-  END LOOP;
-  
-  RETURN m;
-END;
-$func$ LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION zhlevel_sentence (TEXT) RETURNS FLOAT AS
 $func$
 DECLARE
@@ -78,14 +50,20 @@ DECLARE
   r   RECORD;
 BEGIN
   FOR r IN (
+    WITH match_cte AS (
+      SELECT s.entry "entry", s."english" eng, "isTrad"
+      FROM sentence s
+      JOIN "sentence_isTrad" si ON si.entry = s.entry
+    )
+
     SELECT * FROM (
-      SELECT "entry", s."english" eng FROM sentence s
+      SELECT "entry", eng FROM match_cte s
       WHERE NOT "isTrad"
       ORDER BY random()
     ) t1
     UNION ALL
     SELECT * FROM (
-      SELECT "entry", s."english" eng FROM sentence s
+      SELECT "entry", eng FROM match_cte s
       WHERE "isTrad"
       ORDER BY random()
     ) t1

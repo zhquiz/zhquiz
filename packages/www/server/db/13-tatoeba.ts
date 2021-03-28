@@ -252,9 +252,4 @@ export async function populate(db: ConnectionPool) {
   })
 
   s3.close()
-
-  console.log('Updating materialized view')
-  await db.query(sql`
-    REFRESH MATERIALIZED VIEW dict.tatoeba_view;
-  `)
 }

@@ -45,25 +45,31 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 
         let result = await db.query(sql`
         WITH match_cte AS (
-          SELECT DISTINCT ON ("entry")
-            "entry", "english"[1] "english", "isTrad"
-          FROM sentence
+          SELECT s.entry "entry", s."english"[1] english, "isTrad"
+          FROM sentence s
+          JOIN "sentence_isTrad" si ON si.entry = s.entry
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND to_tsvector('jiebaqry', "entry") @@ to_tsquery('jiebaqry', ${entry})
+          ) AND to_tsvector('jiebaqry', s."entry") @@ to_tsquery('jiebaqry', ${entry})
         )
 
         SELECT DISTINCT ON ("entry") *
         FROM (
           SELECT * FROM (
             SELECT "entry", "english"
-            FROM match_cte WHERE NOT "isTrad"
+            FROM match_cte WHERE NOT "isTrad" AND length("entry") <= 20
             ORDER BY RANDOM()
           ) t1
           UNION
           SELECT * FROM (
             SELECT "entry", "english"
-            FROM match_cte WHERE "isTrad"
+            FROM match_cte WHERE "isTrad" AND length("entry") <= 20
+            ORDER BY RANDOM()
+          ) t1
+          UNION
+          SELECT * FROM (
+            SELECT "entry", "english"
+            FROM match_cte WHERE length("entry") > 20
             ORDER BY RANDOM()
           ) t1
         ) t2
@@ -74,14 +80,14 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           result.push(
             ...(await db.query(sql`
             WITH match_cte AS (
-              SELECT DISTINCT ON ("entry")
-                "entry", "english"[1] "english", "isTrad"
-              FROM sentence
+              SELECT s.entry "entry", s."english"[1] english, "isTrad"
+              FROM sentence s
+              JOIN "sentence_isTrad" si ON si.entry = s.entry
               WHERE (
                 "userId" IS NULL OR "userId" = ${userId}
-              ) AND "entry" &@ ${entry} ${
+              ) AND s."entry" &@ ${entry} ${
               result.length
-                ? sql` AND "entry" != ANY(${result.map((r) => r.entry)})`
+                ? sql` AND s."entry" != ANY(${result.map((r) => r.entry)})`
                 : sql``
             }
             )
@@ -90,13 +96,19 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
             FROM (
               SELECT * FROM (
                 SELECT "entry", "english"
-                FROM match_cte WHERE NOT "isTrad"
+                FROM match_cte WHERE NOT "isTrad" AND length("entry") <= 20
                 ORDER BY RANDOM()
               ) t1
               UNION
               SELECT * FROM (
                 SELECT "entry", "english"
-                FROM match_cte WHERE "isTrad"
+                FROM match_cte WHERE "isTrad" AND length("entry") <= 20
+                ORDER BY RANDOM()
+              ) t1
+              UNION
+              SELECT * FROM (
+                SELECT "entry", "english"
+                FROM match_cte WHERE length("entry") > 20
                 ORDER BY RANDOM()
               ) t1
             ) t2
