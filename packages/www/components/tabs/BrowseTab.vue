@@ -148,6 +148,7 @@ export default class ExtraPage extends Vue {
   @Ref() context!: ContextMenu
 
   q0 = ''
+  q = ''
   count = 0
   perPage = 10
   page = 1
@@ -189,15 +190,6 @@ export default class ExtraPage extends Vue {
       },
     },
   ]
-
-  get q() {
-    const q = this.$route.query.q
-    return (Array.isArray(q) ? q[0] : q) || ''
-  }
-
-  set q(q: string) {
-    this.$router.push({ query: { q } })
-  }
 
   openEditModal() {
     if (!this.selected.reading.length && this.selected.reading.length) {

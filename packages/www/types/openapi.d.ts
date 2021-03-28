@@ -287,6 +287,97 @@ declare namespace Paths {
       }
     }
   }
+  namespace PresetCreate {
+    export interface RequestBody {
+      name: string;
+      settings: {
+        q?: string;
+        type: string[];
+        stage: string[];
+        direction: string[];
+        includeUndue: boolean;
+      };
+    }
+    namespace Responses {
+      export interface $201 {
+        id: string;
+      }
+    }
+  }
+  namespace PresetDelete {
+    namespace Parameters {
+      export type Id = string;
+    }
+    export interface QueryParameters {
+      id: Parameters.Id;
+    }
+    namespace Responses {
+      export interface $201 {
+        result: string;
+      }
+    }
+  }
+  namespace PresetGetOne {
+    namespace Parameters {
+      export type Id = string;
+    }
+    export interface QueryParameters {
+      id: Parameters.Id;
+    }
+    namespace Responses {
+      export interface $200 {
+        q?: string;
+        type: string[];
+        stage: string[];
+        direction: string[];
+        includeUndue: boolean;
+      }
+    }
+  }
+  namespace PresetQuery {
+    namespace Parameters {
+      export type Limit = number;
+      export type Page = number;
+      export type Q = string;
+    }
+    export interface QueryParameters {
+      q: Parameters.Q;
+      page?: Parameters.Page;
+      limit?: Parameters.Limit;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: {
+          id: string;
+          name: string;
+        }[];
+        count: number;
+      }
+    }
+  }
+  namespace PresetUpdate {
+    namespace Parameters {
+      export type Id = string;
+    }
+    export interface QueryParameters {
+      id: Parameters.Id;
+    }
+    export interface RequestBody {
+      name?: string;
+      settings?: {
+        q?: string;
+        type: string[];
+        stage: string[];
+        direction: string[];
+        includeUndue: boolean;
+      };
+    }
+    namespace Responses {
+      export interface $201 {
+        result: string;
+      }
+    }
+  }
   namespace QuizCreate {
     export interface RequestBody {
       entry: string[];
@@ -731,6 +822,46 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.LibraryQuery.Responses.$200>
   /**
+   * presetGetOne
+   */
+  'presetGetOne'(
+    parameters?: Parameters<Paths.PresetGetOne.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.PresetGetOne.Responses.$200>
+  /**
+   * presetCreate
+   */
+  'presetCreate'(
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: Paths.PresetCreate.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.PresetCreate.Responses.$201>
+  /**
+   * presetUpdate
+   */
+  'presetUpdate'(
+    parameters?: Parameters<Paths.PresetUpdate.QueryParameters> | null,
+    data?: Paths.PresetUpdate.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.PresetUpdate.Responses.$201>
+  /**
+   * presetDelete
+   */
+  'presetDelete'(
+    parameters?: Parameters<Paths.PresetDelete.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.PresetDelete.Responses.$201>
+  /**
+   * presetQuery
+   */
+  'presetQuery'(
+    parameters?: Parameters<Paths.PresetQuery.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.PresetQuery.Responses.$200>
+  /**
    * quizGetMany
    */
   'quizGetMany'(
@@ -1078,6 +1209,50 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.LibraryQuery.Responses.$200>
+  }
+  ['/api/preset/']: {
+    /**
+     * presetGetOne
+     */
+    'get'(
+      parameters?: Parameters<Paths.PresetGetOne.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.PresetGetOne.Responses.$200>
+    /**
+     * presetCreate
+     */
+    'put'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.PresetCreate.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.PresetCreate.Responses.$201>
+    /**
+     * presetUpdate
+     */
+    'patch'(
+      parameters?: Parameters<Paths.PresetUpdate.QueryParameters> | null,
+      data?: Paths.PresetUpdate.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.PresetUpdate.Responses.$201>
+    /**
+     * presetDelete
+     */
+    'delete'(
+      parameters?: Parameters<Paths.PresetDelete.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.PresetDelete.Responses.$201>
+  }
+  ['/api/preset/q']: {
+    /**
+     * presetQuery
+     */
+    'get'(
+      parameters?: Parameters<Paths.PresetQuery.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.PresetQuery.Responses.$200>
   }
   ['/api/quiz/getMany']: {
     /**
