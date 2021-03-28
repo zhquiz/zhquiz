@@ -189,20 +189,26 @@ export const qParseNum: (
   },
 })
 
-const reDur = /^([+-]?\d+(?:\.\d+)?)([A-Z]+)$/
+const reDur = /^([+-]?\d+(?:\.\d+)?)([A-Z]+)$/i
 const toDate = (s: string) => {
   const m = reDur.exec(s)
+  let d = dayjs(s)
   if (m) {
-    return dayjs()
-      .add(parseFloat(m[1]!), m[2] as any)
-      .toDate()
+    d = dayjs().add(parseFloat(m[1]!), m[2] as any)
+    if (d.isValid()) {
+      return d.toDate()
+    }
   }
 
-  return dayjs(s).toDate()
+  if (d.isValid()) {
+    return d.toDate()
+  }
+
+  return null
 }
 const toBetween = (s: string) => {
   const m = reDur.exec(s)
-  if (m) {
+  if (m && toDate(s) instanceof Date) {
     return [
       dayjs()
         .add(parseFloat(m[1]!) - 0.5, m[2] as any)

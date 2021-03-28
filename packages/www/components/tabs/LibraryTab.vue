@@ -152,6 +152,7 @@ interface ILocal {
   },
 })
 export default class LibraryPage extends Vue {
+  q = ''
   q0 = ''
   isEditModal = false
 
@@ -188,15 +189,6 @@ export default class LibraryPage extends Vue {
     entry: [],
     description: '',
     tag: [],
-  }
-
-  get q() {
-    const q = this.$route.query.q
-    return (Array.isArray(q) ? q[0] : q) || ''
-  }
-
-  set q(q: string) {
-    this.$router.push({ query: { q } })
   }
 
   get entryString() {

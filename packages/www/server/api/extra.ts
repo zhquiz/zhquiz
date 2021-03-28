@@ -319,11 +319,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
       default(v) {
         if (/^\p{sc=Han}+$/u.test(v)) {
           return sql.join(
-            [
-              this.fields.entry[':'](v),
-              this.fields.description[':'](v),
-              this.fields.tag[':'](v),
-            ],
+            [this.fields.entry[':'](v), this.fields.description[':'](v)],
             ' OR '
           )
         }
@@ -335,7 +331,6 @@ const extraRouter: FastifyPluginAsync = async (f) => {
             this.fields.english[':'](v),
             this.fields.type[':'](v),
             this.fields.description[':'](v),
-            this.fields.tag[':'](v),
           ],
           ' OR '
         )

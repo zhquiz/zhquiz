@@ -5,9 +5,10 @@ import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
 
-import { QSplit, qParseDate, qParseNum } from '../db/token'
+import { QSplit, makeTag, qParseDate, qParseNum } from '../db/token'
 import { db } from '../shared'
 import { lookupCharacter } from './character'
+import { sPreset } from './preset'
 import { lookupSentence } from './sentence'
 import { makeReading } from './util'
 import { lookupVocabulary } from './vocabulary'
@@ -192,13 +193,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
   }
 
   {
-    const sBody = S.shape({
-      q: S.string().optional(),
-      type: S.list(S.string()),
-      stage: S.list(S.string()),
-      direction: S.list(S.string()),
-      includeUndue: S.boolean(),
-    })
+    const sBody = sPreset
 
     const sResult = S.shape({
       quiz: S.list(
@@ -697,21 +692,6 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       return sql`TRUE`
     }
 
-    const makeExtra = new QSplit({
-      default(v) {
-        return sql`(${sql.join(
-          [this.fields.entry[':'](v), this.fields.description[':'](v)],
-          ' OR '
-        )})`
-      },
-      fields: {
-        entry: {
-          ':': (v) => sql`"entry" &@ ${v}`,
-        },
-        description: { ':': (v) => sql`"description" &@ ${v}` },
-      },
-    })
-
     const makeQuiz = new QSplit({
       default: () => sql`TRUE`,
       fields: {
@@ -731,13 +711,18 @@ const quizRouter: FastifyPluginAsync = async (f) => {
     })
 
     const cond = [makeQuiz.parse(q) || sql`TRUE`]
-    const exCond = makeExtra.parse(q)
+    const exCond = makeTag.parse(q)
+
     if (exCond) {
-      cond.push(sql`${sql`"entry"`} IN (
-        SELECT unnest(${sql`"entry"`})
-        FROM "extra" WHERE "userId" = ${userId}} ${exCond}
+      cond.push(sql`"type"||'\x1f'||"entry" IN (
+        SELECT "type"||'\x1f'||"entry"
+        FROM "entry_tag" WHERE (
+          "userId" IS NULL OR "userId" = ${userId}
+        ) AND ${exCond}
       )`)
     }
+
+    console.dir(cond, { depth: null })
 
     return sql.join(cond, ' AND ')
   }

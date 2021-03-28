@@ -176,6 +176,49 @@
 
       <QuizCard ref="quizCard" :quiz-array="quizArray" @quiz:ended="reload" />
 
+      <div class="card" v-if="presets.count">
+        <div class="card-header">
+          <div class="card-header-title">Presets</div>
+        </div>
+        <div class="card-content">
+          <form class="mb-4" @submit.prevent="presets.q = presets.q0">
+            <b-field label="Filter" grouped>
+              <b-input v-model="presets.q" type="search" expanded />
+            </b-field>
+          </form>
+
+          <b-field
+            v-for="r in presets.result"
+            :key="r.id"
+            grouped
+            style="width: 100%"
+          >
+            <b-button type="is-link is-light" expanded @click="setPreset(r.id)">
+              {{ r.name }}
+            </b-button>
+            <p class="control ml-2">
+              <b-button
+                type="is-danger is-outlined"
+                @click="deletePreset(r.id)"
+              >
+                <b-icon icon="trash"></b-icon>
+              </b-button>
+            </p>
+          </b-field>
+
+          <b-pagination
+            class="mt-4"
+            v-if="presets.count > presets.limit"
+            v-model="presets.page"
+            :total="presets.count"
+            :per-page="presets.limit"
+            icon-prev="angle-left"
+            icon-next="angle-right"
+            @change="(p) => (presets.page = p)"
+          />
+        </div>
+      </div>
+
       <b-loading :active="isLoading" />
     </div>
   </section>
@@ -186,14 +229,6 @@ import { Component, Ref, Vue, Watch } from 'nuxt-property-decorator'
 
 import QuizCard, { IQuizData, IQuizType } from '@/components/cards/QuizCard.vue'
 import ContextMenu from '@/components/ContextMenu.vue'
-
-interface ILeechCard {
-  id: string
-  entry: string
-  type: string
-  direction: string
-  source?: string
-}
 
 @Component<QuizPage>({
   components: {
@@ -206,8 +241,7 @@ interface ILeechCard {
       select: 'quizSettings',
     })
 
-    const { type, stage, direction, includeUndue, includeExtra } =
-      r.quizSettings || {}
+    const { type, stage, direction, includeUndue } = r.quizSettings || {}
 
     if (type) {
       this.type = type
@@ -225,12 +259,10 @@ interface ILeechCard {
       this.includeUndue = includeUndue
     }
 
-    if (typeof includeExtra === 'boolean') {
-      this.includeExtra = includeExtra
-    }
-
     await this.init()
     this.isQuizDashboardReady = true
+
+    await this.loadPresets()
   },
 })
 export default class QuizPage extends Vue {
@@ -241,45 +273,24 @@ export default class QuizPage extends Vue {
   isInit = false
   isQuizDashboardReady = false
 
-  leechCard: {
-    q: string
-    isOpen: boolean
-    page: number
-    total: number
-    perPage: number
-    sort: {
-      field: string
-      order: 'desc' | 'asc'
-    }
-    data: ILeechCard[]
-    current: ILeechCard
-  } = {
-    q: '',
-    isOpen: false,
-    page: 1,
-    total: 0,
-    perPage: 5,
-    sort: {
-      field: '',
-      order: 'desc',
-    },
-    data: [],
-    current: {
-      id: '',
-      entry: '',
-      type: '',
-      direction: '',
-      source: '',
-    },
-  }
-
   q = ''
+
+  presets = {
+    q: '',
+    q0: '',
+    result: [] as {
+      id: string
+      name: string
+    }[],
+    count: 0,
+    page: 1,
+    limit: 5,
+  }
 
   type: IQuizType[] = ['character', 'vocabulary']
   stage = ['new', 'leech', 'learning']
   direction = ['se']
 
-  includeExtra = true
   includeUndue = false
 
   dueIn: Date | null = null
@@ -327,8 +338,7 @@ export default class QuizPage extends Vue {
       select: 'quizSettings',
     })
 
-    const { type, stage, direction, includeExtra, includeUndue, q } =
-      r.quizSettings || {}
+    const { type, stage, direction, includeUndue, q } = r.quizSettings || {}
 
     if (type) {
       this.type = type
@@ -340,10 +350,6 @@ export default class QuizPage extends Vue {
 
     if (direction) {
       this.direction = direction
-    }
-
-    if (typeof includeExtra !== 'undefined') {
-      this.includeExtra = includeExtra
     }
 
     if (typeof includeUndue !== 'undefined') {
@@ -397,7 +403,52 @@ export default class QuizPage extends Vue {
     this.$buefy.dialog.prompt({
       message: "Settings' name",
       trapFocus: true,
-      onConfirm: () => {},
+      onConfirm: async (name) => {
+        await this.$axios.presetCreate(null, {
+          name,
+          settings: {
+            type: this.type,
+            stage: this.stage,
+            direction: this.direction,
+            includeUndue: this.includeUndue,
+            q: this.q,
+          },
+        })
+        await this.loadPresets()
+      },
+    })
+  }
+
+  async loadPresets() {
+    const {
+      data: { result, count },
+    } = await this.$axios.presetQuery({
+      q: this.presets.q,
+      page: this.presets.page,
+      limit: this.presets.limit,
+    })
+
+    this.presets.result = result
+    this.presets.count = count
+  }
+
+  async setPreset(id: string) {
+    const { data: settings } = await this.$axios.presetGetOne({ id })
+
+    this.type = settings.type as any[]
+    this.stage = settings.stage
+    this.direction = settings.direction
+    this.includeUndue = settings.includeUndue
+    this.q = settings.q || ''
+  }
+
+  deletePreset(id: string) {
+    this.$buefy.dialog.confirm({
+      message: 'Are you sure you want to delete this settings?',
+      onConfirm: async () => {
+        await this.$axios.presetDelete({ id })
+        await this.loadPresets()
+      },
     })
   }
 }
