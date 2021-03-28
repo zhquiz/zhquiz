@@ -104,8 +104,10 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           )
         }
 
+        const entries = result.map((r) => r.entry)
+
         return {
-          result,
+          result: result.filter((a, i) => entries.indexOf(a.entry) === i),
         }
       }
     )
