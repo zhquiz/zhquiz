@@ -6,6 +6,7 @@ import sql from '@databases/sql'
 import { Magic } from '@magic-sdk/admin'
 import fastify, { FastifyPluginAsync } from 'fastify'
 import csrf from 'fastify-csrf'
+import rateLimit from 'fastify-rate-limit'
 import fSession from 'fastify-secure-session'
 import fastifySwagger from 'fastify-swagger'
 import S from 'jsonschema-definer'
@@ -33,6 +34,11 @@ const apiRouter: FastifyPluginAsync = async (f) => {
 
   f.register(fSession, {
     key: fs.readFileSync('session.key'),
+  })
+
+  f.register(rateLimit, {
+    max: 10,
+    timeWindow: '1 second',
   })
 
   f.register(fastifySwagger, {
