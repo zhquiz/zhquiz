@@ -1,4 +1,6 @@
 import sql from '@databases/sql'
+import axios from 'axios'
+import cheerio from 'cheerio'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 
@@ -64,6 +66,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
 
     const sQuery = S.shape({
       q: S.string(),
+      limit: S.integer().optional(),
     })
 
     const sResult = S.shape({
@@ -84,7 +87,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         },
       },
       async (req): Promise<typeof sResult.type> => {
-        let { q } = req.query
+        let { q, limit = 10 } = req.query
 
         const userId: string = req.session.get('userId')
         if (!userId) {
@@ -104,7 +107,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
           return { result: [] }
         }
 
-        const result = await db.query(sql`
+        let result = await db.query(sql`
         WITH match_cte AS (
           SELECT DISTINCT ON ("entry")
             "entry", "isTrad"
@@ -137,11 +140,18 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         SELECT "entry" FROM (
           SELECT "entry" FROM match_cte WHERE "isTrad" ORDER BY RANDOM()
         ) t1
-        LIMIT 20
+        LIMIT ${limit}
         `)
 
+        result = result.map((r) => r.entry)
+        if (result.length < limit) {
+          result.push(
+            ...(await lookupJukuu(q).then((rs) => rs.map((r) => r.c)))
+          )
+        }
+
         return {
-          result: result.map((r) => r.entry),
+          result,
         }
       }
     )
@@ -217,4 +227,79 @@ export async function lookupSentence(
   `)
 
   return r || null
+}
+
+export async function lookupJukuu(
+  q: string
+): Promise<
+  {
+    c: string
+    e: string
+  }[]
+> {
+  const rs: {
+    c: string
+    e: string
+  }[] = await db.query(sql`
+  SELECT "chinese" c, "english" e
+  FROM online.jukuu
+  WHERE "chinese" &@ ${q}
+  `)
+  if (rs.length < 10) {
+    const [r] = await db.query(sql`
+    SELECT "count"
+    FROM online.jukuu_history
+    WHERE "q" = ${q}
+    `)
+
+    if (!r || r.count < 10) {
+      const { data: html } = await axios.get(
+        `http://www.jukuu.com/search.php`,
+        {
+          params: {
+            q,
+          },
+          transformResponse: [],
+        }
+      )
+
+      const $ = cheerio.load(html)
+      let out = Array.from({ length: 10 }).map(() => ({ c: '', e: '' }))
+
+      $('table tr.c td:last-child').each((i, el) => {
+        out[i].c = $(el).text()
+      })
+
+      $('table tr.e td:last-child').each((i, el) => {
+        out[i].e = $(el).text()
+      })
+
+      out = out.filter((r) => r.c)
+
+      await db.tx(async (db) => {
+        await db.query(sql`
+        INSERT INTO online.jukuu_history ("q", "count")
+        VALUES (${q}, ${out.length})
+        ON CONFLICT ("q")
+        DO UPDATE
+        SET "count" = ${out.length}
+        `)
+
+        if (out.length) {
+          await db.query(sql`
+          INSERT INTO online.jukuu ("chinese", "english")
+          VALUES ${sql.join(
+            out.map((r) => sql`(${r.c}, ${r.e})`),
+            ','
+          )}
+          ON CONFLICT DO NOTHING
+          `)
+        }
+      })
+
+      rs.push(...out)
+    }
+  }
+
+  return rs.slice(0, 10)
 }

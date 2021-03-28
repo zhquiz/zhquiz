@@ -4,6 +4,7 @@ import S from 'jsonschema-definer'
 
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
+import { lookupJukuu } from './sentence'
 
 const vocabularyRouter: FastifyPluginAsync = async (f) => {
   {
@@ -42,7 +43,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
-        const result = await db.query(sql`
+        let result = await db.query(sql`
         WITH match_cte AS (
           SELECT DISTINCT ON ("entry")
             "entry", "english"[1] "english", "isTrad"
@@ -105,9 +106,19 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         }
 
         const entries = result.map((r) => r.entry)
+        result = result.filter((a, i) => entries.indexOf(a.entry) === i)
+
+        if (result.length < limit) {
+          result.push(
+            ...(await lookupJukuu(entry).then((rs) =>
+              rs.map((r) => ({ entry: r.c, english: r.e }))
+            ))
+          )
+          result = result.slice(0, limit)
+        }
 
         return {
-          result: result.filter((a, i) => entries.indexOf(a.entry) === i),
+          result,
         }
       }
     )

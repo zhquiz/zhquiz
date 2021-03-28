@@ -6,6 +6,8 @@ services:
       - POSTGRES_PASSWORD
       - POSTGRES_DB
       - PORT=35594
+      - TZ=Asia/Bangkok
+      - PGTZ=Asia/Bangkok
 
       # See https://magic.link for signing in and authorization
       # - MAGIC_PUBLIC
