@@ -297,6 +297,14 @@ export async function lookupJukuu(
         }
       })
 
+      if (out.length) {
+        db.query(
+          sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`
+        ).then(() =>
+          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view`)
+        )
+      }
+
       rs.push(...out)
     }
   }

@@ -4,6 +4,7 @@ import * as cedict from './14-cedict'
 import * as junda from './15-junda'
 import * as radical from './16-radical'
 import * as level from './18-level'
+import * as lib from './23-library'
 import * as jukuu from './30-jukuu'
 
 if (require.main === module) {
@@ -15,6 +16,7 @@ if (require.main === module) {
       await junda.populate(db)
       await radical.populate(db)
       await level.populate(db)
+      await lib.populate(db)
       await jukuu.populate(db)
     } catch (e) {
       console.error(e)

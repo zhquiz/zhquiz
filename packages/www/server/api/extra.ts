@@ -394,7 +394,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           )`)
         }
 
-        const quizCond = makeQuiz.parse(q)
+        const quizCond = q ? makeQuiz.parse(q) : null
         if (quizCond) {
           $and.push(quizCond)
         }

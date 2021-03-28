@@ -109,15 +109,16 @@ export default (): NuxtConfig => {
               'faTag',
               'faListOl',
               'faBars',
+              'faSave',
             ],
           },
         },
       ],
       '@nuxtjs/proxy',
     ],
-    proxy: process.env.SERVER_PORT ? [
-      `http://localhost:${process.env.SERVER_PORT}/api`,
-    ] : [],
+    proxy: process.env.SERVER_PORT
+      ? [`http://localhost:${process.env.SERVER_PORT}/api`]
+      : [],
 
     // PWA module configuration: https://go.nuxtjs.dev/pwa
     pwa: {
@@ -134,11 +135,11 @@ export default (): NuxtConfig => {
       },
     },
     server: {
-      port
+      port,
     },
     env: {
       PORT: process.env.PORT,
-      MAGIC_PUBLIC: process.env.MAGIC_PUBLIC || ''
+      MAGIC_PUBLIC: process.env.MAGIC_PUBLIC || '',
     },
   }
 }
