@@ -1,6 +1,8 @@
-tatoeba.db
-# cedict.db
-*.bz2
+**
 
+!*.db
+
+tatoeba.db
+cedict.db
 zhquiz.db
 jukuu.db

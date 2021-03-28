@@ -22,15 +22,8 @@ export async function populate(db: ConnectionPool) {
   );
   `)
 
-  const hasCMN = s3
-    .prepare(
-      /* sql */ `
-  SELECT 1 FROM "sentence" WHERE "lang" = 'cmn'
-  `
-    )
-    .get()
-  if (!hasCMN) {
-    console.log('CMN not found. Downloading Tatoeba CMN.')
+  try {
+    console.log('Downloading the latest Tatoeba CMN.')
 
     const f = fs.createWriteStream('./cmn_sentences.tsv.bz2')
     https.get(
@@ -51,6 +44,7 @@ export async function populate(db: ConnectionPool) {
     const stmt = s3.prepare(/* sql */ `
     INSERT INTO "sentence" ("id", "lang", "text")
     VALUES (@id, @lang, @text)
+    ON CONFLICT DO NOTHING
     `)
 
     let line = ''
@@ -86,17 +80,12 @@ export async function populate(db: ConnectionPool) {
     })
 
     s3.exec('COMMIT')
+  } catch (e) {
+    console.error(e)
   }
 
-  const hasENG = s3
-    .prepare(
-      /* sql */ `
-  SELECT 1 FROM "sentence" WHERE "lang" = 'eng'
-  `
-    )
-    .get()
-  if (!hasENG) {
-    console.log('ENG not found. Downloading Tatoeba ENG.')
+  try {
+    console.log('Downloading the latest Tatoeba ENG.')
 
     const f = fs.createWriteStream('./eng_sentences.tsv.bz2')
     https.get(
@@ -117,6 +106,7 @@ export async function populate(db: ConnectionPool) {
     const stmt = s3.prepare(/* sql */ `
     INSERT INTO "sentence" ("id", "lang", "text")
     VALUES (@id, @lang, @text)
+    ON CONFLICT DO NOTHING
     `)
 
     let line = ''
@@ -152,17 +142,12 @@ export async function populate(db: ConnectionPool) {
     })
 
     s3.exec('COMMIT')
+  } catch (e) {
+    console.error(e)
   }
 
-  const hasLink = s3
-    .prepare(
-      /* sql */ `
-  SELECT 1 FROM "link"
-  `
-    )
-    .get()
-  if (!hasLink) {
-    console.log('Links not found. Downloading Tatoeba Links.')
+  try {
+    console.log('Downloading the latest Tatoeba Links.')
 
     const f = fs.createWriteStream('./links.tar.bz2')
     https.get('https://downloads.tatoeba.org/exports/links.tar.bz2', (res) => {
@@ -181,6 +166,7 @@ export async function populate(db: ConnectionPool) {
     const stmt = s3.prepare(/* sql */ `
     INSERT INTO "link" ("id1", "id2")
     VALUES (@id1, @id2)
+    ON CONFLICT DO NOTHING
     `)
 
     let line = ''
@@ -214,6 +200,8 @@ export async function populate(db: ConnectionPool) {
     })
 
     s3.exec('COMMIT')
+  } catch (e) {
+    console.error(e)
   }
 
   await db.tx(async (db) => {
@@ -253,6 +241,7 @@ export async function populate(db: ConnectionPool) {
 
   s3.close()
 
+  console.log('Updating materialized view')
   await db.query(sql`
     REFRESH MATERIALIZED VIEW dict.tatoeba_view;
   `)
