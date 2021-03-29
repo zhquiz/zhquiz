@@ -109,7 +109,7 @@
           <b-collapse
             class="card"
             animation="slide"
-            :open="!!current.english.length"
+            :open="!!(current.english || []).length"
           >
             <div
               slot="trigger"
@@ -124,7 +124,7 @@
             </div>
 
             <div class="card-content">
-              <span>{{ current.english.join(' / ') }}</span>
+              <span>{{ (current.english || []).join(' / ') }}</span>
             </div>
           </b-collapse>
 
@@ -447,7 +447,7 @@ export default class VocabPage extends Vue {
 
 span.space-separated {
   & + & {
-    margin-left: 1em;
+    margin-left: 0.5em;
   }
 }
 </style>
