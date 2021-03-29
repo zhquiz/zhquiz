@@ -4,6 +4,7 @@ import cheerio from 'cheerio'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 
+import { refresh } from '../db/refresh'
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
 
@@ -298,16 +299,10 @@ export async function lookupJukuu(
       })
 
       if (out.length) {
-        db.query(
-          sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`
-        ).then(() =>
+        refresh('sentence').then(() =>
           Promise.all([
-            db.query(
-              sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "sentence_isTrad"`
-            ),
-            db.query(
-              sql`REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view`
-            ),
+            refresh('"sentence_isTrad"'),
+            refresh('dict.cedict_view'),
           ])
         )
       }

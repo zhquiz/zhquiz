@@ -3,6 +3,7 @@ import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
 
+import { refresh } from '../db/refresh'
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
 import { makeReading } from './util'
@@ -123,15 +124,15 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         })
 
         if (tag.length) {
-          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+          refresh('entry_tag')
         }
 
         switch (type) {
           case 'character':
-            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "character"`)
+            refresh('"character"')
             break
           case 'sentence':
-            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`)
+            refresh('sentence')
         }
 
         reply.status(201)
@@ -210,15 +211,15 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         })
 
         if (tag.length) {
-          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+          refresh('entry_tag')
         }
 
         switch (type) {
           case 'character':
-            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "character"`)
+            refresh('"character"')
             break
           case 'sentence':
-            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`)
+            refresh('sentence')
         }
 
         reply.status(201)
@@ -276,15 +277,15 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         })
 
         if (x.tag.length) {
-          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+          refresh('entry_tag')
         }
 
         switch (x.type) {
           case 'character':
-            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "character"`)
+            refresh('"character"')
             break
           case 'sentence':
-            db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`)
+            refresh('sentence')
         }
 
         reply.status(201)
