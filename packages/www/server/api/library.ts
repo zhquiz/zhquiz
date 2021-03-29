@@ -3,6 +3,7 @@ import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
 
+import { refresh } from '../db/refresh'
 import { QSplit } from '../db/token'
 import { db } from '../shared'
 
@@ -256,7 +257,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         })
 
         if (tag.length) {
-          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+          refresh('entry_tag')
         }
 
         reply.status(201)
@@ -329,8 +330,8 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           `)
         })
 
-        if (tag && tag.length) {
-          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+        if (tag) {
+          refresh('entry_tag')
         }
 
         reply.status(201)
@@ -388,7 +389,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         })
 
         if (x.tag.length) {
-          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY entry_tag`)
+          refresh('entry_tag')
         }
 
         reply.status(201)

@@ -93,9 +93,16 @@
             </div>
 
             <div class="card-content">
-              <div class="font-zh-trad clickable">
-                {{ (current.alt || []).join(' ') }}
-              </div>
+              <span
+                v-for="a in current.alt || []"
+                :key="a"
+                class="font-zh-trad clickable space-separated"
+                @contextmenu.prevent="
+                  (evt) => openContext(evt, a, 'vocabulary')
+                "
+              >
+                {{ a }}
+              </span>
             </div>
           </b-collapse>
 
@@ -232,7 +239,7 @@ export default class VocabPage extends Vue {
   get simplified() {
     const { entry = '' } = this.current
 
-    if (/^\p{sc=Han}+$/u.test(entry)) {
+    if (/\p{sc=Han}/u.test(entry)) {
       return entry
     }
 
@@ -408,7 +415,7 @@ export default class VocabPage extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .entry-display {
   display: flex;
   flex-direction: column;
@@ -436,5 +443,11 @@ export default class VocabPage extends Vue {
 
 .sentence-entry {
   margin-right: 1rem;
+}
+
+span.space-separated {
+  & + & {
+    margin-left: 1em;
+  }
 }
 </style>
