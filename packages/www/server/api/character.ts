@@ -2,7 +2,7 @@ import sql from '@databases/sql'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 
-import { QSplit, makeQuiz, makeTag } from '../db/token'
+import { QSplit, makeQuiz, makeTag, qParseNum } from '../db/token'
 import { db } from '../shared'
 import { lookupJukuu } from './sentence'
 
@@ -330,6 +330,10 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           return sql`TRUE`
         }
 
+        if (/[^\p{L}\p{N}\p{M}]/u.test(v)) {
+          return null
+        }
+
         return sql`(${sql.join(
           [this.fields.reading[':'](v), this.fields.english[':'](v)],
           ' OR '
@@ -339,6 +343,13 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         pinyin: { ':': (v) => sql`normalize_pinyin("pinyin") &@ ${v}` },
         reading: { ':': (v) => sql`normalize_pinyin("pinyin") &@ ${v}` },
         english: { ':': (v) => sql`"english" &@ ${v}` },
+      },
+    })
+
+    const makeLevel = new QSplit({
+      default: () => null,
+      fields: {
+        level: qParseNum(sql`"hLevel"`),
       },
     })
 
@@ -380,39 +391,44 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         const radCond = makeRad.parse(q)
         const hCond = makeZh.parse(q)
         const tagCond = makeTag.parse(q)
+        const lvCond = makeLevel.parse(q)
 
-        if (!hCond && !radCond && !qCond && !tagCond) {
+        if (!hCond && !radCond && !qCond && !tagCond && !lvCond) {
           return { result: [] }
         }
 
         const result = await db.query(sql`
         SELECT DISTINCT "entry"
         FROM "character"
-        WHERE (
-          "userId" IS NULL OR "userId" = ${userId}
-        ) ${hCond ? sql` AND ${hCond}` : sql``} ${
-          radCond
-            ? sql` AND "entry" IN (
-          SELECT "entry" FROM dict.radical WHERE ${radCond}
-        )`
-            : sql``
-        } ${
-          tagCond
-            ? sql` AND "entry" IN (
+        WHERE ${sql.join(
+          [
+            sql`("userId" IS NULL OR "userId" = ${userId})`,
+            hCond,
+            radCond
+              ? sql`"entry" IN (SELECT "entry" FROM dict.radical WHERE ${radCond})`
+              : null,
+            qCond
+              ? sql`"entry" IN (
+            SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'character' AND ${qCond}
+          )`
+              : null,
+            tagCond
+              ? sql`"entry" IN (
             SELECT "entry"
             FROM entry_tag
             WHERE (
               "userId" IS NULL OR "userId" = ${userId}
             ) AND "type" = 'character' AND ${tagCond}
           )`
-            : sql``
-        } ${
-          qCond
-            ? sql` AND "entry" IN (
-          SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'vocabulary' AND ${qCond}
-        )`
-            : sql``
-        }
+              : null,
+            lvCond
+              ? sql`"entry" IN (SELECT "entry" FROM dict.zhlevel WHERE ${lvCond})`
+              : null,
+          ]
+            .filter((s) => s)
+            .map((s) => s!),
+          ' AND '
+        )}
         LIMIT 20
         `)
 
