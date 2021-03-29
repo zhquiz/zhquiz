@@ -249,11 +249,11 @@ export default class CharacterTab extends Vue {
   q0 = ''
 
   get current() {
-    return this.entries[this.i]
+    return this.entries[this.i] || ' '
   }
 
   get additionalContext() {
-    if (!this.query.q) {
+    if (!(this.query.q || '').trim()) {
       return [
         {
           name: 'Reload',
@@ -288,6 +288,16 @@ export default class CharacterTab extends Vue {
       const qs = q.split('').filter((h) => /\p{sc=Han}/u.test(h))
       this.entries = qs.filter((h, i) => qs.indexOf(h) === i)
     } else {
+      if (!q.trim()) {
+        const {
+          data: { result },
+        } = await this.$axios.characterRandom()
+
+        this.q0 = result
+        this.$set(this.query, 'q', result)
+        return
+      }
+
       const r = await this.$axios.characterQuery({ q })
       this.entries = r.data.result
     }
@@ -311,6 +321,13 @@ export default class CharacterTab extends Vue {
   }
 
   async loadHanzi() {
+    if (!/^\p{sc=Han}$/u.test(this.current)) {
+      this.sub = []
+      this.sup = []
+      this.variants = []
+      return
+    }
+
     const { data: r } = await this.$axios.characterRadical({
       entry: this.current,
     })
@@ -321,6 +338,11 @@ export default class CharacterTab extends Vue {
   }
 
   async loadVocab() {
+    if (!/^\p{sc=Han}$/u.test(this.current)) {
+      this.vocabs = []
+      return
+    }
+
     const {
       data: { result },
     } = await this.$axios.characterVocabulary({
@@ -331,6 +353,11 @@ export default class CharacterTab extends Vue {
   }
 
   async loadSentences() {
+    if (!/^\p{sc=Han}$/u.test(this.current)) {
+      this.sentences = []
+      return
+    }
+
     const {
       data: { result },
     } = await this.$axios.characterSentence({

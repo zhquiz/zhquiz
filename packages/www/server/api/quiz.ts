@@ -737,11 +737,11 @@ const quizRouter: FastifyPluginAsync = async (f) => {
     const lvCond = makeLevel.parse(q)
 
     if (exCond) {
-      cond.push(sql`"type"||'\x1f'||"entry" IN (
-        SELECT "type"||'\x1f'||"entry"
+      cond.push(sql`"entry" IN (
+        SELECT entry_tag."entry"
         FROM "entry_tag" WHERE (
           "userId" IS NULL OR "userId" = ${userId}
-        ) AND ${exCond}
+        ) AND entry_tag."type" = "type" AND ${exCond}
       )`)
     }
 
@@ -750,8 +750,6 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         SELECT "entry" FROM dict.zhlevel WHERE ${lvCond}
       )`)
     }
-
-    console.dir(cond, { depth: null })
 
     return sql.join(cond, ' AND ')
   }

@@ -317,6 +317,16 @@ export default class VocabPage extends Vue {
         sentences: [],
       }))
     } else {
+      if (!q.trim()) {
+        const {
+          data: { result },
+        } = await this.$axios.vocabularyRandom()
+
+        this.q0 = result
+        this.$set(this.query, 'q', result)
+        return
+      }
+
       this.entries = [
         {
           entry: q,
