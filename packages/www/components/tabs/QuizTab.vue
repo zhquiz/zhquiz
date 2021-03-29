@@ -43,13 +43,6 @@
               </b-checkbox-button>
               <b-checkbox-button
                 v-model="stage"
-                native-value="leech"
-                type="is-success"
-              >
-                Leech
-              </b-checkbox-button>
-              <b-checkbox-button
-                v-model="stage"
                 native-value="learning"
                 type="is-success"
               >
@@ -69,7 +62,23 @@
           <div class="field">
             <label class="label">Options</label>
             <div class="control">
-              <b-switch v-model="includeUndue">Include undue</b-switch>
+              <b-checkbox v-model="includeUndue">Include undue</b-checkbox>
+              <b-checkbox
+                :value="includeLeech"
+                @click.native.prevent="
+                  if (includeLeech) {
+                    includeLeech = undefined
+                  } else if (includeLeech === undefined) {
+                    includeLeech = false
+                  } else {
+                    includeLeech = true
+                  }
+                "
+                title="wrongStreak>2"
+                :indeterminate="includeLeech === undefined"
+              >
+                Include leech
+              </b-checkbox>
             </div>
           </div>
         </div>
@@ -158,7 +167,7 @@
             </div>
             <div class="column is-3">
               <span class="column-label">Leech: </span>
-              <span>{{ leechItems.length | format }}</span>
+              <span>{{ leechCount | format }}</span>
             </div>
             <div class="column is-3 flex flex-row">
               <div class="flex-grow" />
@@ -241,10 +250,11 @@ import ContextMenu from '@/components/ContextMenu.vue'
       select: 'quizSettings',
     })
 
-    const { type, stage, direction, includeUndue } = r.quizSettings || {}
+    const { type, stage, direction, includeLeech, includeUndue, q } =
+      r.quizSettings || {}
 
     if (type) {
-      this.type = type
+      this.type = type as any[]
     }
 
     if (stage) {
@@ -255,9 +265,15 @@ import ContextMenu from '@/components/ContextMenu.vue'
       this.direction = direction
     }
 
+    if (typeof includeLeech === 'boolean') {
+      this.includeLeech = includeLeech
+    }
+
     if (typeof includeUndue === 'boolean') {
       this.includeUndue = includeUndue
     }
+
+    this.q = q || ''
 
     await this.init()
     this.isQuizDashboardReady = true
@@ -292,7 +308,9 @@ export default class QuizPage extends Vue {
   direction = ['se']
 
   includeUndue = false
+  includeLeech = true
 
+  leechCount = 0
   dueIn: Date | null = null
 
   quizArray: string[] = []
@@ -326,22 +344,16 @@ export default class QuizPage extends Vue {
     })
   }
 
-  get leechItems() {
-    return this.quizArray.filter((id) => {
-      const d = this.quizData[id]
-      return d && d.wrongStreak && d.wrongStreak > 2
-    })
-  }
-
   async init() {
     const { data: r } = await this.$axios.userGetSettings({
       select: 'quizSettings',
     })
 
-    const { type, stage, direction, includeUndue, q } = r.quizSettings || {}
+    const { type, stage, direction, includeLeech, includeUndue, q } =
+      r.quizSettings || {}
 
     if (type) {
-      this.type = type
+      this.type = type as any[]
     }
 
     if (stage) {
@@ -350,6 +362,10 @@ export default class QuizPage extends Vue {
 
     if (direction) {
       this.direction = direction
+    }
+
+    if (typeof includeLeech === 'boolean') {
+      this.includeLeech = includeLeech
     }
 
     if (typeof includeUndue !== 'undefined') {
@@ -368,14 +384,15 @@ export default class QuizPage extends Vue {
   @Watch('stage', { deep: true })
   @Watch('direction', { deep: true })
   @Watch('includeUndue')
-  @Watch('includeExtra')
+  @Watch('includeLeech')
   async reload() {
-    const { quiz, upcoming } = await this.$axios
+    const { quiz, upcoming, stats } = await this.$axios
       .quizInit(null, {
         type: this.type,
         stage: this.stage,
         direction: this.direction,
         includeUndue: this.includeUndue,
+        includeLeech: this.includeLeech,
         q: this.q,
       })
       .then((r) => r.data)
@@ -393,6 +410,7 @@ export default class QuizPage extends Vue {
       upcoming[0] && upcoming[0].nextReview
         ? new Date(upcoming[0].nextReview)
         : null
+    this.leechCount = stats.leech
   }
 
   async startQuiz() {
@@ -411,6 +429,7 @@ export default class QuizPage extends Vue {
             stage: this.stage,
             direction: this.direction,
             includeUndue: this.includeUndue,
+            includeLeech: this.includeLeech,
             q: this.q,
           },
         })

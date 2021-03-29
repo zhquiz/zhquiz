@@ -38,7 +38,7 @@ const apiRouter: FastifyPluginAsync = async (f) => {
   })
 
   f.register(rateLimit, {
-    max: 10,
+    max: isDev ? 20 : 10,
     timeWindow: '1 second',
   })
 

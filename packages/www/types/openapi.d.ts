@@ -296,6 +296,7 @@ declare namespace Paths {
         stage: string[];
         direction: string[];
         includeUndue: boolean;
+        includeLeech?: boolean;
       };
     }
     namespace Responses {
@@ -331,6 +332,7 @@ declare namespace Paths {
         stage: string[];
         direction: string[];
         includeUndue: boolean;
+        includeLeech?: boolean;
       }
     }
   }
@@ -370,6 +372,7 @@ declare namespace Paths {
         stage: string[];
         direction: string[];
         includeUndue: boolean;
+        includeLeech?: boolean;
       };
     }
     namespace Responses {
@@ -441,6 +444,7 @@ declare namespace Paths {
       stage: string[];
       direction: string[];
       includeUndue: boolean;
+      includeLeech?: boolean;
     }
     namespace Responses {
       export interface $200 {
@@ -454,6 +458,9 @@ declare namespace Paths {
           nextReview?: string; // date-time
           id: string;
         }[];
+        stats: {
+          leech: number;
+        };
       }
     }
   }
@@ -587,7 +594,12 @@ declare namespace Paths {
         level?: number;
         levelMin?: number;
         quizSettings?: {
-          [name: string]: any;
+          q?: string;
+          type: string[];
+          stage: string[];
+          direction: string[];
+          includeUndue: boolean;
+          includeLeech?: boolean;
         };
         levelBrowser?: string[];
       }
