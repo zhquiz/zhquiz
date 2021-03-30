@@ -36,3 +36,9 @@ Hint - it is as simple as installing Docker / Docker Compose, then
 docker-compose build
 docker-compose up
 ```
+
+## Mobile / Smartphone / iPad app
+
+This is also possible, with either self hosting or localhost tunneling.
+
+I ensured that the UI is mobile-enabled.

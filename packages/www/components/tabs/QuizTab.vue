@@ -82,10 +82,10 @@
             </div>
           </div>
         </div>
-        <div class="column" style="min-width: 600px">
+        <div class="column">
           <div class="field">
             <label class="label">Direction</label>
-            <b-field class="flex-wrap">
+            <b-field class="flex-wrap more-wrap">
               <b-checkbox-button
                 v-model="direction"
                 native-value="se"
@@ -110,7 +110,7 @@
             </b-field>
           </div>
         </div>
-        <div class="column" style="min-width: 600px">
+        <div class="column" style="min-width: min(100vw, 600px)">
           <form @submit.prevent="reload">
             <b-field label="Filter" grouped>
               <b-input
@@ -573,5 +573,9 @@ export default class QuizPage extends Vue {
     height: 150px;
     opacity: 0;
   }
+}
+
+.more-wrap ::v-deep .field {
+  flex-wrap: wrap;
 }
 </style>

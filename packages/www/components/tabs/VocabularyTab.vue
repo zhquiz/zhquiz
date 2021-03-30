@@ -23,9 +23,7 @@
           >
             <div
               class="clickable text-center font-zh-simp"
-              @contextmenu.prevent="
-                (evt) => openContext(evt, simplified, 'vocabulary')
-              "
+              @click="(evt) => openContext(evt, simplified, 'vocabulary')"
             >
               {{ simplified }}
             </div>
@@ -97,9 +95,7 @@
                 v-for="a in current.alt || []"
                 :key="a"
                 class="font-zh-trad clickable space-separated"
-                @contextmenu.prevent="
-                  (evt) => openContext(evt, a, 'vocabulary')
-                "
+                @click="(evt) => openContext(evt, a, 'vocabulary')"
               >
                 {{ a }}
               </span>
@@ -153,9 +149,7 @@
               >
                 <span
                   class="clickable"
-                  @contextmenu.prevent="
-                    (evt) => openContext(evt, s.entry, 'sentence')
-                  "
+                  @click="(evt) => openContext(evt, s.entry, 'sentence')"
                 >
                   {{ s.entry }}
                 </span>
