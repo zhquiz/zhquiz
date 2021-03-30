@@ -80,25 +80,33 @@ CREATE INDEX "idx_sentence_isTrad_isTrad" ON "sentence_isTrad" ("isTrad");
 
 CREATE MATERIALIZED VIEW "entry_tag" AS
   SELECT
-    unnest("entry") "entry",
-    unnest("tag") "tag",
-    "type",
-    "userId"
-  FROM "extra"
-  UNION ALL
-  SELECT
-    unnest("entry") "entry",
-    unnest("tag") "tag",
-    "type",
-    "userId"
-  FROM "library"
-  UNION ALL
-  SELECT
     "entry",
     "tag",
     "type",
-    NULL
-  FROM dict.entry_tag;
+    "userId"
+  FROM (
+    SELECT
+      unnest("entry") "entry",
+      unnest("tag") "tag",
+      "type",
+      "userId"
+    FROM "extra"
+    UNION ALL
+    SELECT
+      unnest("entry") "entry",
+      unnest("tag") "tag",
+      "type",
+      "userId"
+    FROM "library"
+    UNION ALL
+    SELECT
+      "entry",
+      "tag",
+      "type",
+      NULL
+    FROM dict.entry_tag
+  ) t1
+  WHERE "tag" IS NOT NULL;
   
 CREATE UNIQUE INDEX "idx_entry_tag_unique" ON "entry_tag" ("entry", "tag", "type", "userId");
 CREATE INDEX "idx_entry_tag_entry" ON "entry_tag" ("entry");

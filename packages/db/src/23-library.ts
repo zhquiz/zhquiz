@@ -204,8 +204,4 @@ export async function populate(db: ConnectionPool) {
       `)
     }
   })
-
-  // await db.query(sql`
-  //   REFRESH MATERIALIZED VIEW dict.entry_tag;
-  // `)
 }

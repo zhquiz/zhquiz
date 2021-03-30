@@ -1,4 +1,5 @@
 import createConnectionPool, { ConnectionPool } from '@databases/pg'
+import { Magic } from '@magic-sdk/admin'
 
 export const isDev = process.env.NODE_ENV === 'development'
 
@@ -16,7 +17,12 @@ if (!db) {
           user: process.env.POSTGRES_USER,
           password: process.env.POSTGRES_PASSWORD,
           database: process.env.POSTGRES_DB,
+          host: process.env.POSTGRES_HOST,
           bigIntMode: 'number',
         }
   )
 }
+
+export const magic = process.env.MAGIC_SECRET
+  ? new Magic(process.env.MAGIC_SECRET)
+  : null

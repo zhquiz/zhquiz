@@ -1,5 +1,5 @@
-import { populate } from '~/server/db/14-cedict'
-import { db } from '~/server/shared'
+import { populate } from '../src/30-jukuu'
+import { db } from '../src/init'
 
 async function main() {
   process.chdir('./db/assets')

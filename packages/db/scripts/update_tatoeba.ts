@@ -1,5 +1,5 @@
-import { populate } from '~/server/db/13-tatoeba'
-import { db } from '~/server/shared'
+import { populate } from '../src/13-tatoeba'
+import { db } from '../src/init'
 
 async function main() {
   process.chdir('./db/assets')

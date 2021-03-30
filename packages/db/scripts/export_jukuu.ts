@@ -1,6 +1,7 @@
 import sql from '@databases/sql'
-import { db } from '~/server/shared'
 import sqlite3 from 'better-sqlite3'
+
+import { db } from '../src/init'
 
 async function main() {
   const s3 = sqlite3('./db/assets/jukuu.db')

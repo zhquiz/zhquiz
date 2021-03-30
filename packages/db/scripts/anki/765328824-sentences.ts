@@ -7,8 +7,9 @@
 // import { execSync } from 'child_process'
 
 import sql from '@databases/sql'
-import { db } from '~/server/shared'
 import sqlite3 from 'better-sqlite3'
+
+import { db } from '../../src/init'
 
 async function main() {
   process.chdir(__dirname)
@@ -53,7 +54,7 @@ async function main() {
       (flds.split('\x1f') as string[]).reduce(
         (prev, f, i) => ({
           ...prev,
-          [headers[i]]: f,
+          [headers[i]]: f
         }),
         {} as Record<string, string>
       )
@@ -82,7 +83,7 @@ async function main() {
             .map(
               (r) =>
                 sql`(${[r.Expression]}, ${[r.Meaning]}, 'sentence', ${[
-                  'anki-765328824',
+                  'anki-765328824'
                 ]}, ${userId})`
             ),
           ','
@@ -97,7 +98,7 @@ async function main() {
     .then(() =>
       Promise.all([
         db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "sentence_isTrad"`),
-        db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view`),
+        db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view`)
       ])
     )
 

@@ -2,7 +2,7 @@ import { SQLQuery, sql } from '@databases/pg'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 
-import { db } from '../shared'
+import { db, magic } from '../shared'
 import { sPreset } from './preset'
 
 const userRouter: FastifyPluginAsync = async (f) => {
@@ -149,6 +149,10 @@ const userRouter: FastifyPluginAsync = async (f) => {
       const userId: string = req.session.get('userId')
       if (!userId) {
         throw { statusCode: 401 }
+      }
+
+      if (magic) {
+        await magic.users.logoutByToken(req.session.get('apiKey'))
       }
 
       req.session.delete()
