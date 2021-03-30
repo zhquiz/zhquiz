@@ -1,14 +1,14 @@
 dev-build:
   command: |
-    docker-compose build -f docker-compose.dev.yml
+    docker-compose -f docker-compose.dev.yml up
 dev:
   command: |
     pnpx concurrently \
-      'docker-compose up -f docker-compose.dev.yml' \
+      'docker-compose -f docker-compose.dev.yml up' \
       'cd packages/www && yarn dev'
 dev-reset:
   command: |
-    docker-compose down -f docker-compose.dev.yml --volumes
+    docker-compose -f docker-compose.dev.yml down --volumes
 build:
   command: |
     docker-compose build

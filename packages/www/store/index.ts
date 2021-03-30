@@ -1,4 +1,4 @@
-import { Magic } from 'magic-sdk'
+import { magic } from '~/plugins/api'
 import { actionTree, getAccessorType, mutationTree } from 'typed-vuex'
 
 interface ISettings {
@@ -100,11 +100,10 @@ export const actions = actionTree(
     async setCredentials({ commit }) {
       let isApp = true
 
-      if (process.browser && process.env.MAGIC_PUBLIC) {
+      if (magic) {
         this.app.$axios.defaults.headers =
           this.app.$axios.defaults.headers || {}
 
-        const magic = new Magic(process.env.MAGIC_PUBLIC)
         isApp = await magic.user
           .getIdToken()
           .then((token) => {

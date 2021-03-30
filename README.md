@@ -6,7 +6,7 @@ ZhQuiz, a Chinese quizzing platform
 
 <https://youtu.be/iomE0xiYoqY>
 
-Currently, the most updated is [Docker with PostgreSQL](/packages/www), followed by <https://github.com/zhquiz/go-zhquiz>.
+Currently, the most updated is [Docker with PostgreSQL](/docker-compose.yml), followed by <https://github.com/zhquiz/go-zhquiz>.
 
 ## Features
 
@@ -28,11 +28,12 @@ By default, it will use Google TTS. But if offline, or Google TTS were to fail, 
 
 ## Docker app
 
-Powered by PostgreSQL and pgroonga. See [Docker with PostgreSQL](/packages/www).
+Powered by PostgreSQL and pgroonga.
 
 Hint - it is as simple as installing Docker / Docker Compose, then
 
 ```sh
+git clone --depth=1 https://github.com/zhquiz/zhquiz.git
 docker-compose build
 docker-compose up
 ```

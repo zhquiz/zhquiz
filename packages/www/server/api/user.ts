@@ -155,7 +155,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
         await magic.users.logoutByToken(req.session.get('apiKey'))
       }
 
-      req.session.delete()
+      req.session.set('userId', null)
       reply.redirect('/')
     }
   )

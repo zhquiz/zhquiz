@@ -4,10 +4,12 @@ import {
   LoadingProgrammatic as Loading,
   SnackbarProgrammatic as Snackbar,
 } from 'buefy'
+import { Magic } from 'magic-sdk'
 import OpenAPIClientAxios from 'openapi-client-axios'
 
 // eslint-disable-next-line import/no-mutable-exports
 export let api: Client
+export let magic: Magic | null = null
 
 const apiClient = new OpenAPIClientAxios({
   definition: require('~/assets/openapi.json'),
@@ -30,10 +32,14 @@ const plugin: Plugin = async (_, inject) => {
   api = await apiClient.init()
 
   const {
-    data: { csrf },
+    data: { csrf, magic: m },
   } = await api.settings()
   api.defaults.headers = api.defaults.headers || {}
   api.defaults.headers['CSRF-Token'] = csrf
+
+  if (process.browser && m) {
+    magic = new Magic(m)
+  }
 
   api.interceptors.request.use((config) => {
     if (!loading) {

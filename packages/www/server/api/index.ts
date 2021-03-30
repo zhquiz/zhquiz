@@ -68,20 +68,21 @@ const apiRouter: FastifyPluginAsync = async (f) => {
     sessionPlugin: 'fastify-secure-session',
   })
 
-  if (!isDev) {
-    f.addHook('onRequest', (req, reply, next) => {
-      if (['/api/doc', '/api/settings'].some((s) => req.url.startsWith(s))) {
-        next()
-        return
-      }
+  // if (!isDev) {
+  //   f.addHook('onRequest', (req, reply, next) => {
+  //     if (['/api/doc', '/api/settings'].some((s) => req.url.startsWith(s))) {
+  //       next()
+  //       return
+  //     }
 
-      f.csrfProtection(req, reply, next)
-    })
-  }
+  //     f.csrfProtection(req, reply, next)
+  //   })
+  // }
 
   {
     const sResponse = S.shape({
       csrf: S.string(),
+      magic: S.string().optional(),
     })
 
     f.get(
@@ -97,6 +98,7 @@ const apiRouter: FastifyPluginAsync = async (f) => {
       async (_, reply): Promise<typeof sResponse.type> => {
         return {
           csrf: await reply.generateCsrf(),
+          magic: process.env.MAGIC_PUBLIC,
         }
       }
     )

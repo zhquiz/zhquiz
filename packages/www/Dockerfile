@@ -11,6 +11,4 @@ RUN yarn build
 RUN jq 'del(.devDependencies)' package.json > tmp.json && mv tmp.json package.json
 RUN yarn --frozen-lockfile
 
-FROM astefanutti/scratch-node
-COPY --from=builder /app/.nuxt /app/node_modules /app/server_dist /
-ENTRYPOINT ["node", "-r", "tsconfig-paths/register", "server-dist/index.js"]
+ENTRYPOINT ["yarn", "start"]
