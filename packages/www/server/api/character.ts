@@ -220,6 +220,11 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         LIMIT ${limit}
         `)
 
+        const entries = result.map((r) => r.entry)
+        result = result
+          .filter((a, i) => entries.indexOf(a.entry) === i)
+          .slice(0, limit)
+
         if (result.length < limit) {
           result.push(
             ...(await lookupJukuu(entry).then((rs) =>
@@ -330,7 +335,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           return sql`TRUE`
         }
 
-        if (/[^\p{L}\p{N}\p{M}]/u.test(v)) {
+        if (/[^\p{L}\p{N}\p{M} :-]/u.test(v)) {
           return null
         }
 

@@ -1,8 +1,14 @@
+import path from 'path'
+
 import toPinyin from 'chinese-to-pinyin'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import Text2Speech from 'node-gtts'
 import jieba from 'nodejieba'
+
+jieba.load({
+  userDict: path.join(__dirname, '../../assets/trad.dict.txt'),
+})
 
 const utilRouter: FastifyPluginAsync = async (f) => {
   {

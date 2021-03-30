@@ -210,6 +210,9 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           id: S.string(),
         })
       ),
+      stats: S.shape({
+        leech: S.integer(),
+      }),
     })
 
     f.post<{
@@ -226,7 +229,14 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         },
       },
       async (req): Promise<typeof sResult.type> => {
-        const { q = '', type, stage, direction, includeUndue } = req.body
+        const {
+          q = '',
+          type,
+          stage,
+          direction,
+          includeUndue,
+          includeLeech,
+        } = req.body
 
         const userId: string = req.session.get('userId')
         if (!userId) {
@@ -253,8 +263,13 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           orCond.push(sql`"srsLevel" >= 3`)
         }
 
-        let cond = sql`(${sql.join([...orCond, sql`TRUE`], ' OR ')})`
-        if (!stageSet.has('leech')) {
+        let cond = orCond.length
+          ? sql`(${sql.join(orCond, ' OR ')})`
+          : sql`FALSE`
+
+        if (includeLeech) {
+          cond = sql`(${cond} OR "wrongStreak" > 2)`
+        } else if (includeLeech === false) {
           cond = sql`${cond} AND ("wrongStreak" <= 2 OR "wrongStreak" IS NULL)`
         }
 
@@ -273,6 +288,14 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           AND ${parseQ(q, userId)}
         `
         )
+
+        const [rLeech] = await db.query(sql`
+        SELECT COUNT(*) "count"
+        FROM "quiz"
+        WHERE "userId" = ${userId}
+          AND "wrongStreak" > 2
+        `)
+        const leech = rLeech ? rLeech.count : 0
 
         const now = new Date()
         const quiz: {
@@ -320,6 +343,9 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         return {
           quiz: shuffle(quiz),
           upcoming,
+          stats: {
+            leech,
+          },
         }
       }
     )
@@ -693,7 +719,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
     }
 
     const makeQuiz = new QSplit({
-      default: () => sql`TRUE`,
+      default: () => null,
       fields: {
         type: { ':': (v) => sql`"type" = ${v}` },
         direction: { ':': (v) => sql`"direction" = ${v}` },

@@ -3,6 +3,7 @@ import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 
 import { db } from '../shared'
+import { sPreset } from './preset'
 
 const userRouter: FastifyPluginAsync = async (f) => {
   {
@@ -14,7 +15,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
       identifier: S.string().optional(),
       level: S.integer().optional(),
       levelMin: S.integer().optional(),
-      quizSettings: S.object().additionalProperties(true).optional(),
+      quizSettings: sPreset.optional(),
       levelBrowser: S.list(S.string()).optional(),
     })
 

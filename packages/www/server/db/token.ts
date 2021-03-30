@@ -51,19 +51,21 @@ export class QSplit {
       }
     }
 
-    if ($or.length) {
-      $and.push(sql`((${sql.join($or, ') OR (')}))`)
-    }
+    let cond: SQLQuery | null = null
 
     if ($not.length) {
       $and.push(sql`NOT ((${sql.join($not, ') AND (')}))`)
     }
 
     if ($and.length) {
-      return sql`(${sql.join($and, ') AND (')})`
+      $or.push(sql`(${sql.join($and, ') AND (')})`)
     }
 
-    return null
+    if ($or.length) {
+      cond = sql`((${sql.join($or, ') OR (')}))`
+    }
+
+    return cond
   }
 
   /**

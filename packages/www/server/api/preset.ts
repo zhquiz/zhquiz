@@ -11,6 +11,7 @@ export const sPreset = S.shape({
   stage: S.list(S.string()),
   direction: S.list(S.string()),
   includeUndue: S.boolean(),
+  includeLeech: S.boolean().optional(),
 })
 
 const presetRouter: FastifyPluginAsync = async (f) => {
