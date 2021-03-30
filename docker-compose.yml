@@ -1,0 +1,23 @@
+services:
+  db:
+    build: ./packages/db
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+
+      # For development
+      - TZ=Asia/Bangkok
+      - PGTZ=Asia/Bangkok
+    ports:
+      # For development
+      - 5434:5432 # pgAdmin connection port
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+      # For development
+      - ./packages/db/initdb.d:/docker-entrypoint-initdb.d
+      - ./packages/db/assets:/app/assets
+      - ./packages/db/src:/app/src
+volumes:
+  pgdata:
