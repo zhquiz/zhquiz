@@ -4,7 +4,7 @@
       <div slot="trigger" slot-scope="props" class="card-header" role="button">
         <p
           class="card-header-title"
-          @contextmenu.prevent="
+          @click="
             (evt) => {
               selected = currentData
               $refs.context.open(evt)
@@ -24,7 +24,7 @@
             :key="t"
             class="tag clickable"
             :class="getTagClass(t)"
-            @contextmenu.prevent="
+            @click="
               (evt) => {
                 selected = [t]
                 $refs.context.open(evt)

@@ -91,7 +91,7 @@
           <div v-if="current.type === 'character'">
             <div
               class="hanzi-display has-context"
-              @contextmenu.prevent="openContext"
+              @click="openContext"
               style="text-align: center"
             >
               {{ current.entry }}
@@ -113,9 +113,7 @@
                 <span
                   class="has-context"
                   :title="it.reading[0]"
-                  @contextmenu.prevent="
-                    (ev) => openContext(ev, it.chinese, 'sentence')
-                  "
+                  @click="(ev) => openContext(ev, it.chinese, 'sentence')"
                 >
                   {{ it.entry }}
                 </span>
@@ -132,7 +130,7 @@
             <div
               class="font-zh-simp text-w-normal has-context"
               style="font-size: 2rem"
-              @contextmenu.prevent="openContext"
+              @click="openContext"
             >
               {{ current.simplified }}
             </div>
@@ -146,7 +144,7 @@
                 v-for="(it, i) in current.alt"
                 :key="i"
                 class="traditional has-context"
-                @contextmenu.prevent="(ev) => openContext(ev, it)"
+                @click="(ev) => openContext(ev, it)"
               >
                 {{ it }}
               </span>
@@ -170,7 +168,7 @@
                 <span
                   class="has-context"
                   :title="dictionaryData.sentence[it].reading[0]"
-                  @contextmenu.prevent="(ev) => openContext(ev, it, 'sentence')"
+                  @click="(ev) => openContext(ev, it, 'sentence')"
                 >
                   {{ it }}
                 </span>
@@ -191,7 +189,7 @@
             <h2
               class="font-zh-simp text-w-normal has-context"
               :title="(current.reading || [])[0]"
-              @contextmenu.prevent="openContext"
+              @click="openContext"
             >
               {{ current.entry }}
             </h2>

@@ -18,9 +18,7 @@
         <div class="column is-6 entry-display">
           <div
             class="hanzi-display clickable font-han"
-            @contextmenu.prevent="
-              (evt) => openContext(evt, current, 'character')
-            "
+            @click="(evt) => openContext(evt, current, 'character')"
           >
             {{ current }}
           </div>
@@ -64,7 +62,7 @@
                 v-for="h in sub"
                 :key="h"
                 class="font-han clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
+                @click="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -89,7 +87,7 @@
                 v-for="h in sup"
                 :key="h"
                 class="font-han clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, h, 'hanzi')"
+                @click="(evt) => openContext(evt, h, 'hanzi')"
               >
                 {{ h }}
               </span>
@@ -114,7 +112,7 @@
                 v-for="h in variants"
                 :key="h"
                 class="font-han clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
+                @click="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -138,9 +136,7 @@
               <div v-for="(v, i) in vocabs" :key="i" class="long-item">
                 <span
                   class="clickable"
-                  @contextmenu.prevent="
-                    (evt) => openContext(evt, v.entry, 'vocabulary')
-                  "
+                  @click="(evt) => openContext(evt, v.entry, 'vocabulary')"
                 >
                   {{ v.entry }}
                 </span>
@@ -173,9 +169,7 @@
               <div v-for="(s, i) in sentences" :key="i" class="long-item">
                 <span
                   class="clickable"
-                  @contextmenu.prevent="
-                    (evt) => openContext(evt, s.entry, 'sentence')
-                  "
+                  @click="(evt) => openContext(evt, s.entry, 'sentence')"
                 >
                   {{ s.entry }}
                 </span>

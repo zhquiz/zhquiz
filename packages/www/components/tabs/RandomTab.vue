@@ -7,7 +7,7 @@
             <b-tooltip :label="character.english">
               <div
                 class="font-han hanzi clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, 'character')"
+                @click="(evt) => openContext(evt, 'character')"
               >
                 {{ character.entry }}
               </div>
@@ -25,7 +25,7 @@
             <b-tooltip :label="vocabulary.english">
               <div
                 class="font-zh-simp hanzi clickable"
-                @contextmenu.prevent="(evt) => openContext(evt, 'vocabulary')"
+                @click="(evt) => openContext(evt, 'vocabulary')"
               >
                 {{ vocabulary.entry }}
               </div>
@@ -43,7 +43,7 @@
         <b-tooltip :label="sentence.english">
           <div
             class="font-zh-simp hanzi clickable text-center"
-            @contextmenu.prevent="(evt) => openContext(evt, 'sentence')"
+            @click="(evt) => openContext(evt, 'sentence')"
           >
             {{ sentence.entry }}
           </div>

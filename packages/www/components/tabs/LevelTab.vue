@@ -33,7 +33,7 @@
         <b-table-column v-slot="props" field="level" label="Level" width="40">
           <span
             class="clickable"
-            @contextmenu.prevent="
+            @click="
               (evt) => {
                 selected = allData[props.row.level]
                 $refs.context.open(evt)
@@ -51,7 +51,7 @@
               :key="t"
               class="tag clickable"
               :class="getTagClass(t)"
-              @contextmenu.prevent="
+              @click="
                 (evt) => {
                   selected = [t]
                   $refs.context.open(evt)
