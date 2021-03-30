@@ -1,0 +1,37 @@
+services:
+  db:
+    build: ./packages/db
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+
+      - TZ=Asia/Bangkok
+      - PGTZ=Asia/Bangkok
+
+    ports:
+      - 5433:5432 # pgAdmin connection port
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+      - ./packages/db/initdb.d:/docker-entrypoint-initdb.d
+      - ./packages/db/assets:/app/assets
+      - ./packages/db/src:/app/src
+  www:
+    build:
+      context: ./packages/www
+    environment: 
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST=db
+      - PORT=35594
+
+      # See https://magic.link for signing in and authorization
+      - MAGIC_PUBLIC
+      - MAGIC_SECRET
+    ports:
+      - 35594:35594 # $PORT:$PORT - Go to http://localhost:$PORT
+volumes:
+  pgdata:

@@ -1,0 +1,61 @@
+services:
+  db:
+    build: ./packages/db
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+
+      # For development
+      - TZ=Asia/Bangkok
+      - PGTZ=Asia/Bangkok
+
+    # For development
+    ports:
+      - 5433:5432 # pgAdmin connection port
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+      # For development
+      - ./packages/db/initdb.d:/docker-entrypoint-initdb.d
+      - ./packages/db/assets:/app/assets
+      - ./packages/db/src:/app/src
+  www:
+    build:
+      context: ./packages/www
+
+      # For development
+      dockerfile: Dockerfile.dev
+    environment: 
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST=db
+
+      # See https://magic.link for signing in and authorization
+      - MAGIC_PUBLIC
+      - MAGIC_SECRET
+
+      # For development
+      # - DEFAULT_USER=polv@polv.cc
+      - SERVER_PORT=35595
+    ports:
+      - 35594:35594 # $PORT:$PORT - Go to http://localhost:$PORT
+
+      # For development
+      - 35595:35595 # $SERVER_PORT:$SERVER_PORT
+
+    # Comment this key out, for production
+    entrypoint: ./node_modules/.bin/nodemon server/api/index.ts
+    # entrypoint: ./node_modules/.bin/nodemon server/index.ts
+
+    # For development
+    volumes:
+      - ./packages/www/node_modules:/app/node_modules
+      - ./packages/www/assets:/app/assets
+      # - ./packages/www/scripts:/app/scripts
+      - ./packages/www/server:/app/server
+      - ./packages/www/types:/app/types
+volumes:
+  pgdata:

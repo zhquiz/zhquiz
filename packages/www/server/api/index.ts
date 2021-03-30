@@ -3,7 +3,6 @@ import fs from 'fs'
 import qs from 'querystring'
 
 import sql from '@databases/sql'
-import { Magic } from '@magic-sdk/admin'
 import fastify, { FastifyPluginAsync } from 'fastify'
 import csrf from 'fastify-csrf'
 import rateLimit from 'fastify-rate-limit'
@@ -11,9 +10,8 @@ import fSession from 'fastify-secure-session'
 import fastifySwagger from 'fastify-swagger'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
-import waitOn from 'wait-on'
 
-import { db, isDev } from '../shared'
+import { db, isDev, magic } from '../shared'
 import characterRouter from './character'
 import extraRouter from './extra'
 import libraryRouter from './library'
@@ -25,10 +23,6 @@ import utilRouter from './util'
 import vocabularyRouter from './vocabulary'
 
 const apiRouter: FastifyPluginAsync = async (f) => {
-  const magic = process.env.MAGIC_SECRET
-    ? new Magic(process.env.MAGIC_SECRET)
-    : null
-
   if (!fs.existsSync('session.key')) {
     execSync('./node_modules/.bin/secure-session-gen-key > session.key')
   }
@@ -74,20 +68,21 @@ const apiRouter: FastifyPluginAsync = async (f) => {
     sessionPlugin: 'fastify-secure-session',
   })
 
-  if (!isDev) {
-    f.addHook('onRequest', (req, reply, next) => {
-      if (['/api/doc', '/api/settings'].some((s) => req.url.startsWith(s))) {
-        next()
-        return
-      }
+  // if (!isDev) {
+  //   f.addHook('onRequest', (req, reply, next) => {
+  //     if (['/api/doc', '/api/settings'].some((s) => req.url.startsWith(s))) {
+  //       next()
+  //       return
+  //     }
 
-      f.csrfProtection(req, reply, next)
-    })
-  }
+  //     f.csrfProtection(req, reply, next)
+  //   })
+  // }
 
   {
     const sResponse = S.shape({
       csrf: S.string(),
+      magic: S.string().optional(),
     })
 
     f.get(
@@ -103,6 +98,7 @@ const apiRouter: FastifyPluginAsync = async (f) => {
       async (_, reply): Promise<typeof sResponse.type> => {
         return {
           csrf: await reply.generateCsrf(),
+          magic: process.env.MAGIC_PUBLIC,
         }
       }
     )
@@ -124,7 +120,7 @@ const apiRouter: FastifyPluginAsync = async (f) => {
         return
       }
 
-      const [apiKey] =
+      const [, apiKey] =
         /^Bearer (.+)$/.exec(req.headers.authorization || '') || []
 
       if (!apiKey) {
@@ -179,10 +175,6 @@ const apiRouter: FastifyPluginAsync = async (f) => {
 export default apiRouter
 
 async function main() {
-  await waitOn({
-    resources: ['tcp:5432'],
-  })
-
   const app = fastify({
     logger: {
       prettyPrint: isDev,

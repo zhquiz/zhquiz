@@ -126,6 +126,7 @@ export default (): NuxtConfig => {
       manifest: {
         lang: 'en',
       },
+      icon: false,
     },
 
     // Build Configuration: https://go.nuxtjs.dev/config-build
@@ -140,7 +141,6 @@ export default (): NuxtConfig => {
     },
     env: {
       PORT: process.env.PORT,
-      MAGIC_PUBLIC: process.env.MAGIC_PUBLIC || '',
     },
   }
 }

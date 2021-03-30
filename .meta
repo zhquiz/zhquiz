@@ -1,5 +1,0 @@
-{
-  "projects": {
-    "submodules/go-zhquiz": "git@github.com:zhquiz/go-zhquiz.git"
-  }
-}

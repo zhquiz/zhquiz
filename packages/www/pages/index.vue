@@ -32,7 +32,7 @@
 
 <script lang="ts">
 import { Vue, Component } from 'nuxt-property-decorator'
-import { Magic } from 'magic-sdk'
+import { magic } from '~/plugins/api'
 
 @Component<HomePage>({
   async mounted() {
@@ -41,23 +41,18 @@ import { Magic } from 'magic-sdk'
     if (this.$accessor.isApp) {
       this.$router.replace('/app')
     } else {
-      if (process.env.MAGIC_PUBLIC) {
-        this.magic = new Magic(process.env.MAGIC_PUBLIC)
-      }
-
       this.isReady = true
     }
   },
 })
 export default class HomePage extends Vue {
-  magic: Magic | null = null
   email = ''
 
   isReady = false
 
   async login() {
-    if (this.magic) {
-      this.magic.auth
+    if (magic) {
+      magic.auth
         .loginWithMagicLink({ email: this.email })
         .then((token) => {
           console.log(token)
