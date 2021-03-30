@@ -4,9 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node -r tsconfig-paths/register server-dist/index.js",
-    "dev": "run-p 'dev:*'",
-    "dev:nuxt": "nuxt dev",
-    "dev:server": "docker-compose up",
+    "dev": "nuxt dev",
     "build": "run-s 'build:*'",
     "build:nuxt": "nuxt build",
     "build:server": "tsc -P server/tsconfig.json",

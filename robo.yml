@@ -1,20 +1,17 @@
-clone:
-  command: meta git init
-status:
-  command: meta git status
+dev-build:
+  command: |
+    docker-compose build -f docker-compose.dev.yml
 dev:
   command: |
-    cd submodules/ui
-    yarn dev
-dist:
+    pnpx concurrently \
+      'docker-compose up -f docker-compose.dev.yml' \
+      'cd packages/www && yarn dev'
+dev-reset:
   command: |
-    cd submodules/ui
-    yarn build
-    cd -
-
-    cd submodules/go-zhquiz
-    robo build-all
-    cd -
-
-    cd packages/nodejs
-    yarn ts-node scripts/dist.ts
+    docker-compose down -f docker-compose.dev.yml --volumes
+build:
+  command: |
+    docker-compose build
+start:
+  command: |
+    docker-compose up
