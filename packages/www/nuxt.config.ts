@@ -1,15 +1,12 @@
 import { NuxtConfig } from '@nuxt/types'
 
 export default (): NuxtConfig => {
-  const port = parseInt(process.env.PORT!) || 35594
-  process.env.PORT = port.toString()
-
   return {
     // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
-    ssr: true,
+    ssr: false,
 
     // Target: https://go.nuxtjs.dev/config-target
-    target: 'server',
+    target: 'static',
 
     // Global page headers: https://go.nuxtjs.dev/config-head
     head: {
@@ -62,7 +59,7 @@ export default (): NuxtConfig => {
     ],
 
     // Auto import components: https://go.nuxtjs.dev/config-components
-    components: true,
+    // components: true,
 
     // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
     buildModules: [
@@ -136,11 +133,11 @@ export default (): NuxtConfig => {
         config.node.fs = 'empty'
       },
     },
-    server: {
-      port,
+    generate: {
+      dir: './public',
     },
-    env: {
-      PORT: process.env.PORT,
+    server: {
+      port: process.env.PORT,
     },
   }
 }

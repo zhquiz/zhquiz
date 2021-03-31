@@ -17,3 +17,4 @@
 !/package.json
 !/tsconfig.*
 !/yarn.lock
+!/trad.dict.txt

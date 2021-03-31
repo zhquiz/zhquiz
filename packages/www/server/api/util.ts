@@ -7,7 +7,7 @@ import Text2Speech from 'node-gtts'
 import jieba from 'nodejieba'
 
 jieba.load({
-  userDict: path.join(__dirname, '../../assets/trad.dict.txt'),
+  userDict: path.join(__dirname, '../../trad.dict.txt'),
 })
 
 const utilRouter: FastifyPluginAsync = async (f) => {

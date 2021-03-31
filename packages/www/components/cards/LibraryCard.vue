@@ -54,6 +54,9 @@ import { Vue, Component, Ref, Prop } from 'nuxt-property-decorator'
 import ContextMenu from '../ContextMenu.vue'
 
 @Component<LibraryCard>({
+  components: {
+    ContextMenu,
+  },
   watch: {
     isOpen() {
       if (this.isOpen) {

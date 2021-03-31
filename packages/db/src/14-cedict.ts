@@ -9,7 +9,7 @@ import sqlite3 from 'better-sqlite3'
 
 export async function populate(
   db: ConnectionPool,
-  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tatoeba'))
+  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedict'))
 ) {
   process.chdir(dir)
 
@@ -61,7 +61,7 @@ export async function populate(
 
       lines.map((ln) => {
         const m = /^(\p{sc=Han}+) (\p{sc=Han}+) \[([^\]]+)\] \/(.+)\/$/u.exec(
-          ln
+          ln.trim()
         )
 
         if (m) {
@@ -78,7 +78,7 @@ export async function populate(
     await new Promise<void>((resolve, reject) => {
       f2.once('error', reject).once('end', () => {
         const m = /^(\p{sc=Han}+) (\p{sc=Han}+) \[([^\]]+)\] \/(.+)\/$/u.exec(
-          line
+          line.trim()
         )
 
         if (m) {
@@ -141,4 +141,8 @@ export async function populate(
         ])
       )
   }
+}
+
+if (require.main === module) {
+  import('./init').then(({ db }) => populate(db, './assets'))
 }

@@ -196,8 +196,11 @@ import { Component, Prop, Ref, Vue, Watch } from 'nuxt-property-decorator'
 import ContextMenu from '@/components/ContextMenu.vue'
 
 @Component<CharacterTab>({
+  components: {
+    ContextMenu,
+  },
   async created() {
-    this.$emit('title', 'Hanzi')
+    this.$emit('title', 'Character')
 
     this.q0 = this.query.q || ''
 
@@ -276,7 +279,7 @@ export default class CharacterTab extends Vue {
 
   @Watch('query.q')
   async onQChange(q: string) {
-    this.$emit('title', (q ? q + ' - ' : '') + 'Hanzi')
+    this.$emit('title', (q ? q + ' - ' : '') + 'Character')
 
     if (/\p{sc=Han}/u.test(q)) {
       const qs = q.split('').filter((h) => /\p{sc=Han}/u.test(h))

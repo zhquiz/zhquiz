@@ -67,7 +67,10 @@ import { Component, Ref, Vue } from 'nuxt-property-decorator'
 import ContextMenu from '../ContextMenu.vue'
 import { IQuizType } from '../cards/QuizCard.vue'
 
-@Component<RandomPage>({
+@Component<RandomTab>({
+  components: {
+    ContextMenu,
+  },
   created() {
     this.$emit('title', 'Random')
   },
@@ -79,7 +82,7 @@ import { IQuizType } from '../cards/QuizCard.vue'
     ])
   },
 })
-export default class RandomPage extends Vue {
+export default class RandomTab extends Vue {
   @Ref() context!: ContextMenu
 
   character = {

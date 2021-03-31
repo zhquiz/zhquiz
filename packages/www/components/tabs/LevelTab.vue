@@ -80,7 +80,7 @@
 import { Component, Ref, Vue } from 'vue-property-decorator'
 import ContextMenu from '@/components/ContextMenu.vue'
 
-@Component<LevelPage>({
+@Component<LevelTab>({
   components: {
     ContextMenu,
   },
@@ -95,7 +95,7 @@ import ContextMenu from '@/components/ContextMenu.vue'
     },
   },
 })
-export default class LevelPage extends Vue {
+export default class LevelTab extends Vue {
   @Ref() context!: ContextMenu
 
   isLoading = true

@@ -295,7 +295,11 @@ export interface IQuizData {
   wrongStreak?: number
 }
 
-@Component
+@Component({
+  components: {
+    ContextMenu,
+  },
+})
 export default class QuizCard extends Vue {
   @Prop({ required: true }) quizArray!: string[]
 

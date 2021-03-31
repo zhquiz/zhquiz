@@ -135,7 +135,7 @@ interface IExtra {
   tag: string[]
 }
 
-@Component<ExtraPage>({
+@Component<BrowseTab>({
   components: {
     ContextMenu,
   },
@@ -144,7 +144,7 @@ interface IExtra {
     this.load()
   },
 })
-export default class ExtraPage extends Vue {
+export default class BrowseTab extends Vue {
   @Ref() context!: ContextMenu
 
   q0 = ''
