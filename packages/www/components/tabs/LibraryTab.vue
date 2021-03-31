@@ -141,7 +141,7 @@ interface ILocal {
   tag: string[]
 }
 
-@Component<LibraryPage>({
+@Component<LibraryTab>({
   components: {
     LibraryCard,
   },
@@ -151,7 +151,7 @@ interface ILocal {
     this.updateOnline()
   },
 })
-export default class LibraryPage extends Vue {
+export default class LibraryTab extends Vue {
   q = ''
   q0 = ''
   isEditModal = false

@@ -1,28 +1,16 @@
+version: '3'
 services:
   zhquiz:
-    build: .
+    build:
+      context: .
     environment:
       - PORT=35594
+      - DATABASE_URL
 
       # See https://magic.link for signing in and authorization
-      # - MAGIC_PUBLIC
-      # - MAGIC_SECRET
-
-      # For development
-      - SERVER_PORT
-      - DEFAULT_USER=polv@polv.cc
+      - MAGIC_PUBLIC
+      - MAGIC_SECRET
     ports:
       - 35594:35594 # $PORT:$PORT - Go to http://localhost:$PORT
-
-      # For development
-      - 35595:35595 # $SERVER_PORT:$SERVER_PORT
-    volumes:
-      # For development
-      - ./node_modules:/app/node_modules
-      - ./assets:/app/assets
-      - ./scripts:/app/scripts
-      - ./server:/app/server
-      - ./types:/app/types
-
-    # Comment this key out, for production
-    entrypoint: ./node_modules/.bin/nodemon server/api/index.ts
+    restart: always
+    network_mode: host

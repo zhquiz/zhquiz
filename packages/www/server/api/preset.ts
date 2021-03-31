@@ -116,7 +116,6 @@ const presetRouter: FastifyPluginAsync = async (f) => {
           `
         )
 
-        console.log(rCount)
         if (!rCount) {
           return { result: [], count: 0 }
         }

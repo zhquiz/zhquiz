@@ -13,12 +13,6 @@ export let magic: Magic | null = null
 
 const apiClient = new OpenAPIClientAxios({
   definition: require('~/assets/openapi.json'),
-  axiosConfigDefaults: {
-    baseURL:
-      typeof location !== 'undefined'
-        ? location.origin
-        : `http://localhost:${process.env.PORT}`,
-  },
 })
 
 let loading: {

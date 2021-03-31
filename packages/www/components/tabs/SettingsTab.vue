@@ -43,7 +43,7 @@
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
 
-@Component<SettingsPage>({
+@Component<SettingsTab>({
   created() {
     this.$emit('title', 'Settings')
     const { settings } = this.$store.state
@@ -54,12 +54,10 @@ import { Component, Vue } from 'nuxt-property-decorator'
     ]
   },
 })
-export default class SettingsPage extends Vue {
+export default class SettingsTab extends Vue {
   readonly lvRange = [1, 60]
-  readonly sentenceLengthRange = [2, 20]
 
   lv = this.clone(this.lvRange)
-  sentenceLength = this.clone(this.sentenceLengthRange)
 
   get email() {
     // return this.$accessor.user || ''

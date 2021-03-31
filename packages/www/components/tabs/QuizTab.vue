@@ -237,9 +237,8 @@
 import { Component, Ref, Vue, Watch } from 'nuxt-property-decorator'
 
 import QuizCard, { IQuizData, IQuizType } from '@/components/cards/QuizCard.vue'
-import ContextMenu from '@/components/ContextMenu.vue'
 
-@Component<QuizPage>({
+@Component<QuizTab>({
   components: {
     QuizCard,
   },
@@ -281,9 +280,8 @@ import ContextMenu from '@/components/ContextMenu.vue'
     await this.loadPresets()
   },
 })
-export default class QuizPage extends Vue {
+export default class QuizTab extends Vue {
   @Ref() quizCard!: QuizCard
-  @Ref() context!: ContextMenu
 
   isLoading = false
   isInit = false

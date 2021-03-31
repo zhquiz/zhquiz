@@ -175,7 +175,7 @@ import { Component, Prop, Ref, Vue } from 'nuxt-property-decorator'
 import toPinyin from 'chinese-to-pinyin'
 import ContextMenu from '@/components/ContextMenu.vue'
 
-@Component<VocabPage>({
+@Component<VocabularyTab>({
   components: {
     ContextMenu,
   },
@@ -188,7 +188,7 @@ import ContextMenu from '@/components/ContextMenu.vue'
     },
   },
 })
-export default class VocabPage extends Vue {
+export default class VocabularyTab extends Vue {
   @Prop({ default: () => ({}) }) query!: {
     q?: string
   }
