@@ -1,6 +1,7 @@
 version: '3'
 services:
   db:
+    restart: always
     build: ./packages/db
     environment:
       - POSTGRES_USER
@@ -20,6 +21,7 @@ services:
       - ./packages/db/assets:/app/assets
       - ./packages/db/src:/app/src
   www:
+    restart: always
     build: ./packages/www
     environment: 
       - POSTGRES_USER
