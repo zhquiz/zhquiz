@@ -37,7 +37,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { id } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -139,7 +139,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { q, page = 1, limit = 10 } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -240,7 +240,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       async (req, reply): Promise<typeof sResult.type> => {
         const { title, type, description, tag, entry } = req.body
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -302,7 +302,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         const { id } = req.query
         const { title, type, description, tag, entry } = req.body
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -367,7 +367,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       async (req, reply): Promise<typeof sResult.type> => {
         const { id } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }

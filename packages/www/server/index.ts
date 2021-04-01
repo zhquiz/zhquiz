@@ -5,6 +5,7 @@ import fastify from 'fastify'
 import fastifyStatic from 'fastify-static'
 
 import apiRouter from './api'
+import { gCloudLogger } from './logger'
 import { isDev } from './shared'
 
 async function main() {
@@ -12,7 +13,7 @@ async function main() {
   process.env.PORT = port.toString()
 
   const app = fastify({
-    logger: {
+    logger: gCloudLogger({
       prettyPrint: isDev,
       serializers: {
         req(req) {
@@ -26,7 +27,7 @@ async function main() {
           return { method: req.method, url, query }
         },
       },
-    },
+    }),
   })
 
   app.register(apiRouter, {

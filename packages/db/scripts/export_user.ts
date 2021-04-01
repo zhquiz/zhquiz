@@ -1,7 +1,7 @@
 import { execSync } from 'child_process'
 
 async function main() {
-  process.chdir('./db/initdb.d')
+  process.chdir('./initdb.d')
 
   execSync(
     /* sh */ `
@@ -11,9 +11,9 @@ async function main() {
       env: {
         PGDATABASE: process.env.POSTGRES_DB,
         PGPORT: '5433',
-        PGUSER: process.env.POSTGRES_USER,
+        PGUSER: process.env.POSTGRES_USER
       },
-      stdio: 'pipe',
+      stdio: 'pipe'
     }
   )
 }

@@ -1,6 +1,7 @@
 version: '3'
 services:
   db:
+    restart: always
     build: ./packages/db
     environment:
       - POSTGRES_USER
@@ -20,6 +21,7 @@ services:
       - ./packages/db/assets:/app/assets
       - ./packages/db/src:/app/src
   www:
+    restart: always
     build: ./packages/www
     environment: 
       - POSTGRES_USER
@@ -27,6 +29,9 @@ services:
       - POSTGRES_DB
       - POSTGRES_HOST=db
       - PORT=35594
+
+      # Try randomkeygen.com
+      - SECRET=7JMqUYvB4tn1RdMIBvWzUL6O4LNk7QH5
 
       # See https://magic.link for signing in and authorization
       - MAGIC_PUBLIC

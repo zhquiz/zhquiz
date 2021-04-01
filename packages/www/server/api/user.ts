@@ -35,7 +35,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { select } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -103,7 +103,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
         },
       },
       async (req, reply): Promise<typeof sResult.type> => {
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -146,16 +146,16 @@ const userRouter: FastifyPluginAsync = async (f) => {
       },
     },
     async (req, reply) => {
-      const userId: string = req.session.get('userId')
+      const userId: string = req.session.userId
       if (!userId) {
         throw { statusCode: 401 }
       }
 
       if (magic) {
-        await magic.users.logoutByToken(req.session.get('apiKey'))
+        await magic.users.logoutByToken(req.session.apiKey)
       }
 
-      req.session.set('userId', null)
+      req.session.userId = null
       reply.redirect('/')
     }
   )
@@ -168,7 +168,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
       },
     },
     async (req, reply) => {
-      const userId: string = req.session.get('userId')
+      const userId: string = req.session.userId
       if (!userId) {
         throw { statusCode: 401 }
       }

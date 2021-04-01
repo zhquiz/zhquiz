@@ -7,6 +7,9 @@ services:
       - PORT=35594
       - DATABASE_URL
 
+      # Try randomkeygen.com
+      - SECRET=7JMqUYvB4tn1RdMIBvWzUL6O4LNk7QH5
+
       # See https://magic.link for signing in and authorization
       - MAGIC_PUBLIC
       - MAGIC_SECRET

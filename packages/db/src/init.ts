@@ -1,7 +1,7 @@
+import path from 'path'
+
 import createConnectionPool, { ConnectionPool } from '@databases/pg'
 
-import * as tatoeba from './13-tatoeba'
-import * as cedict from './14-cedict'
 import * as junda from './15-junda'
 import * as radical from './16-radical'
 import * as level from './18-level'
@@ -30,13 +30,13 @@ if (!db) {
 if (require.main === module) {
   ;(async () => {
     try {
-      await tatoeba.populate(db)
-      await cedict.populate(db)
-      await junda.populate(db)
-      await radical.populate(db)
-      await level.populate(db)
+      // await tatoeba.populate(db, path.join(__dirname, '../assets'))
+      // await cedict.populate(db, path.join(__dirname, '../assets'))
+      await junda.populate(db, path.join(__dirname, '../assets'))
+      await radical.populate(db, path.join(__dirname, '../assets'))
+      await level.populate(db, path.join(__dirname, '../assets'))
       await lib.populate(db)
-      await jukuu.populate(db)
+      await jukuu.populate(db, path.join(__dirname, '../assets'))
     } catch (e) {
       console.error(e)
     }

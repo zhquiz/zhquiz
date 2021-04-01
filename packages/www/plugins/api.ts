@@ -22,7 +22,7 @@ let loading: {
 let requestTimeout: any = null
 
 // eslint-disable-next-line require-await
-const plugin: Plugin = async (_, inject) => {
+const plugin: Plugin = async ({ redirect }, inject) => {
   api = await apiClient.init()
 
   const {
@@ -84,6 +84,10 @@ const plugin: Plugin = async (_, inject) => {
       if (requestTimeout) {
         clearTimeout(requestTimeout)
         requestTimeout = null
+      }
+
+      if (err.status === 401) {
+        redirect(200, '/')
       }
 
       // eslint-disable-next-line no-console
