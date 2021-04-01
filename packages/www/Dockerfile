@@ -13,9 +13,9 @@ RUN yarn --frozen-lockfile
 
 ENTRYPOINT [ "yarn", "start" ]
 
-# FROM astefanutti/scratch-node
-# COPY --from=builder /app/node_modules /node_modules
-# COPY --from=builder /app/public /public
-# COPY --from=builder /app/server-dist /server-dist
-# COPY --from=builder /app/tsconfig.* /app/trad.dict.txt /
-# ENTRYPOINT ["node", "-r", "tsconfig-paths/register", "server-dist/index.js"]
+FROM node:12
+COPY --from=builder /app/node_modules /node_modules
+COPY --from=builder /app/public /public
+COPY --from=builder /app/server-dist /server-dist
+COPY --from=builder /app/tsconfig.* /app/trad.dict.txt /
+ENTRYPOINT ["node", "-r", "tsconfig-paths/register", "server-dist/index.js"]

@@ -19,7 +19,7 @@
           <section class="card">
             <div class="card-content">
               <h2 class="title is-4">
-                User library
+                Library
                 <button
                   class="button is-success"
                   style="float: right"
@@ -47,31 +47,6 @@
                 icon-prev="angle-left"
                 icon-next="angle-right"
                 @change="(p) => (local.page = p)"
-              />
-            </div>
-          </section>
-        </div>
-        <div class="column">
-          <section class="card">
-            <div class="card-content">
-              <h2 class="title is-4">Online library</h2>
-
-              <LibraryCard
-                v-for="(it, i) in online.result"
-                :key="i"
-                :title="it.title"
-                :entry="it.entry"
-                :description="it.description"
-              />
-
-              <b-pagination
-                v-if="online.count > online.perPage"
-                v-model="online.page"
-                :total="online.count"
-                :per-page="online.perPage"
-                icon-prev="angle-left"
-                icon-next="angle-right"
-                @change="(p) => (online.page = p)"
               />
             </div>
           </section>
@@ -148,7 +123,6 @@ interface ILocal {
   created() {
     this.$emit('title', 'Library')
     this.updateLocal()
-    this.updateOnline()
   },
 })
 export default class LibraryTab extends Vue {
@@ -254,30 +228,6 @@ export default class LibraryTab extends Vue {
     this.local = {
       ...this.local,
       ...r,
-    }
-  }
-
-  @Watch('q')
-  @Watch('online.page')
-  async updateOnline() {
-    const { data: r } = await this.$axios.get(
-      'https://www.zhquiz.cc/api/library',
-      {
-        params: {
-          q: this.q,
-          page: this.online.page,
-          perPage: this.online.perPage,
-        },
-      }
-    )
-
-    this.online = {
-      ...this.online,
-      ...r,
-      result: (r.result as any[]).map((it) => ({
-        entry: it.entries,
-        ...it,
-      })),
     }
   }
 

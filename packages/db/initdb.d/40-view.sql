@@ -98,13 +98,6 @@ CREATE MATERIALIZED VIEW "entry_tag" AS
       "type",
       "userId"
     FROM "library"
-    UNION ALL
-    SELECT
-      "entry",
-      "tag",
-      "type",
-      NULL
-    FROM dict.entry_tag
   ) t1
   WHERE "tag" IS NOT NULL;
   

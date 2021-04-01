@@ -150,7 +150,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
             COUNT(*) "count"
           FROM "library"
           WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
+            "isShared" OR "userId" = ${userId}
           ) AND ${makeZh.parse(q) || sql`TRUE`}
           `
         )
@@ -168,25 +168,24 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
               "type",
               "description",
               "tag",
-              (CASE WHEN "userId" IS NOT NULL THEN "id" END) "id",
+              (CASE WHEN "userId" = ${userId} THEN "id" END) "id",
               "updatedAt"
             FROM "library"
             WHERE (
-              "userId" IS NULL OR "userId" = ${userId}
+              "isShared" OR "userId" = ${userId}
             ) AND ${makeZh.parse(q) || sql`TRUE`}
+            ORDER BY "updatedAt" DESC, "title"
           )
 
           SELECT * FROM (
             SELECT * FROM (
               SELECT * FROM match_cte
               WHERE "id" IS NOT NULL
-              ORDER BY "updatedAt" DESC
             ) t1
             UNION ALL
             SELECT * FROM (
               SELECT * FROM match_cte
               WHERE "id" IS NULL
-              ORDER BY "title"
             ) t1
           ) t2
           LIMIT ${limit}

@@ -1,8 +1,9 @@
 CREATE TABLE "library" (
-  "id"              UUID NOT NULL DEFAULT uuid_generate_v1(),
+  "id"              UUID NOT NULL DEFAULT uuid_generate_v4(),
   "createdAt"       TIMESTAMPTZ DEFAULT now(),
   "updatedAt"       TIMESTAMPTZ DEFAULT now(),
   "userId"          UUID,
+  "isShared"        BOOLEAN,
   "type"            TEXT NOT NULL,
   "entry"           TEXT[] NOT NULL CHECK ("entry"[1] IS NOT NULL),
   "title"           TEXT NOT NULL,

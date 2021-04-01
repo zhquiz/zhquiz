@@ -4,7 +4,7 @@ import sqlite3 from 'better-sqlite3'
 import { db } from '../src/init'
 
 async function main() {
-  const s3 = sqlite3('./db/assets/jukuu.db')
+  const s3 = sqlite3('./assets/jukuu.db')
 
   s3.exec(/* sql */ `
   CREATE TABLE IF NOT EXISTS jukuu (
