@@ -2,7 +2,7 @@ import { populate } from '../src/13-tatoeba'
 import { db } from '../src/init'
 
 async function main() {
-  process.chdir('./db/assets')
+  process.chdir('./assets')
   await populate(db)
   await db.dispose()
 }

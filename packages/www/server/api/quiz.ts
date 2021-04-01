@@ -50,7 +50,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { id, entry, type, direction, select } = req.body
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -119,7 +119,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { q = '', page, limit, sort, sortDirection } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -238,7 +238,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           includeLeech,
         } = req.body
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -377,7 +377,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       async (req, reply): Promise<typeof sResult.type> => {
         const { id, dLevel } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -490,7 +490,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       async (req, reply): Promise<typeof sResult.type> => {
         const { entry: entries, type } = req.body
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -632,7 +632,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { id, entry, type } = req.body
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -684,7 +684,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       async (req, reply): Promise<typeof sResult.type> => {
         const { id, entry, type } = req.body
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }

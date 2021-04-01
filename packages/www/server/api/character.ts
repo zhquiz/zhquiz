@@ -34,7 +34,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { entry } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -90,7 +90,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { entry, limit = 5 } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -178,7 +178,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { entry, limit = 5 } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -272,7 +272,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { entry } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -382,7 +382,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         let { q } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -460,7 +460,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         },
       },
       async (req): Promise<typeof sResult.type> => {
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }

@@ -1,12 +1,12 @@
-import { execSync } from 'child_process'
-import fs from 'fs'
 import qs from 'querystring'
 
 import sql from '@databases/sql'
+import ConnectPG from 'connect-pg-simple'
 import fastify, { FastifyPluginAsync } from 'fastify'
+import fCookie from 'fastify-cookie'
 import csrf from 'fastify-csrf'
 import rateLimit from 'fastify-rate-limit'
-import fSession from 'fastify-secure-session'
+import fSession from 'fastify-session'
 import fastifySwagger from 'fastify-swagger'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
@@ -23,12 +23,24 @@ import utilRouter from './util'
 import vocabularyRouter from './vocabulary'
 
 const apiRouter: FastifyPluginAsync = async (f) => {
-  if (!fs.existsSync('session.key')) {
-    execSync('./node_modules/.bin/secure-session-gen-key > session.key')
-  }
-
+  f.register(fCookie)
   f.register(fSession, {
-    key: fs.readFileSync('session.key'),
+    secret: process.env.SECRET!,
+    // @ts-ignore
+    store: new (ConnectPG(fSession))(
+      process.env.DATABASE_URL
+        ? {
+            conString: process.env.DATABASE_URL,
+          }
+        : {
+            conObject: {
+              user: process.env.POSTGRES_USER,
+              password: process.env.POSTGRES_PASSWORD,
+              database: process.env.POSTGRES_DB,
+              host: process.env.POSTGRES_HOST,
+            },
+          }
+    ),
   })
 
   f.register(rateLimit, {
@@ -65,7 +77,7 @@ const apiRouter: FastifyPluginAsync = async (f) => {
   })
 
   f.register(csrf, {
-    sessionPlugin: 'fastify-secure-session',
+    sessionPlugin: 'fastify-session',
   })
 
   // if (!isDev) {
@@ -109,7 +121,7 @@ const apiRouter: FastifyPluginAsync = async (f) => {
       return
     }
 
-    if (req.session.get('userId')) {
+    if (req.session.userId) {
       return
     }
 
@@ -133,11 +145,11 @@ const apiRouter: FastifyPluginAsync = async (f) => {
         throw { statusCode: 401, message: e }
       }
 
-      if (apiKey !== req.session.get('apiKey')) {
+      if (apiKey !== req.session.apiKey) {
         const u = await magic.users.getMetadataByToken(apiKey)
         user = u.email || ''
 
-        req.session.set('apiKey', apiKey)
+        req.session.apiKey = apiKey
       }
     }
 
@@ -154,9 +166,9 @@ const apiRouter: FastifyPluginAsync = async (f) => {
           VALUES (${id}, ${user})
           `)
 
-        req.session.set('userId', id)
+        req.session.userId = id
       } else {
-        req.session.set('userId', r.id)
+        req.session.userId = r.id
       }
     }
   })

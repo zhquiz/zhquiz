@@ -35,7 +35,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const { entry } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -90,7 +90,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         let { q, limit = 10 } = req.query
 
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
@@ -174,7 +174,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         },
       },
       async (req): Promise<typeof sResult.type> => {
-        const userId: string = req.session.get('userId')
+        const userId: string = req.session.userId
         if (!userId) {
           throw { statusCode: 401 }
         }
