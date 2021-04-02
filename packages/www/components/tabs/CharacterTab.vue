@@ -44,6 +44,15 @@
               Next
             </button>
           </div>
+
+          <div v-if="tag.length" class="mb-4">
+            Tags:
+            <b-taglist style="display: inline-flex">
+              <b-tag v-for="t in tag.slice(0, 5)" :key="t" type="is-info">
+                {{ t }}
+              </b-tag>
+            </b-taglist>
+          </div>
         </div>
 
         <div class="column is-6">
@@ -236,6 +245,9 @@ export default class CharacterTab extends Vue {
   sub: string[] = []
   sup: string[] = []
   variants: string[] = []
+
+  tag: string[] = []
+
   vocabs: {
     entry: string
     alt: string[]
@@ -324,6 +336,7 @@ export default class CharacterTab extends Vue {
       this.sub = []
       this.sup = []
       this.variants = []
+      this.tag = []
       this.vocabs = []
       this.sentences = []
     }
@@ -334,6 +347,7 @@ export default class CharacterTab extends Vue {
       this.sub = []
       this.sup = []
       this.variants = []
+      this.tag = []
       return
     }
 
@@ -344,6 +358,13 @@ export default class CharacterTab extends Vue {
     this.sub = r.sub
     this.sup = r.sup
     this.variants = r.var
+
+    if (r.sub.length || r.sub.length || r.var.length) {
+      const { data: r } = await this.$axios.characterGetByEntry({
+        entry: this.current,
+      })
+      this.tag = r.tag
+    }
   }
 
   async loadVocab() {

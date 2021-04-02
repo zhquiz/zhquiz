@@ -114,18 +114,26 @@
 </template>
 
 <script lang="ts">
+import BrowseTab from '@/components/tabs/BrowseTab.vue'
+import CharacterTab from '@/components/tabs/CharacterTab.vue'
+import LevelTab from '@/components/tabs/LevelTab.vue'
+import LibraryTab from '@/components/tabs/LibraryTab.vue'
+import QuizTab from '@/components/tabs/QuizTab.vue'
+import RandomTab from '@/components/tabs/RandomTab.vue'
+import SettingsTab from '@/components/tabs/SettingsTab.vue'
+import VocabularyTab from '@/components/tabs/VocabularyTab.vue'
 import { Component, Vue } from 'nuxt-property-decorator'
 
 @Component<AppPage>({
   components: {
-    BrowseTab: () => import('@/components/tabs/BrowseTab.vue'),
-    CharacterTab: () => import('@/components/tabs/CharacterTab.vue'),
-    LevelTab: () => import('@/components/tabs/LevelTab.vue'),
-    LibraryTab: () => import('@/components/tabs/LibraryTab.vue'),
-    QuizTab: () => import('@/components/tabs/QuizTab.vue'),
-    RandomTab: () => import('@/components/tabs/RandomTab.vue'),
-    SettingsTab: () => import('@/components/tabs/SettingsTab.vue'),
-    VocabularyTab: () => import('@/components/tabs/VocabularyTab.vue'),
+    BrowseTab,
+    CharacterTab,
+    LevelTab,
+    LibraryTab,
+    QuizTab,
+    RandomTab,
+    SettingsTab,
+    VocabularyTab,
   },
   async mounted() {
     await this.$accessor.setCredentials()

@@ -435,7 +435,7 @@ export async function lookupVocabulary(
   reading: string[]
   english: string[]
   tag: string[]
-} | null> {
+}> {
   const [r] = await db.query(sql`
   SELECT *, (
     SELECT array_agg(DISTINCT "tag")

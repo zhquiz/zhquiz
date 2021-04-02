@@ -23,7 +23,7 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
       )
       .all()
       .map((p) => {
-        return sql`(${p.entry.replace('……', '...')}, ${p.hLevel}, ${p.vLevel})`
+        return sql`(${p.entry.replace(/……/g, '...')}, ${p.hLevel}, ${p.vLevel})`
       })
 
     for (let i = 0; i < lots.length; i += batchSize) {

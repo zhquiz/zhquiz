@@ -6,6 +6,8 @@ CREATE TABLE "quiz" (
   "entry"           TEXT NOT NULL,
   "type"            TEXT NOT NULL,
   "direction"       TEXT NOT NULL,
+  "hint"            TEXT NOT NULL DEFAULT '',
+  "mnemonic"        TEXT NOT NULL DEFAULT '',
   "srsLevel"        INT,
   "nextReview"      TIMESTAMPTZ,
   "lastRight"       TIMESTAMPTZ,

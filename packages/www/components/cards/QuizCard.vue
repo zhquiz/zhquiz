@@ -2,7 +2,7 @@
   <b-modal class="quiz-modal" :active.sync="isQuizModal" @close="endQuiz">
     <div class="card">
       <div v-if="current.id" class="card-content">
-        <div v-show="!isQuizShownAnswer" class="content">
+        <div v-show="!isQuizShownAnswer" class="content" @click="addHint">
           <div v-if="current.type === 'character'">
             <div v-if="current.direction === 'ec'">
               <h4>Hanzi English-Chinese</h4>
@@ -16,7 +16,7 @@
             <div v-else>
               <h4>Hanzi Chinese-English</h4>
               <div
-                class="font-chinese text-w-normal hanzi-display"
+                class="font-chinese text-w-normal hanzi-display has-context"
                 style="text-align: center"
               >
                 {{ current.entry }}
@@ -28,7 +28,7 @@
             <div v-if="current.direction === 'ec'">
               <h4>Vocab English-Chinese</h4>
 
-              <ul v-if="Array.isArray(current.english)">
+              <ul v-if="Array.isArray(current.english)" class="has-context">
                 <li
                   v-for="(it, i) in current.english"
                   :key="i"
@@ -61,7 +61,10 @@
               </h4>
               <h4 v-else>Vocab Simplified-English</h4>
 
-              <div class="font-zh-simp text-w-normal" style="font-size: 2rem">
+              <div
+                class="font-zh-simp text-w-normal has-context"
+                style="font-size: 2rem"
+              >
                 {{ current.entry }}
               </div>
             </div>
@@ -80,10 +83,16 @@
             <div v-else>
               <h4>Sentence Chinese-English</h4>
 
-              <h2 class="font-zh-simp text-w-normal">
+              <h2 class="font-zh-simp text-w-normal has-context">
                 {{ current.entry }}
               </h2>
             </div>
+          </div>
+
+          <div class="has-context mt-4 mb-4" v-if="current.hint">
+            <small>
+              {{ current.hint }}
+            </small>
           </div>
         </div>
 
@@ -209,10 +218,20 @@
             </ul>
           </div>
 
+          <div class="has-context mt-4 mb-4" @click="addMnemonic">
+            <small>
+              {{ current.mnemonic || 'Click to add mnemonic' }}
+            </small>
+          </div>
+
           <div v-if="current.tag && current.tag.length" class="mb-4">
             Tags:
             <b-taglist style="display: inline-flex">
-              <b-tag v-for="t in current.tag" :key="t" type="is-info">
+              <b-tag
+                v-for="t in current.tag.slice(0, 5)"
+                :key="t"
+                type="is-info"
+              >
                 {{ t }}
               </b-tag>
             </b-taglist>
@@ -278,14 +297,6 @@
             >
               Hide answer
             </button>
-            <!-- <button
-              ref="btnEditModal"
-              class="button is-info"
-              @click="openEditModal(quizCurrentId)"
-              @keypress="openEditModal(quizCurrentId)"
-            >
-              Edit
-            </button> -->
           </div>
         </div>
       </div>
@@ -310,6 +321,8 @@ export interface IQuizData {
   entry?: string
   nextReview?: string
   wrongStreak?: number
+  hint?: string
+  mnemonic?: string
 }
 
 @Component({
@@ -512,7 +525,7 @@ export default class QuizCard extends Vue {
         },
       } = await this.$axios.quizGetMany(null, {
         id: [quizId],
-        select: ['entry', 'type', 'direction'],
+        select: ['entry', 'type', 'direction', 'hint', 'mnemonic'],
       })
 
       if (r) {
@@ -675,6 +688,42 @@ export default class QuizCard extends Vue {
 
       await setTemplate[type]()
     }
+  }
+
+  addHint() {
+    const i = this.quizArray[this.quizIndex]
+    const it = this.quizData[i]
+
+    this.$buefy.dialog.prompt({
+      message: 'Hint',
+      inputAttrs: {
+        value: it.hint,
+      },
+      trapFocus: true,
+      onConfirm: async (hint) => {
+        await this.$axios.quizUpdate({ id: it.id }, { hint })
+        it.hint = hint
+        this.$set(this.quizData, i, it)
+      },
+    })
+  }
+
+  addMnemonic() {
+    const i = this.quizArray[this.quizIndex]
+    const it = this.quizData[i]
+
+    this.$buefy.dialog.prompt({
+      message: 'Mnemonic',
+      inputAttrs: {
+        value: it.mnemonic,
+      },
+      trapFocus: true,
+      onConfirm: async (mnemonic) => {
+        await this.$axios.quizUpdate({ id: it.id }, { mnemonic })
+        it.mnemonic = mnemonic
+        this.$set(this.quizData, i, it)
+      },
+    })
   }
 }
 </script>

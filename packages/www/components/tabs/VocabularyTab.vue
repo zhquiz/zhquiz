@@ -50,6 +50,19 @@
               Next
             </button>
           </div>
+
+          <div v-if="current.tag && current.tag.length" class="mb-4">
+            Tags:
+            <b-taglist style="display: inline-flex">
+              <b-tag
+                v-for="t in current.tag.slice(0, 5)"
+                :key="t"
+                type="is-info"
+              >
+                {{ t }}
+              </b-tag>
+            </b-taglist>
+          </div>
         </div>
 
         <div class="column is-6">
@@ -210,6 +223,7 @@ export default class VocabularyTab extends Vue {
     alt: string[]
     reading: string[]
     english: string[]
+    tag: string[]
     sentences: {
       entry: string
       english: string
@@ -276,6 +290,7 @@ export default class VocabularyTab extends Vue {
           reading: [],
           english: [],
           sentences: [],
+          tag: [],
         },
       ]
     } else {
@@ -328,6 +343,7 @@ export default class VocabularyTab extends Vue {
         reading: [],
         english: [],
         sentences: [],
+        tag: [],
       }))
     } else {
       if (!q.trim()) {
@@ -348,6 +364,7 @@ export default class VocabularyTab extends Vue {
           reading: [],
           english: [],
           sentences: [],
+          tag: [],
         },
       ]
     }
@@ -411,6 +428,7 @@ export default class VocabularyTab extends Vue {
             reading: [],
             english: [],
             sentences: [],
+            tag: [],
           })),
           ...this.entries.slice(i + 1),
         ]

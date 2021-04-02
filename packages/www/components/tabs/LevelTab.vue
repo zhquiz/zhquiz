@@ -79,7 +79,7 @@
 
     <ContextMenu
       ref="context"
-      type="vocab"
+      type="vocabulary"
       :entry="selected"
       :pinyin="pinyinMap"
       @quiz:added="(evt) => reload(evt.entries)"

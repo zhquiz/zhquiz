@@ -563,7 +563,7 @@ export async function lookupCharacter(
   reading: string[]
   english: string[]
   tag: string[]
-} | null> {
+}> {
   if (!/^\p{sc=Han}$/u.test(entry)) {
     throw { statusCode: 400, message: 'not Character' }
   }

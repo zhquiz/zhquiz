@@ -78,15 +78,15 @@
           </b-field>
           <b-field label="Pinyin">
             <b-input
-              :value="selected.reading.join(' ')"
-              @input="(ev) => (selected.reading = ev.split(' '))"
+              :value="selected.reading.join(' / ')"
+              @input="(ev) => (selected.reading = ev.split(' / '))"
               placeholder="Must not be empty"
             ></b-input>
           </b-field>
           <b-field label="English">
             <b-input
-              :value="selected.english.join(' ')"
-              @input="(ev) => (selected.english = ev.split(' '))"
+              :value="selected.english.join('\n')"
+              @input="(ev) => (selected.english = ev.split('\n'))"
               type="textarea"
               placeholder="Must not be empty"
             ></b-input>
@@ -254,7 +254,6 @@ export default class BrowseTab extends Vue {
     this.selected.id = id
 
     await this.context.addToQuiz()
-    this.$buefy.snackbar.open(`Added extra: ${this.selected.entry[0]} to quiz`)
 
     this.isEditModal = false
     await this.load()
@@ -269,7 +268,9 @@ export default class BrowseTab extends Vue {
         description: this.selected.description || '',
       })
 
-      this.$buefy.snackbar.open(`Updated extra: ${this.selected.entry[0]}`)
+      this.$buefy.snackbar.open(
+        `Updated ${this.selected.type}: ${this.selected.entry[0]}`
+      )
     }
 
     this.isEditModal = false
@@ -280,9 +281,10 @@ export default class BrowseTab extends Vue {
     const { id } = this.selected
 
     if (id) {
-      this.$axios.extraDelete({ id })
-
-      this.$buefy.snackbar.open(`Deleted extra: ${this.selected.entry[0]}`)
+      await this.$axios.extraDelete({ id })
+      this.$buefy.snackbar.open(
+        `Deleted ${this.selected.type}: ${this.selected.entry[0]}`
+      )
       await this.load()
     }
   }
