@@ -92,6 +92,7 @@
             <div
               class="hanzi-display has-context"
               @click="openContext"
+              @contextmenu.prevent="openContext"
               style="text-align: center"
             >
               {{ current.entry }}
@@ -114,6 +115,9 @@
                   class="has-context"
                   :title="it.reading[0]"
                   @click="(ev) => openContext(ev, it.chinese, 'sentence')"
+                  @contextmenu.prevent="
+                    (ev) => openContext(ev, it.chinese, 'sentence')
+                  "
                 >
                   {{ it.entry }}
                 </span>
@@ -131,6 +135,7 @@
               class="font-zh-simp text-w-normal has-context"
               style="font-size: 2rem"
               @click="openContext"
+              @contextmenu.prevent="openContext"
             >
               {{ current.simplified }}
             </div>
@@ -145,6 +150,7 @@
                 :key="i"
                 class="traditional has-context"
                 @click="(ev) => openContext(ev, it)"
+                @contextmenu.prevent="(ev) => openContext(ev, it)"
               >
                 {{ it }}
               </span>
@@ -169,6 +175,7 @@
                   class="has-context"
                   :title="dictionaryData.sentence[it].reading[0]"
                   @click="(ev) => openContext(ev, it, 'sentence')"
+                  @contextmenu.prevent="(ev) => openContext(ev, it, 'sentence')"
                 >
                   {{ it }}
                 </span>
@@ -190,6 +197,7 @@
               class="font-zh-simp text-w-normal has-context"
               :title="(current.reading || [])[0]"
               @click="openContext"
+              @contextmenu.prevent="openContext"
             >
               {{ current.entry }}
             </h2>

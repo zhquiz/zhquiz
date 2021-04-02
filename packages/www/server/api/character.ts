@@ -5,6 +5,7 @@ import S from 'jsonschema-definer'
 import { QSplit, makeQuiz, makeTag, qParseNum } from '../db/token'
 import { db } from '../shared'
 import { lookupJukuu } from './sentence'
+import { makeReading } from './util'
 
 const characterRouter: FastifyPluginAsync = async (f) => {
   {
@@ -588,10 +589,17 @@ export async function lookupCharacter(
     db.query(sql`
     INSERT INTO log_character ("entry", "count")
     VALUES (${entry}, ${0})
-    ON CONFLICT DO UPDATE
+    ON CONFLICT ("entry") DO UPDATE
     SET "count" = EXCLUDED.count
     `)
+
+    return {
+      entry,
+      reading: [await makeReading(entry)],
+      english: [],
+      tag: [],
+    }
   }
 
-  return r || null
+  return r
 }

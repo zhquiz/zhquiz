@@ -39,6 +39,12 @@
                 $refs.context.open(evt)
               }
             "
+            @contextmenu.prevent="
+              (evt) => {
+                selected = allData[props.row.level]
+                $refs.context.open(evt)
+              }
+            "
           >
             {{ props.row.level }}
           </span>
@@ -52,6 +58,12 @@
               class="tag clickable"
               :class="getTagClass(t)"
               @click="
+                (evt) => {
+                  selected = [t]
+                  $refs.context.open(evt)
+                }
+              "
+              @contextmenu.prevent="
                 (evt) => {
                   selected = [t]
                   $refs.context.open(evt)

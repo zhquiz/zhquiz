@@ -10,6 +10,12 @@
               $refs.context.open(evt)
             }
           "
+          @contextmenu.prevent="
+            (evt) => {
+              selected = currentData
+              $refs.context.open(evt)
+            }
+          "
         >
           {{ title }}
         </p>
@@ -25,6 +31,12 @@
             class="tag clickable"
             :class="getTagClass(t)"
             @click="
+              (evt) => {
+                selected = [t]
+                $refs.context.open(evt)
+              }
+            "
+            @contextmenu.prevent="
               (evt) => {
                 selected = [t]
                 $refs.context.open(evt)

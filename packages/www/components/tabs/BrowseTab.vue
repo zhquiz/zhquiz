@@ -24,7 +24,6 @@
 
       <b-table
         :data="tableData"
-        :columns="tableHeader"
         paginated
         backend-pagination
         :total="count"
@@ -32,9 +31,34 @@
         :current-page.sync="page"
         backend-sorting
         :default-sort="[sort.key, sort.type]"
-        @contextmenu="onTableContextmenu"
         @sort="onSort"
       >
+        <b-table-column field="entry" label="Entry" v-slot="props">
+          <span
+            class="clickable"
+            @click="(ev) => onTableContextmenu(props.row, ev)"
+            @contextmenu.prevent="(ev) => onTableContextmenu(props.row, ev)"
+          >
+            <div v-for="it in props.row.entry" :key="it">
+              {{ it }}
+            </div>
+          </span>
+        </b-table-column>
+        <b-table-column field="reading" label="Pinyin" v-slot="props">
+          <div v-for="it in props.row.reading" :key="it">
+            {{ it }}
+          </div>
+        </b-table-column>
+        <b-table-column
+          field="english"
+          label="English"
+          v-slot="props"
+          width="40vw"
+        >
+          <div v-for="it in props.row.english" :key="it">
+            {{ it }}
+          </div>
+        </b-table-column>
       </b-table>
     </div>
 
@@ -153,11 +177,6 @@ export default class BrowseTab extends Vue {
   perPage = 10
   page = 1
   tableData: IExtra[] = []
-  readonly tableHeader = [
-    { field: 'entry', label: 'Entry' },
-    { field: 'reading', label: 'Pinyin' },
-    { field: 'english', label: 'English', width: '40vw' },
-  ]
 
   isEditModal = false
 
@@ -285,6 +304,8 @@ export default class BrowseTab extends Vue {
   async onTableContextmenu(row: IExtra, evt: MouseEvent) {
     evt.preventDefault()
 
+    console.log(row)
+
     this.selected = row
     this.context.open(evt)
   }
@@ -298,7 +319,7 @@ export default class BrowseTab extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.b-table ::v-deep tr:hover {
+.clickable:hover {
   cursor: pointer;
   color: blue;
 }

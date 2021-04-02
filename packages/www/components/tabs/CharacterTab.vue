@@ -19,6 +19,9 @@
           <div
             class="hanzi-display clickable font-han"
             @click="(evt) => openContext(evt, current, 'character')"
+            @contextmenu.prevent="
+              (evt) => openContext(evt, current, 'character')
+            "
           >
             {{ current }}
           </div>
@@ -63,6 +66,7 @@
                 :key="h"
                 class="font-han clickable"
                 @click="(evt) => openContext(evt, h, 'character')"
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -87,7 +91,8 @@
                 v-for="h in sup"
                 :key="h"
                 class="font-han clickable"
-                @click="(evt) => openContext(evt, h, 'hanzi')"
+                @click="(evt) => openContext(evt, h, 'character')"
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -113,6 +118,7 @@
                 :key="h"
                 class="font-han clickable"
                 @click="(evt) => openContext(evt, h, 'character')"
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -137,6 +143,9 @@
                 <span
                   class="clickable"
                   @click="(evt) => openContext(evt, v.entry, 'vocabulary')"
+                  @contextmenu.prevent="
+                    (evt) => openContext(evt, v.entry, 'vocabulary')
+                  "
                 >
                   {{ v.entry }}
                 </span>
@@ -170,6 +179,9 @@
                 <span
                   class="clickable"
                   @click="(evt) => openContext(evt, s.entry, 'sentence')"
+                  @contextmenu.prevent="
+                    (evt) => openContext(evt, s.entry, 'sentence')
+                  "
                 >
                   {{ s.entry }}
                 </span>

@@ -24,6 +24,9 @@
             <div
               class="clickable text-center font-zh-simp"
               @click="(evt) => openContext(evt, simplified, 'vocabulary')"
+              @contextmenu.prevent="
+                (evt) => openContext(evt, simplified, 'vocabulary')
+              "
             >
               {{ simplified }}
             </div>
@@ -96,6 +99,9 @@
                 :key="a"
                 class="font-zh-trad clickable space-separated"
                 @click="(evt) => openContext(evt, a, 'vocabulary')"
+                @contextmenu.prevent="
+                  (evt) => openContext(evt, a, 'vocabulary')
+                "
               >
                 {{ a }}
               </span>
@@ -150,6 +156,9 @@
                 <span
                   class="clickable"
                   @click="(evt) => openContext(evt, s.entry, 'sentence')"
+                  @contextmenu.prevent="
+                    (evt) => openContext(evt, s.entry, 'sentence')
+                  "
                 >
                   {{ s.entry }}
                 </span>

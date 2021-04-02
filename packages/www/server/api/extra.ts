@@ -561,7 +561,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         const $and = [
           sql`extra."userId" = ${userId}`,
           makeExtra.parse(q) || sql`TRUE`,
-          sql` AND extra."english"[1] IS NOT NULL`,
+          sql`extra."english"[1] IS NOT NULL`,
         ]
 
         const tagCond = makeTag.parse(q)

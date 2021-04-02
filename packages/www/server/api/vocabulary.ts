@@ -5,6 +5,7 @@ import S from 'jsonschema-definer'
 import { QSplit, makeQuiz, makeTag, qParseNum } from '../db/token'
 import { db } from '../shared'
 import { lookupJukuu } from './sentence'
+import { makeReading } from './util'
 
 const vocabularyRouter: FastifyPluginAsync = async (f) => {
   {
@@ -460,10 +461,18 @@ export async function lookupVocabulary(
     db.query(sql`
     INSERT INTO log_vocabulary ("entry", "count")
     VALUES (${entry}, ${0})
-    ON CONFLICT DO UPDATE
+    ON CONFLICT ("entry") DO UPDATE
     SET "count" = EXCLUDED.count
     `)
+
+    return {
+      entry,
+      alt: [],
+      reading: [await makeReading(entry)],
+      english: [],
+      tag: [],
+    }
   }
 
-  return r || null
+  return r
 }
