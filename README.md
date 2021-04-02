@@ -1,6 +1,6 @@
 # ZhQuiz
 
-ZhQuiz, a Chinese quizzing platform
+ZhQuiz, a Chinese quizzing platform by levels and dictionary
 
 ![Preview GIF](/docs/preview.gif)
 

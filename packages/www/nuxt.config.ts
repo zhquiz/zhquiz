@@ -34,7 +34,6 @@ export default (): NuxtConfig => {
           sizes: '16x16',
           href: '/favicon-16x16.png',
         },
-        { rel: 'manifest', href: '/site.manifest' },
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
       ],
       script: [
@@ -122,8 +121,11 @@ export default (): NuxtConfig => {
     pwa: {
       manifest: {
         lang: 'en',
+        name: 'ZhQuiz',
+        short_name: 'zhquiz',
+        description:
+          'ZhQuiz, a Chinese quizzing platform by levels and dictionary',
       },
-      icon: false,
     },
 
     // Build Configuration: https://go.nuxtjs.dev/config-build
