@@ -7,6 +7,18 @@ import {
 } from 'openapi-client-axios'; 
 
 declare namespace Paths {
+  namespace AddTags {
+    export interface RequestBody {
+      entry: string;
+      type: "character" | "vocabulary" | "sentence";
+      tag: string[];
+    }
+    namespace Responses {
+      export interface $201 {
+        result: string;
+      }
+    }
+  }
   namespace CharacterGetByEntry {
     namespace Parameters {
       export type Entry = string;
@@ -19,6 +31,7 @@ declare namespace Paths {
         entry: string;
         reading: string[];
         english: string[];
+        tag: string[];
       }
     }
   }
@@ -198,6 +211,21 @@ declare namespace Paths {
       }
     }
   }
+  namespace GetTags {
+    namespace Parameters {
+      export type Entry = string;
+      export type Type = "character" | "vocabulary" | "sentence";
+    }
+    export interface QueryParameters {
+      entry: Parameters.Entry;
+      type: Parameters.Type;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: string[];
+      }
+    }
+  }
   namespace LibraryCreate {
     export interface RequestBody {
       entry: string[];
@@ -205,6 +233,7 @@ declare namespace Paths {
       type: string;
       description: string;
       tag: string[];
+      isShared?: boolean;
     }
     namespace Responses {
       export interface $201 {
@@ -239,6 +268,7 @@ declare namespace Paths {
         type: string;
         description: string;
         tag: string[];
+        isShared?: boolean;
       }
     }
   }
@@ -262,6 +292,7 @@ declare namespace Paths {
           type: string;
           description: string;
           tag: string[];
+          isShared?: boolean;
         }[];
         count: number;
       }
@@ -280,6 +311,7 @@ declare namespace Paths {
       type?: string;
       description?: string;
       tag?: string[];
+      isShared?: boolean;
     }
     namespace Responses {
       export interface $201 {
@@ -515,6 +547,21 @@ declare namespace Paths {
       }
     }
   }
+  namespace RemoveTags {
+    export interface RequestBody {
+      entry: string;
+      type: "character" | "vocabulary" | "sentence";
+      tag: string[];
+    }
+    namespace Responses {
+      export interface $200 {
+        result: string;
+      }
+      export interface $201 {
+        result: string;
+      }
+    }
+  }
   namespace SentenceGetByEntry {
     namespace Parameters {
       export type Entry = string;
@@ -526,6 +573,7 @@ declare namespace Paths {
       export interface $200 {
         entry: string;
         english: string[];
+        tag: string[];
       }
     }
   }
@@ -634,6 +682,7 @@ declare namespace Paths {
         alt: string[];
         reading: string[];
         english: string[];
+        tag: string[];
       }
     }
   }
@@ -786,6 +835,30 @@ export interface OperationMethods {
     data?: any,
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.ExtraDelete.Responses.$201>
+  /**
+   * getTags
+   */
+  'getTags'(
+    parameters?: Parameters<Paths.GetTags.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.GetTags.Responses.$200>
+  /**
+   * addTags
+   */
+  'addTags'(
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: Paths.AddTags.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.AddTags.Responses.$201>
+  /**
+   * removeTags
+   */
+  'removeTags'(
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: Paths.RemoveTags.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.RemoveTags.Responses.$200 | Paths.RemoveTags.Responses.$201>
   /**
    * extraQuery
    */
@@ -1168,6 +1241,36 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.ExtraDelete.Responses.$201>
+  }
+  ['/api/extra/tags']: {
+    /**
+     * getTags
+     */
+    'get'(
+      parameters?: Parameters<Paths.GetTags.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.GetTags.Responses.$200>
+  }
+  ['/api/extra/addTags']: {
+    /**
+     * addTags
+     */
+    'patch'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.AddTags.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.AddTags.Responses.$201>
+  }
+  ['/api/extra/removeTags']: {
+    /**
+     * removeTags
+     */
+    'patch'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.RemoveTags.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.RemoveTags.Responses.$200 | Paths.RemoveTags.Responses.$201>
   }
   ['/api/extra/q']: {
     /**

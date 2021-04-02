@@ -18,6 +18,7 @@ services:
       - pgdata:/var/lib/postgresql/data
 
       - ./packages/db/initdb.d:/docker-entrypoint-initdb.d
+      - ./packages/db/library:/app/library
       - ./packages/db/assets:/app/assets
       - ./packages/db/src:/app/src
   www:

@@ -1,207 +1,59 @@
+import fs from 'fs'
+
 import { ConnectionPool, sql } from '@databases/pg'
+import fg from 'fast-glob'
+import yaml from 'js-yaml'
+import S from 'jsonschema-definer'
 
-export async function populate(db: ConnectionPool) {
+export const sLibrary = S.shape({
+  id: S.string().format('uuid'),
+  createdAt: S.instanceOf(Date).optional(),
+  updatedAt: S.instanceOf(Date).optional(),
+  isShared: S.boolean().optional(),
+  title: S.string(),
+  entry: S.list(S.string()).minItems(1),
+  type: S.string().enum('character', 'vocabulary', 'sentence').optional(),
+  description: S.string().optional(),
+  tag: S.list(S.string()).optional()
+}).additionalProperties(true)
+
+export async function populate(db: ConnectionPool, dir = '/app/library') {
+  process.chdir(dir)
+
   await db.tx(async (db) => {
-    {
-      const tag = 'HSK6'
-      const sets = 10
-      const [{ count }] = await db.query(sql`
-      SELECT COUNT(*) count
-      FROM (
-        SELECT DISTINCT "entry" FROM (
-          SELECT "entry"
-          FROM entry_tag et
-          LEFT JOIN dict.cedict v ON v.simplified = et.entry
-          WHERE tag &@ ${tag} AND "type" = 'vocabulary'
-        ) t1
-      ) t2
-      `)
-
-      const lotSize = Math.ceil(count / sets)
-      for (let i = 0; i < sets; i++) {
-        await db.query(sql`
-        INSERT INTO "library" ("title", "entry", "type", "tag")
-        SELECT
-          ${`${tag} (Set ${sets - i}/${sets})`},
-          (
-            SELECT array_agg("entry")
-            FROM (
-              SELECT DISTINCT "entry" FROM (
-                SELECT "entry"
-                FROM entry_tag et
-                LEFT JOIN dict.cedict v ON v.simplified = et.entry
-                WHERE tag &@ ${tag} AND "type" = 'vocabulary'
-              ) t1
-              LIMIT ${lotSize} OFFSET ${i * lotSize}
-            ) t2
-          ),
-          'vocabulary',
-          ${['HSK', tag]}
-        `)
-      }
-    }
-
-    {
-      const tag = 'HSK5'
-      const sets = 6
-      const [{ count }] = await db.query(sql`
-      SELECT COUNT(*) count
-      FROM (
-        SELECT DISTINCT "entry" FROM (
-          SELECT "entry"
-          FROM entry_tag et
-          LEFT JOIN dict.cedict v ON v.simplified = et.entry
-          WHERE tag &@ ${tag} AND "type" = 'vocabulary'
-        ) t1
-      ) t2
-      `)
-
-      const lotSize = Math.ceil(count / sets)
-      for (let i = 0; i < sets; i++) {
-        await db.query(sql`
-        INSERT INTO "library" ("title", "entry", "type", "tag")
-        SELECT
-          ${`${tag} (Set ${sets - i}/${sets})`},
-          (
-            SELECT array_agg("entry")
-            FROM (
-              SELECT DISTINCT "entry" FROM (
-                SELECT "entry"
-                FROM entry_tag et
-                LEFT JOIN dict.cedict v ON v.simplified = et.entry
-                WHERE tag &@ ${tag} AND "type" = 'vocabulary'
-              ) t1
-              LIMIT ${lotSize} OFFSET ${i * lotSize}
-            ) t2
-          ),
-          'vocabulary',
-          ${['HSK', tag]}
-        `)
-      }
-    }
-
-    {
-      const tag = 'HSK4'
-      const sets = 3
-      const [{ count }] = await db.query(sql`
-      SELECT COUNT(*) count
-      FROM (
-        SELECT DISTINCT "entry" FROM (
-          SELECT "entry"
-          FROM entry_tag et
-          LEFT JOIN dict.cedict v ON v.simplified = et.entry
-          WHERE tag &@ ${tag} AND "type" = 'vocabulary'
-        ) t1
-      ) t2
-      `)
-
-      const lotSize = Math.ceil(count / sets)
-      for (let i = 0; i < sets; i++) {
-        await db.query(sql`
-        INSERT INTO "library" ("title", "entry", "type", "tag")
-        SELECT
-          ${`${tag} (Set ${sets - i}/${sets})`},
-          (
-            SELECT array_agg("entry")
-            FROM (
-              SELECT DISTINCT "entry" FROM (
-                SELECT "entry"
-                FROM entry_tag et
-                LEFT JOIN dict.cedict v ON v.simplified = et.entry
-                WHERE tag &@ ${tag} AND "type" = 'vocabulary'
-              ) t1
-              LIMIT ${lotSize} OFFSET ${i * lotSize}
-            ) t2
-          ),
-          'vocabulary',
-          ${['HSK', tag]}
-        `)
-      }
-    }
-
-    {
-      const tag = 'HSK3'
-      const sets = 2
-      const [{ count }] = await db.query(sql`
-      SELECT COUNT(*) count
-      FROM (
-        SELECT DISTINCT "entry" FROM (
-          SELECT "entry"
-          FROM entry_tag et
-          LEFT JOIN dict.cedict v ON v.simplified = et.entry
-          WHERE tag &@ ${tag} AND "type" = 'vocabulary'
-        ) t1
-      ) t2
-      `)
-
-      const lotSize = Math.ceil(count / sets)
-      for (let i = 0; i < sets; i++) {
-        await db.query(sql`
-        INSERT INTO "library" ("title", "entry", "type", "tag")
-        SELECT
-          ${`${tag} (Set ${sets - i}/${sets})`},
-          (
-            SELECT array_agg("entry")
-            FROM (
-              SELECT DISTINCT "entry" FROM (
-                SELECT "entry"
-                FROM entry_tag et
-                LEFT JOIN dict.cedict v ON v.simplified = et.entry
-                WHERE tag &@ ${tag} AND "type" = 'vocabulary'
-              ) t1
-              LIMIT ${lotSize} OFFSET ${i * lotSize}
-            ) t2
-          ),
-          'vocabulary',
-          ${['HSK', tag]}
-        `)
-      }
-    }
-
-    {
-      const tag = 'HSK2'
+    for (const filename of await fg(['**/*.yaml'])) {
+      const rs = S.list(sLibrary).ensure(
+        yaml.load(fs.readFileSync(filename, 'utf-8')) as any
+      )
 
       await db.query(sql`
-      INSERT INTO "library" ("title", "entry", "type", "tag")
-      SELECT
-        ${tag},
-        (
-          SELECT array_agg("entry")
-          FROM (
-            SELECT DISTINCT "entry" FROM (
-              SELECT "entry"
-              FROM entry_tag et
-              LEFT JOIN dict.cedict v ON v.simplified = et.entry
-              WHERE tag &@ ${tag} AND "type" = 'vocabulary'
-            ) t1
-          ) t2
+      INSERT INTO "library" ("id", "title", "entry", "type", "tag", "createdAt", "updatedAt", "description", "isShared")
+      VALUES ${sql.join(
+        rs.map(
+          (r) =>
+            sql`(${r.id}, ${r.title}, ${r.entry}, ${r.type || 'vocabulary'}, ${[
+              ...filename.replace(/\.ya?ml$/i, '').split('/'),
+              ...(r.tag || [])
+            ]}, ${r.createdAt || new Date()}, ${
+              r.updatedAt || r.createdAt || new Date()
+            }, ${r.description || ''}, ${r.isShared !== false})`
         ),
-        'vocabulary',
-        ${['HSK', tag]}
-      `)
-    }
-
-    {
-      const tag = 'HSK1'
-
-      await db.query(sql`
-      INSERT INTO "library" ("title", "entry", "type", "tag")
-      SELECT
-        ${tag},
-        (
-          SELECT array_agg("entry")
-          FROM (
-            SELECT DISTINCT "entry" FROM (
-              SELECT "entry"
-              FROM entry_tag et
-              LEFT JOIN dict.cedict v ON v.simplified = et.entry
-              WHERE tag &@ ${tag} AND "type" = 'vocabulary'
-            ) t1
-          ) t2
-        ),
-        'vocabulary',
-        ${['HSK', tag]}
+        ','
+      )}
+      ON CONFLICT ("id")
+      DO UPDATE SET
+        "title" = EXCLUDED."title",
+        "entry" = EXCLUDED."entry",
+        "type" = EXCLUDED."type",
+        "tag" = EXCLUDED."tag",
+        "createdAt" = EXCLUDED."createdAt",
+        "description" = EXCLUDED."description",
+        "isShared" = EXCLUDED."isShared"
       `)
     }
   })
+
+  await db.query(sql`
+    REFRESH MATERIALIZED VIEW entry_tag;
+  `)
 }

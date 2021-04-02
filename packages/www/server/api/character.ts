@@ -140,6 +140,15 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           result = result.filter((r) => r.frequency)
         }
 
+        if (!result.length) {
+          db.query(sql`
+          INSERT INTO c2v ("entry", "count")
+          VALUES (${entry}, ${0})
+          ON CONFLICT DO UPDATE
+          SET "count" = EXCLUDED.count
+          `)
+        }
+
         return {
           result,
         }
@@ -254,6 +263,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       entry: S.string(),
       reading: S.list(S.string()),
       english: S.list(S.string()),
+      tag: S.list(S.string()),
     })
 
     f.get<{
@@ -551,18 +561,37 @@ export async function lookupCharacter(
   entry: string
   reading: string[]
   english: string[]
+  tag: string[]
 } | null> {
   if (!/^\p{sc=Han}$/u.test(entry)) {
     throw { statusCode: 400, message: 'not Character' }
   }
 
   const [r] = await db.query(sql`
-  SELECT "entry", "pinyin" "reading", "english"
-  FROM "character"
-  WHERE (
-    "userId" IS NULL OR "userId" = ${userId}
-  ) AND "entry" = ${entry}
+  SELECT *, (
+    SELECT array_agg(DISTINCT "tag")
+    FROM entry_tag
+    WHERE (
+      "userId" IS NULL OR "userId" = ${userId}
+    ) AND "type" = 'character' AND "entry" = t1."entry"
+  )||'{}'::text[] "tag"
+  FROM (
+    SELECT "entry", "pinyin" "reading", "english"
+    FROM "character"
+    WHERE (
+      "userId" IS NULL OR "userId" = ${userId}
+    ) AND "entry" = ${entry}
+  ) t1
   `)
+
+  if (!r) {
+    db.query(sql`
+    INSERT INTO log_character ("entry", "count")
+    VALUES (${entry}, ${0})
+    ON CONFLICT DO UPDATE
+    SET "count" = EXCLUDED.count
+    `)
+  }
 
   return r || null
 }

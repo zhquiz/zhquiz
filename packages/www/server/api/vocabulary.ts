@@ -151,6 +151,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
       alt: S.list(S.string()),
       reading: S.list(S.string()),
       english: S.list(S.string()),
+      tag: S.list(S.string()),
     })
 
     f.get<{
@@ -432,18 +433,37 @@ export async function lookupVocabulary(
   alt: string[]
   reading: string[]
   english: string[]
+  tag: string[]
 } | null> {
   const [r] = await db.query(sql`
-  SELECT
-    "entry"[1] "entry",
-    "entry"[2:]||'{}'::text[] "alt",
-    "pinyin" "reading",
-    "english"
-  FROM "vocabulary"
-  WHERE (
-    "userId" IS NULL OR "userId" = ${userId}
-  ) AND ${entry} = ANY("entry")
+  SELECT *, (
+    SELECT array_agg(DISTINCT "tag")
+    FROM entry_tag
+    WHERE (
+      "userId" IS NULL OR "userId" = ${userId}
+    ) AND "type" = 'vocabulary' AND "entry" = t1."entry"
+  )||'{}'::text[] "tag"
+  FROM (
+    SELECT
+      "entry"[1] "entry",
+      "entry"[2:]||'{}'::text[] "alt",
+      "pinyin" "reading",
+      "english"
+    FROM "vocabulary"
+    WHERE (
+      "userId" IS NULL OR "userId" = ${userId}
+    ) AND ${entry} = ANY("entry")
+  ) t1
   `)
+
+  if (!r) {
+    db.query(sql`
+    INSERT INTO log_vocabulary ("entry", "count")
+    VALUES (${entry}, ${0})
+    ON CONFLICT DO UPDATE
+    SET "count" = EXCLUDED.count
+    `)
+  }
 
   return r || null
 }

@@ -36,9 +36,4 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
   })
 
   s3.close()
-
-  await db.query(sql`
-    REFRESH MATERIALIZED VIEW dict.entry_tag;
-    REFRESH MATERIALIZED VIEW entry_tag;
-  `)
 }
