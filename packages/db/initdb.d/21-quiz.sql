@@ -29,6 +29,10 @@ CREATE TRIGGER "t_quiz_updatedAt"
 
 CREATE UNIQUE INDEX "idx_u_quiz" ON "quiz" ("userId", "entry", "type", "direction");
 
+CREATE INDEX "idx_quiz_q" ON "quiz"
+  USING pgroonga ("hint", "mnemonic")
+  WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
+
 CREATE INDEX "idx_quiz_entry" ON "quiz" ("entry");
 CREATE INDEX "idx_quiz_updatedAt" ON "quiz" ("updatedAt");
 CREATE INDEX "idx_quiz_userId" ON "quiz" ("userId");

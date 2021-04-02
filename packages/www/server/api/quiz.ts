@@ -782,6 +782,8 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       fields: {
         type: { ':': (v) => sql`"type" = ${v}` },
         direction: { ':': (v) => sql`"direction" = ${v}` },
+        hint: { ':': (v) => sql`"hint" &@ ${v}` },
+        mnemonic: { ':': (v) => sql`"mnemonic" &@ ${v}` },
         srsLevel: qParseNum(sql`"srsLevel"`),
         nextReview: qParseDate(sql`"nextReview"`),
         lastRight: qParseDate(sql`"lastRight"`),
