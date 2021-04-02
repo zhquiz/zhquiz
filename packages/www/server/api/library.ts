@@ -19,6 +19,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       type: S.string(),
       description: S.string(),
       tag: S.list(S.string()),
+      isShared: S.boolean().optional(),
     })
 
     f.get<{
@@ -50,7 +51,8 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           "title",
           "type",
           "description",
-          "tag"
+          "tag",
+          "isShared"
         FROM "library"
         WHERE "userId" = ${userId} AND "id" = ${id}
         `
@@ -92,6 +94,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           type: S.string(),
           description: S.string(),
           tag: S.list(S.string()),
+          isShared: S.boolean().optional(),
         })
       ),
       count: S.integer(),
@@ -169,7 +172,8 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
               "description",
               "tag",
               (CASE WHEN "userId" = ${userId} THEN "id" END) "id",
-              "updatedAt"
+              "updatedAt",
+              "isShared"
             FROM "library"
             WHERE (
               "isShared" OR "userId" = ${userId}
@@ -217,6 +221,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       type: S.string(),
       description: S.string(),
       tag: S.list(S.string()),
+      isShared: S.boolean().optional(),
     })
 
     const sResult = S.shape({
@@ -237,7 +242,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         },
       },
       async (req, reply): Promise<typeof sResult.type> => {
-        const { title, type, description, tag, entry } = req.body
+        const { title, type, description, tag, entry, isShared } = req.body
 
         const userId: string = req.session.userId
         if (!userId) {
@@ -248,8 +253,8 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           const id = shortUUID.uuid()
 
           await db.query(sql`
-          INSERT INTO "library" ("id", "userId", "title", "type", "description", "tag", "entry")
-          VALUES (${id}, ${userId} ${title}, ${type}, ${description}, ${tag}, ${entry})
+          INSERT INTO "library" ("id", "userId", "title", "type", "description", "tag", "entry", "isShared")
+          VALUES (${id}, ${userId} ${title}, ${type}, ${description}, ${tag}, ${entry}, ${isShared})
           `)
 
           return id
@@ -276,6 +281,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       type: S.string().optional(),
       description: S.string().optional(),
       tag: S.list(S.string()).optional(),
+      isShared: S.boolean().optional(),
     })
 
     const sResult = S.shape({
@@ -299,7 +305,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       },
       async (req, reply): Promise<typeof sResult.type> => {
         const { id } = req.query
-        const { title, type, description, tag, entry } = req.body
+        const { title, type, description, tag, entry, isShared } = req.body
 
         const userId: string = req.session.userId
         if (!userId) {
@@ -321,6 +327,9 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
               ...(typeof tag !== 'undefined' ? [sql`"tag" = ${tag}`] : []),
               ...(typeof entry !== 'undefined'
                 ? [sql`"entry" = ${entry}`]
+                : []),
+              ...(typeof isShared !== 'undefined'
+                ? [sql`"isShared" = ${isShared}`]
                 : []),
             ],
             ','

@@ -196,6 +196,7 @@ export default class VocabularyTab extends Vue {
   @Ref() context!: ContextMenu
 
   entries: {
+    id: string
     entry: string
     alt: string[]
     reading: string[]
@@ -260,6 +261,7 @@ export default class VocabularyTab extends Vue {
 
       this.entries = [
         {
+          id: entry,
           entry,
           alt: [],
           reading: [],
@@ -311,6 +313,7 @@ export default class VocabularyTab extends Vue {
         .filter((h, i, arr) => arr.indexOf(h) === i)
 
       this.entries = qs.map((entry) => ({
+        id: entry,
         entry,
         alt: [],
         reading: [],
@@ -330,6 +333,7 @@ export default class VocabularyTab extends Vue {
 
       this.entries = [
         {
+          id: q,
           entry: q,
           alt: [],
           reading: [],
@@ -348,6 +352,8 @@ export default class VocabularyTab extends Vue {
       return
     }
 
+    const { id } = entry
+
     if (!entry.reading.length) {
       if (/\p{sc=Han}/u.test(entry.entry)) {
         const { data } = await this.$axios
@@ -356,27 +362,29 @@ export default class VocabularyTab extends Vue {
           })
           .catch(() => ({ data: null }))
 
+        const i = this.entries.findIndex((it) => it.id === id) || this.i
         if (data) {
           this.entries = [
-            ...this.entries.slice(0, this.i),
+            ...this.entries.slice(0, i),
             {
               ...data,
+              id,
               entry: data.entry || '',
               reading: data.reading || [],
               sentences: [],
             },
-            ...this.entries.slice(this.i + 1),
+            ...this.entries.slice(i + 1),
           ]
         } else {
           this.entries = [
-            ...this.entries.slice(0, this.i),
+            ...this.entries.slice(0, i),
             {
               ...entry,
               reading: [
                 toPinyin(entry.entry, { keepRest: true, toneToNumber: true }),
               ],
             },
-            ...this.entries.slice(this.i + 1),
+            ...this.entries.slice(i + 1),
           ]
         }
       } else {
@@ -384,16 +392,18 @@ export default class VocabularyTab extends Vue {
           data: { result },
         } = await this.$axios.vocabularyQuery({ q: entry.entry })
 
+        const i = this.entries.findIndex((it) => it.id === id) || this.i
         this.entries = [
-          ...this.entries.slice(0, this.i),
+          ...this.entries.slice(0, i),
           ...result.map((entry) => ({
+            id: entry,
             entry,
             alt: [],
             reading: [],
             english: [],
             sentences: [],
           })),
-          ...this.entries.slice(this.i + 1),
+          ...this.entries.slice(i + 1),
         ]
       }
     } else if (!entry.sentences.length) {

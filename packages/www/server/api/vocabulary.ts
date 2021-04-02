@@ -445,5 +445,14 @@ export async function lookupVocabulary(
   ) AND ${entry} = ANY("entry")
   `)
 
+  if (!r) {
+    db.query(sql`
+    INSERT INTO log_vocabulary ("entry", "count")
+    VALUES (${entry}, ${0})
+    ON CONFLICT DO UPDATE
+    SET "count" = EXCLUDED.count
+    `)
+  }
+
   return r || null
 }

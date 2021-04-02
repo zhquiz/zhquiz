@@ -80,6 +80,14 @@
           <b-field label="Tag">
             <b-input v-model="edited.tag"></b-input>
           </b-field>
+          <b-field label="Additional options">
+            <b-checkbox
+              :value="edited.isShared"
+              @input="(ev) => $set(edited, 'isShared', ev)"
+            >
+              Make it availble for others (shared library)?
+            </b-checkbox>
+          </b-field>
         </div>
         <footer class="card-footer">
           <div class="card-footer-item">
@@ -114,6 +122,7 @@ interface ILocal {
   entry: string[]
   description: string
   tag: string[]
+  isShared?: boolean
 }
 
 @Component<LibraryTab>({

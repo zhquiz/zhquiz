@@ -47,7 +47,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         const [r] = await db.query(sql`
         SELECT "entry", "pinyin", "english", "description", "tag", "type"
         FROM "extra"
-        WHERE "userId" = ${userId} AND "id" = ${id}
+        WHERE "userId" = ${userId} AND "id" = ${id} AND "english"[1] IS NOT NULL
         `)
 
         if (!r) {
@@ -232,6 +232,194 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
   {
     const sQuery = S.shape({
+      entry: S.string(),
+      type: S.string().enum('character', 'vocabulary', 'sentence'),
+    })
+
+    const sResponse = S.shape({
+      result: S.list(S.string()),
+    })
+
+    f.get<{
+      Querystring: typeof sQuery.type
+    }>(
+      '/tags',
+      {
+        schema: {
+          operationId: 'getTags',
+          querystring: sQuery.valueOf(),
+          response: {
+            200: sResponse.valueOf(),
+          },
+        },
+      },
+      async (req): Promise<typeof sResponse.type> => {
+        const { entry, type } = req.query
+
+        const userId: string = req.session.userId
+        if (!userId) {
+          throw { statusCode: 401 }
+        }
+
+        const rs = await db.query(sql`
+        SELECT "tag"
+        FROM entry_tag
+        WHERE (
+          "userId" IS NULL OR "userId" = ${userId}
+        ) AND "type" = ${type} AND "entry" = ${entry}
+        `)
+
+        return {
+          result: rs.map((r) => r.tag),
+        }
+      }
+    )
+  }
+
+  {
+    const sBody = S.shape({
+      entry: S.string(),
+      type: S.string().enum('character', 'vocabulary', 'sentence'),
+      tag: S.list(S.string()),
+    })
+
+    const sResponse = S.shape({
+      result: S.string(),
+    })
+
+    f.patch<{
+      Body: typeof sBody.type
+    }>(
+      '/addTags',
+      {
+        schema: {
+          operationId: 'addTags',
+          body: sBody.valueOf(),
+          response: {
+            201: sResponse.valueOf(),
+          },
+        },
+      },
+      async (req, reply): Promise<typeof sResponse.type> => {
+        const { entry, type, tag } = req.body
+
+        const userId: string = req.session.userId
+        if (!userId) {
+          throw { statusCode: 401 }
+        }
+
+        const [r] = await db.query(sql`
+        SELECT "id", "tag"
+        FROM "extra"
+        WHERE "userId" = ${userId} AND "type" = ${type} AND "entry"[1] = ${entry} AND "entry"[2] IS NULL
+        `)
+
+        if (r) {
+          await db.query(sql`
+          UPDATE "extra"
+          SET "tag" = (
+            SELECT array_agg(DISTINCT t)
+            FROM (
+              SELECT unnest("tag"||${tag}) t
+            ) t1
+          )
+          WHERE "id" = ${r.id}
+          `)
+
+          refresh('entry_tag')
+
+          reply.status(201)
+          return {
+            result: 'updated',
+          }
+        } else {
+          const id = shortUUID.uuid()
+          await db.query(sql`
+          INSERT INTO "extra" ("entry", "tag", "type", "userId", "id")
+          VALUES (${entry}, ${tag}, ${type}, ${userId}, ${id})
+          `)
+
+          refresh('entry_tag')
+
+          reply.status(201)
+          return {
+            result: `created: ${id}`,
+          }
+        }
+      }
+    )
+  }
+
+  {
+    const sBody = S.shape({
+      entry: S.string(),
+      type: S.string().enum('character', 'vocabulary', 'sentence'),
+      tag: S.list(S.string()),
+    })
+
+    const sResponse = S.shape({
+      result: S.string(),
+    })
+
+    f.patch<{
+      Body: typeof sBody.type
+    }>(
+      '/removeTags',
+      {
+        schema: {
+          operationId: 'removeTags',
+          body: sBody.valueOf(),
+          response: {
+            200: sResponse.valueOf(),
+            201: sResponse.valueOf(),
+          },
+        },
+      },
+      async (req, reply): Promise<typeof sResponse.type> => {
+        const { entry, type, tag } = req.body
+
+        const userId: string = req.session.userId
+        if (!userId) {
+          throw { statusCode: 401 }
+        }
+
+        const [r] = await db.query(sql`
+        SELECT "id", "tag"
+        FROM "extra"
+        WHERE "userId" = ${userId} AND "type" = ${type} AND "entry"[1] = ${entry} AND "entry"[2] IS NULL
+        `)
+
+        if (r) {
+          await db.query(sql`
+          UPDATE "extra"
+          SET "tag" = (
+            SELECT array_agg(DISTINCT t)
+            FROM (
+              SELECT unnest("tag") t
+            ) t1
+            WHERE t != ANY(${tag})
+          )
+          WHERE "id" =${r.id}
+          `)
+
+          refresh('entry_tag')
+
+          reply.status(201)
+          return {
+            result: 'updated',
+          }
+        } else {
+          reply.status(200)
+          return {
+            result: `not updated`,
+          }
+        }
+      }
+    )
+  }
+
+  {
+    const sQuery = S.shape({
       id: S.string(),
     })
 
@@ -373,6 +561,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         const $and = [
           sql`extra."userId" = ${userId}`,
           makeExtra.parse(q) || sql`TRUE`,
+          sql` AND extra."english"[1] IS NOT NULL`,
         ]
 
         const tagCond = makeTag.parse(q)

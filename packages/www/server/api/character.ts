@@ -140,6 +140,15 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           result = result.filter((r) => r.frequency)
         }
 
+        if (!result.length) {
+          db.query(sql`
+          INSERT INTO c2v ("entry", "count")
+          VALUES (${entry}, ${0})
+          ON CONFLICT DO UPDATE
+          SET "count" = EXCLUDED.count
+          `)
+        }
+
         return {
           result,
         }
@@ -563,6 +572,15 @@ export async function lookupCharacter(
     "userId" IS NULL OR "userId" = ${userId}
   ) AND "entry" = ${entry}
   `)
+
+  if (!r) {
+    db.query(sql`
+    INSERT INTO log_character ("entry", "count")
+    VALUES (${entry}, ${0})
+    ON CONFLICT DO UPDATE
+    SET "count" = EXCLUDED.count
+    `)
+  }
 
   return r || null
 }
