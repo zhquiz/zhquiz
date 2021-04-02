@@ -200,6 +200,15 @@
               </li>
             </ul>
           </div>
+
+          <div v-if="current.tag && current.tag.length" class="mb-4">
+            Tags:
+            <b-taglist style="display: inline-flex">
+              <b-tag v-for="t in current.tag" :key="t" type="is-info">
+                {{ t }}
+              </b-tag>
+            </b-taglist>
+          </div>
         </div>
       </div>
 
@@ -322,6 +331,7 @@ export default class QuizCard extends Vue {
       {
         reading: string[]
         english: string[]
+        tag: string[]
       }
     >,
     vocabulary: {} as Record<
@@ -332,6 +342,7 @@ export default class QuizCard extends Vue {
         reading: string[]
         english: string[]
         sentences: string[]
+        tag: string[]
       }
     >,
     sentence: {} as Record<
@@ -339,6 +350,7 @@ export default class QuizCard extends Vue {
       {
         reading: string[]
         english: string[]
+        tag: string[]
       }
     >,
   }
@@ -527,12 +539,13 @@ export default class QuizCard extends Vue {
       } = {
         character: async () => {
           const {
-            data: { reading, english },
+            data: { reading, english, tag },
           } = await this.$axios.characterGetByEntry({ entry })
 
           this.dictionaryData.character[entry] = {
             reading,
             english,
+            tag,
           }
 
           this.$set(
@@ -555,6 +568,7 @@ export default class QuizCard extends Vue {
                     }),
                   ],
                   english: [english],
+                  tag: [],
                 }
               }
             })
@@ -567,7 +581,7 @@ export default class QuizCard extends Vue {
           }
         },
         vocabulary: async () => {
-          const { simplified, alt, reading, english } =
+          const { simplified, alt, reading, english, tag } =
             this.dictionaryData.vocabulary[entry] ||
             (await this.$axios
               .vocabularyGetByEntry({ entry })
@@ -582,6 +596,7 @@ export default class QuizCard extends Vue {
             reading,
             english,
             sentences: [],
+            tag,
           }
 
           this.$set(
@@ -605,6 +620,7 @@ export default class QuizCard extends Vue {
                       }),
                     ],
                     english: [english],
+                    tag: [],
                   }
                 }
                 return entry
@@ -628,7 +644,7 @@ export default class QuizCard extends Vue {
             .sentenceGetByEntry({
               entry,
             })
-            .then(({ data: { english } }) => {
+            .then(({ data: { english, tag } }) => {
               this.dictionaryData.sentence[entry] = {
                 reading: [
                   toPinyin(entry, {
@@ -637,6 +653,7 @@ export default class QuizCard extends Vue {
                   }),
                 ],
                 english,
+                tag,
               }
 
               this.$set(

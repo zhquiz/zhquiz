@@ -31,6 +31,7 @@ declare namespace Paths {
         entry: string;
         reading: string[];
         english: string[];
+        tag: string[];
       }
     }
   }
@@ -572,6 +573,7 @@ declare namespace Paths {
       export interface $200 {
         entry: string;
         english: string[];
+        tag: string[];
       }
     }
   }
@@ -680,6 +682,7 @@ declare namespace Paths {
         alt: string[];
         reading: string[];
         english: string[];
+        tag: string[];
       }
     }
   }

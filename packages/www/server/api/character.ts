@@ -263,6 +263,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       entry: S.string(),
       reading: S.list(S.string()),
       english: S.list(S.string()),
+      tag: S.list(S.string()),
     })
 
     f.get<{
@@ -560,17 +561,27 @@ export async function lookupCharacter(
   entry: string
   reading: string[]
   english: string[]
+  tag: string[]
 } | null> {
   if (!/^\p{sc=Han}$/u.test(entry)) {
     throw { statusCode: 400, message: 'not Character' }
   }
 
   const [r] = await db.query(sql`
-  SELECT "entry", "pinyin" "reading", "english"
-  FROM "character"
-  WHERE (
-    "userId" IS NULL OR "userId" = ${userId}
-  ) AND "entry" = ${entry}
+  SELECT *, (
+    SELECT array_agg(DISTINCT "tag")
+    FROM entry_tag
+    WHERE (
+      "userId" IS NULL OR "userId" = ${userId}
+    ) AND "type" = 'character' AND "entry" = t1."entry"
+  )||'{}'::text[] "tag"
+  FROM (
+    SELECT "entry", "pinyin" "reading", "english"
+    FROM "character"
+    WHERE (
+      "userId" IS NULL OR "userId" = ${userId}
+    ) AND "entry" = ${entry}
+  ) t1
   `)
 
   if (!r) {

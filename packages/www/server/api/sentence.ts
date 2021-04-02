@@ -17,6 +17,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
     const sResult = S.shape({
       entry: S.string(),
       english: S.list(S.string()),
+      tag: S.list(S.string()),
     })
 
     f.get<{
@@ -217,14 +218,24 @@ export async function lookupSentence(
 ): Promise<{
   entry: string
   english: string[]
+  tag: string[]
 } | null> {
   const [r] = await db.query(sql`
-  SELECT
-    "entry", "english"
-  FROM "sentence"
-  WHERE (
-    "userId" IS NULL OR "userId" = ${userId}
-  ) AND "entry" = ${entry}
+  SELECT *, (
+    SELECT array_agg(DISTINCT "tag")
+    FROM entry_tag
+    WHERE (
+      "userId" IS NULL OR "userId" = ${userId}
+    ) AND "type" = 'vocabulary' AND "entry" = t1."entry"
+  )||'{}'::text[] "tag"
+  FROM (
+    SELECT
+      "entry", "english"
+    FROM "sentence"
+    WHERE (
+      "userId" IS NULL OR "userId" = ${userId}
+    ) AND "entry" = ${entry}
+  ) t1
   `)
 
   return r || null
