@@ -24,7 +24,6 @@
 
       <b-table
         :data="tableData"
-        :columns="tableHeader"
         paginated
         backend-pagination
         :total="count"
@@ -32,9 +31,34 @@
         :current-page.sync="page"
         backend-sorting
         :default-sort="[sort.key, sort.type]"
-        @contextmenu="onTableContextmenu"
         @sort="onSort"
       >
+        <b-table-column field="entry" label="Entry" v-slot="props">
+          <span
+            class="clickable"
+            @click="(ev) => onTableContextmenu(props.row, ev)"
+            @contextmenu.prevent="(ev) => onTableContextmenu(props.row, ev)"
+          >
+            <div v-for="it in props.row.entry" :key="it">
+              {{ it }}
+            </div>
+          </span>
+        </b-table-column>
+        <b-table-column field="reading" label="Pinyin" v-slot="props">
+          <div v-for="it in props.row.reading" :key="it">
+            {{ it }}
+          </div>
+        </b-table-column>
+        <b-table-column
+          field="english"
+          label="English"
+          v-slot="props"
+          width="40vw"
+        >
+          <div v-for="it in props.row.english" :key="it">
+            {{ it }}
+          </div>
+        </b-table-column>
       </b-table>
     </div>
 
@@ -54,15 +78,15 @@
           </b-field>
           <b-field label="Pinyin">
             <b-input
-              :value="selected.reading.join(' ')"
-              @input="(ev) => (selected.reading = ev.split(' '))"
+              :value="selected.reading.join(' / ')"
+              @input="(ev) => (selected.reading = ev.split(' / '))"
               placeholder="Must not be empty"
             ></b-input>
           </b-field>
           <b-field label="English">
             <b-input
-              :value="selected.english.join(' ')"
-              @input="(ev) => (selected.english = ev.split(' '))"
+              :value="selected.english.join('\n')"
+              @input="(ev) => (selected.english = ev.split('\n'))"
               type="textarea"
               placeholder="Must not be empty"
             ></b-input>
@@ -153,11 +177,6 @@ export default class BrowseTab extends Vue {
   perPage = 10
   page = 1
   tableData: IExtra[] = []
-  readonly tableHeader = [
-    { field: 'entry', label: 'Entry' },
-    { field: 'reading', label: 'Pinyin' },
-    { field: 'english', label: 'English', width: '40vw' },
-  ]
 
   isEditModal = false
 
@@ -235,7 +254,6 @@ export default class BrowseTab extends Vue {
     this.selected.id = id
 
     await this.context.addToQuiz()
-    this.$buefy.snackbar.open(`Added extra: ${this.selected.entry[0]} to quiz`)
 
     this.isEditModal = false
     await this.load()
@@ -250,7 +268,9 @@ export default class BrowseTab extends Vue {
         description: this.selected.description || '',
       })
 
-      this.$buefy.snackbar.open(`Updated extra: ${this.selected.entry[0]}`)
+      this.$buefy.snackbar.open(
+        `Updated ${this.selected.type}: ${this.selected.entry[0]}`
+      )
     }
 
     this.isEditModal = false
@@ -261,9 +281,10 @@ export default class BrowseTab extends Vue {
     const { id } = this.selected
 
     if (id) {
-      this.$axios.extraDelete({ id })
-
-      this.$buefy.snackbar.open(`Deleted extra: ${this.selected.entry[0]}`)
+      await this.$axios.extraDelete({ id })
+      this.$buefy.snackbar.open(
+        `Deleted ${this.selected.type}: ${this.selected.entry[0]}`
+      )
       await this.load()
     }
   }
@@ -285,6 +306,8 @@ export default class BrowseTab extends Vue {
   async onTableContextmenu(row: IExtra, evt: MouseEvent) {
     evt.preventDefault()
 
+    console.log(row)
+
     this.selected = row
     this.context.open(evt)
   }
@@ -298,7 +321,7 @@ export default class BrowseTab extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.b-table ::v-deep tr:hover {
+.clickable:hover {
   cursor: pointer;
   color: blue;
 }

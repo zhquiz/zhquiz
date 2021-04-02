@@ -39,6 +39,12 @@
                 $refs.context.open(evt)
               }
             "
+            @contextmenu.prevent="
+              (evt) => {
+                selected = allData[props.row.level]
+                $refs.context.open(evt)
+              }
+            "
           >
             {{ props.row.level }}
           </span>
@@ -57,6 +63,12 @@
                   $refs.context.open(evt)
                 }
               "
+              @contextmenu.prevent="
+                (evt) => {
+                  selected = [t]
+                  $refs.context.open(evt)
+                }
+              "
             >
               {{ t }}
             </span>
@@ -67,7 +79,7 @@
 
     <ContextMenu
       ref="context"
-      type="vocab"
+      type="vocabulary"
       :entry="selected"
       :pinyin="pinyinMap"
       @quiz:added="(evt) => reload(evt.entries)"

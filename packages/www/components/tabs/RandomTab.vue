@@ -8,6 +8,7 @@
               <div
                 class="font-han hanzi clickable"
                 @click="(evt) => openContext(evt, 'character')"
+                @contextmenu.prevent="(evt) => openContext(evt, 'character')"
               >
                 {{ character.entry }}
               </div>
@@ -26,6 +27,7 @@
               <div
                 class="font-zh-simp hanzi clickable"
                 @click="(evt) => openContext(evt, 'vocabulary')"
+                @contextmenu.prevent="(evt) => openContext(evt, 'vocabulary')"
               >
                 {{ vocabulary.entry }}
               </div>
@@ -44,6 +46,7 @@
           <div
             class="font-zh-simp hanzi clickable text-center"
             @click="(evt) => openContext(evt, 'sentence')"
+            @contextmenu.prevent="(evt) => openContext(evt, 'sentence')"
           >
             {{ sentence.entry }}
           </div>

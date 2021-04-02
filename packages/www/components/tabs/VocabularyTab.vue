@@ -24,6 +24,9 @@
             <div
               class="clickable text-center font-zh-simp"
               @click="(evt) => openContext(evt, simplified, 'vocabulary')"
+              @contextmenu.prevent="
+                (evt) => openContext(evt, simplified, 'vocabulary')
+              "
             >
               {{ simplified }}
             </div>
@@ -46,6 +49,19 @@
             >
               Next
             </button>
+          </div>
+
+          <div v-if="current.tag && current.tag.length" class="mb-4">
+            Tags:
+            <b-taglist style="display: inline-flex">
+              <b-tag
+                v-for="t in current.tag.slice(0, 5)"
+                :key="t"
+                type="is-info"
+              >
+                {{ t }}
+              </b-tag>
+            </b-taglist>
           </div>
         </div>
 
@@ -96,6 +112,9 @@
                 :key="a"
                 class="font-zh-trad clickable space-separated"
                 @click="(evt) => openContext(evt, a, 'vocabulary')"
+                @contextmenu.prevent="
+                  (evt) => openContext(evt, a, 'vocabulary')
+                "
               >
                 {{ a }}
               </span>
@@ -150,6 +169,9 @@
                 <span
                   class="clickable"
                   @click="(evt) => openContext(evt, s.entry, 'sentence')"
+                  @contextmenu.prevent="
+                    (evt) => openContext(evt, s.entry, 'sentence')
+                  "
                 >
                   {{ s.entry }}
                 </span>
@@ -201,6 +223,7 @@ export default class VocabularyTab extends Vue {
     alt: string[]
     reading: string[]
     english: string[]
+    tag: string[]
     sentences: {
       entry: string
       english: string
@@ -267,6 +290,7 @@ export default class VocabularyTab extends Vue {
           reading: [],
           english: [],
           sentences: [],
+          tag: [],
         },
       ]
     } else {
@@ -319,6 +343,7 @@ export default class VocabularyTab extends Vue {
         reading: [],
         english: [],
         sentences: [],
+        tag: [],
       }))
     } else {
       if (!q.trim()) {
@@ -339,6 +364,7 @@ export default class VocabularyTab extends Vue {
           reading: [],
           english: [],
           sentences: [],
+          tag: [],
         },
       ]
     }
@@ -402,6 +428,7 @@ export default class VocabularyTab extends Vue {
             reading: [],
             english: [],
             sentences: [],
+            tag: [],
           })),
           ...this.entries.slice(i + 1),
         ]

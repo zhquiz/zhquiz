@@ -180,6 +180,7 @@ declare namespace Paths {
     namespace Responses {
       export interface $200 {
         result: {
+          id: string; // uuid
           entry: string[];
           reading: string[];
           english: string[];
@@ -449,6 +450,8 @@ declare namespace Paths {
           entry?: string;
           type?: string;
           direction?: string;
+          hint?: string;
+          mnemonic?: string;
         }[];
       }
     }
@@ -516,6 +519,23 @@ declare namespace Paths {
         result: {
         }[];
         count: number;
+      }
+    }
+  }
+  namespace QuizUpdate {
+    namespace Parameters {
+      export type Id = string;
+    }
+    export interface QueryParameters {
+      id: Parameters.Id;
+    }
+    export interface RequestBody {
+      hint?: string;
+      mnemonic?: string;
+    }
+    namespace Responses {
+      export interface $201 {
+        result: string;
       }
     }
   }
@@ -972,14 +992,6 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.QuizInit.Responses.$200>
   /**
-   * quizUpdateSrsLevel
-   */
-  'quizUpdateSrsLevel'(
-    parameters?: Parameters<Paths.QuizUpdateSrsLevel.QueryParameters> | null,
-    data?: any,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.QuizUpdateSrsLevel.Responses.$201>
-  /**
    * quizCreate
    */
   'quizCreate'(
@@ -987,6 +999,22 @@ export interface OperationMethods {
     data?: Paths.QuizCreate.RequestBody,
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.QuizCreate.Responses.$201>
+  /**
+   * quizUpdate
+   */
+  'quizUpdate'(
+    parameters?: Parameters<Paths.QuizUpdate.QueryParameters> | null,
+    data?: Paths.QuizUpdate.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.QuizUpdate.Responses.$201>
+  /**
+   * quizUpdateSrsLevel
+   */
+  'quizUpdateSrsLevel'(
+    parameters?: Parameters<Paths.QuizUpdateSrsLevel.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.QuizUpdateSrsLevel.Responses.$201>
   /**
    * quizGetSrsLevel
    */
@@ -1400,6 +1428,24 @@ export interface PathsDictionary {
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.QuizInit.Responses.$200>
   }
+  ['/api/quiz/']: {
+    /**
+     * quizUpdate
+     */
+    'patch'(
+      parameters?: Parameters<Paths.QuizUpdate.QueryParameters> | null,
+      data?: Paths.QuizUpdate.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.QuizUpdate.Responses.$201>
+    /**
+     * quizCreate
+     */
+    'put'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.QuizCreate.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.QuizCreate.Responses.$201>
+  }
   ['/api/quiz/updateSrsLevel']: {
     /**
      * quizUpdateSrsLevel
@@ -1409,16 +1455,6 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.QuizUpdateSrsLevel.Responses.$201>
-  }
-  ['/api/quiz/']: {
-    /**
-     * quizCreate
-     */
-    'put'(
-      parameters?: Parameters<UnknownParamsObject> | null,
-      data?: Paths.QuizCreate.RequestBody,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.QuizCreate.Responses.$201>
   }
   ['/api/quiz/getSrsLevel']: {
     /**

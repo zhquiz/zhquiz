@@ -19,6 +19,9 @@
           <div
             class="hanzi-display clickable font-han"
             @click="(evt) => openContext(evt, current, 'character')"
+            @contextmenu.prevent="
+              (evt) => openContext(evt, current, 'character')
+            "
           >
             {{ current }}
           </div>
@@ -40,6 +43,15 @@
             >
               Next
             </button>
+          </div>
+
+          <div v-if="tag.length" class="mb-4">
+            Tags:
+            <b-taglist style="display: inline-flex">
+              <b-tag v-for="t in tag.slice(0, 5)" :key="t" type="is-info">
+                {{ t }}
+              </b-tag>
+            </b-taglist>
           </div>
         </div>
 
@@ -63,6 +75,7 @@
                 :key="h"
                 class="font-han clickable"
                 @click="(evt) => openContext(evt, h, 'character')"
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -87,7 +100,8 @@
                 v-for="h in sup"
                 :key="h"
                 class="font-han clickable"
-                @click="(evt) => openContext(evt, h, 'hanzi')"
+                @click="(evt) => openContext(evt, h, 'character')"
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -113,6 +127,7 @@
                 :key="h"
                 class="font-han clickable"
                 @click="(evt) => openContext(evt, h, 'character')"
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'character')"
               >
                 {{ h }}
               </span>
@@ -137,6 +152,9 @@
                 <span
                   class="clickable"
                   @click="(evt) => openContext(evt, v.entry, 'vocabulary')"
+                  @contextmenu.prevent="
+                    (evt) => openContext(evt, v.entry, 'vocabulary')
+                  "
                 >
                   {{ v.entry }}
                 </span>
@@ -170,6 +188,9 @@
                 <span
                   class="clickable"
                   @click="(evt) => openContext(evt, s.entry, 'sentence')"
+                  @contextmenu.prevent="
+                    (evt) => openContext(evt, s.entry, 'sentence')
+                  "
                 >
                   {{ s.entry }}
                 </span>
@@ -224,6 +245,9 @@ export default class CharacterTab extends Vue {
   sub: string[] = []
   sup: string[] = []
   variants: string[] = []
+
+  tag: string[] = []
+
   vocabs: {
     entry: string
     alt: string[]
@@ -312,6 +336,7 @@ export default class CharacterTab extends Vue {
       this.sub = []
       this.sup = []
       this.variants = []
+      this.tag = []
       this.vocabs = []
       this.sentences = []
     }
@@ -322,6 +347,7 @@ export default class CharacterTab extends Vue {
       this.sub = []
       this.sup = []
       this.variants = []
+      this.tag = []
       return
     }
 
@@ -332,6 +358,13 @@ export default class CharacterTab extends Vue {
     this.sub = r.sub
     this.sup = r.sup
     this.variants = r.var
+
+    if (r.sub.length || r.sub.length || r.var.length) {
+      const { data: r } = await this.$axios.characterGetByEntry({
+        entry: this.current,
+      })
+      this.tag = r.tag
+    }
   }
 
   async loadVocab() {

@@ -494,6 +494,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
     const sResult = S.shape({
       result: S.list(
         S.shape({
+          id: S.string().format('uuid'),
           entry: S.list(S.string()).minItems(1),
           reading: S.list(S.string()),
           english: S.list(S.string()),
@@ -561,7 +562,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         const $and = [
           sql`extra."userId" = ${userId}`,
           makeExtra.parse(q) || sql`TRUE`,
-          sql` AND extra."english"[1] IS NOT NULL`,
+          sql`extra."english"[1] IS NOT NULL`,
         ]
 
         const tagCond = makeTag.parse(q)
@@ -586,6 +587,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const result = await db.query(sql`
         SELECT DISTINCT ON (extra."updatedAt", extra."id")
+          extra."id"  "id",
           extra."entry" "entry",
           extra."pinyin" "reading",
           extra."english" "english",

@@ -10,7 +10,7 @@ import { db } from '../shared'
 import { lookupCharacter } from './character'
 import { sPreset } from './preset'
 import { lookupSentence } from './sentence'
-import { makeReading } from './util'
+import { makeEnglish } from './util'
 import { lookupVocabulary } from './vocabulary'
 
 const quizRouter: FastifyPluginAsync = async (f) => {
@@ -30,6 +30,8 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           entry: S.string(),
           type: S.string(),
           direction: S.string(),
+          hint: S.string(),
+          mnemonic: S.string(),
         }).partial()
       ),
     })
@@ -60,6 +62,8 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           entry: sql`"entry"`,
           type: sql`"type"`,
           direction: sql`"direction"`,
+          hint: sql`"hint"`,
+          mnemonic: sql`"mnemonic"`,
         }
 
         const sel = select.map((s) => selMap[s]).filter((s) => s)
@@ -354,6 +358,66 @@ const quizRouter: FastifyPluginAsync = async (f) => {
   {
     const sQuery = S.shape({
       id: S.string(),
+    })
+
+    const sBody = S.shape({
+      hint: S.string().optional(),
+      mnemonic: S.string().optional(),
+    })
+
+    const sResult = S.shape({
+      result: S.string(),
+    })
+
+    f.patch<{
+      Querystring: typeof sQuery.type
+      Body: typeof sBody.type
+    }>(
+      '/',
+      {
+        schema: {
+          operationId: 'quizUpdate',
+          querystring: sQuery.valueOf(),
+          body: sBody.valueOf(),
+          response: {
+            201: sResult.valueOf(),
+          },
+        },
+      },
+      async (req, reply): Promise<typeof sResult.type> => {
+        const { id } = req.query
+        const { hint, mnemonic } = req.body
+
+        const userId: string = req.session.userId
+        if (!userId) {
+          throw { statusCode: 401 }
+        }
+
+        await db.tx(async (db) => {
+          await db.query(sql`
+          UPDATE "quiz"
+          SET ${sql.join(
+            [
+              ...(hint ? [sql`"hint" = ${hint}`] : []),
+              ...(mnemonic ? [sql`"mnemonic" = ${mnemonic}`] : []),
+            ],
+            ','
+          )}
+          WHERE "userId" = ${userId} AND "id" = ${id}
+          `)
+        })
+
+        reply.status(201)
+        return {
+          result: 'updated',
+        }
+      }
+    )
+  }
+
+  {
+    const sQuery = S.shape({
+      id: S.string(),
       dLevel: S.integer(),
     })
 
@@ -498,7 +562,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         const lookups: {
           entry: string
           alt?: string[]
-          reading?: string[]
+          reading: string[]
           english: string[]
           type: string
         }[] = await Promise.all(
@@ -506,30 +570,22 @@ const quizRouter: FastifyPluginAsync = async (f) => {
             switch (type) {
               case 'character':
                 return lookupCharacter(el, userId).then(async (r) => ({
-                  ...(r || {
-                    entry: el,
-                    reading: [await makeReading(el)],
-                    english: [],
-                  }),
+                  ...r,
                   type,
                 }))
               case 'sentence':
                 return lookupSentence(el, userId).then(async (r) => ({
+                  reading: [],
                   ...(r || {
                     entry: el,
-                    reading: [await makeReading(el)],
                     english: [],
                   }),
                   type,
                 }))
             }
 
-            return lookupVocabulary(el, userId).then(async (r) => ({
-              ...(r || {
-                entry: el,
-                reading: [await makeReading(el)],
-                english: [],
-              }),
+            return lookupVocabulary(el, userId).then((r) => ({
+              ...r,
               type,
             }))
           })
@@ -539,13 +595,16 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         if (missingEntries.length) {
           await db.tx(async (db) => {
             await db.query(sql`
-            INSERT INTO "extra" ("entry", "pinyin", "userId", "id", "type")
+            INSERT INTO "extra" ("entry", "pinyin", "english", "userId", "id", "type")
             VALUES ${sql.join(
-              missingEntries.map(
-                (it) =>
-                  sql`(${[it.entry]}, ${it.reading || []}, ${[
-                    userId,
-                  ]}, ${shortUUID.uuid()}, ${it.type})`
+              await Promise.all(
+                missingEntries.map(
+                  async (it) =>
+                    sql`(${[it.entry]}, ${it.reading}, ${await makeEnglish(
+                      it.entry,
+                      userId
+                    )}, ${userId}, ${shortUUID.uuid()}, ${it.type})`
+                )
               ),
               ','
             )}

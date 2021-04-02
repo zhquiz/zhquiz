@@ -6,6 +6,8 @@ import S from 'jsonschema-definer'
 import Text2Speech from 'node-gtts'
 import jieba from 'nodejieba'
 
+import { lookupVocabulary } from './vocabulary'
+
 jieba.load({
   userDict: path.join(__dirname, '../../trad.dict.txt'),
 })
@@ -101,4 +103,18 @@ export default utilRouter
 
 export async function makeReading(el: string) {
   return toPinyin(el, { keepRest: true, toneToNumber: true })
+}
+
+export async function makeEnglish(el: string, userId: string) {
+  const segs = (
+    await Promise.all(jieba.cut(el).map((s) => lookupVocabulary(s, userId)))
+  )
+    .filter((v) => v && /\p{sc=Han}/u.test(v.entry))
+    .map((v) => `${v!.entry} - ${v!.english.join(' / ')}`)
+
+  if (segs.length === 0) {
+    return [el]
+  }
+
+  return segs
 }
