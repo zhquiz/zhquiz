@@ -35,6 +35,7 @@
                 :key="i"
                 :title="it.title"
                 :entry="it.entry"
+                :type="it.type"
                 :description="it.description"
                 :additional="additionalContext(it)"
               />
@@ -120,6 +121,7 @@ interface ILocal {
   id?: string
   title: string
   entry: string[]
+  type: 'vocabulary' | 'character' | 'sentence'
   description: string
   tag: string[]
   isShared?: boolean
@@ -170,6 +172,7 @@ export default class LibraryTab extends Vue {
     id: '',
     title: '',
     entry: [],
+    type: 'vocabulary',
     description: '',
     tag: [],
   }
@@ -218,6 +221,7 @@ export default class LibraryTab extends Vue {
       id: '',
       title: '',
       entry: [],
+      type: 'vocabulary',
       description: '',
       tag: [],
     }
@@ -237,6 +241,10 @@ export default class LibraryTab extends Vue {
     this.local = {
       ...this.local,
       ...r,
+      result: r.result.map((r) => ({
+        ...r,
+        type: r.type as any,
+      })),
     }
   }
 

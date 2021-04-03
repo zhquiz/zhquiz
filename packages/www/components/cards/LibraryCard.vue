@@ -4,12 +4,6 @@
       <div slot="trigger" slot-scope="props" class="card-header" role="button">
         <p
           class="card-header-title"
-          @click="
-            (evt) => {
-              selected = currentData
-              $refs.context.open(evt)
-            }
-          "
           @contextmenu.prevent="
             (evt) => {
               selected = currentData
@@ -23,14 +17,28 @@
           <b-icon :icon="props.open ? 'caret-down' : 'caret-up'"> </b-icon>
         </a>
       </div>
-      <div class="card-content">
+      <div
+        class="card-content"
+        @click="
+          (evt) => {
+            selected = currentData
+            $refs.context.open(evt)
+          }
+        "
+        @contextmenu.prevent="
+          (evt) => {
+            selected = currentData
+            $refs.context.open(evt)
+          }
+        "
+      >
         <div>
           <span
             v-for="t in currentData"
             :key="t"
             class="tag clickable"
             :class="getTagClass(t)"
-            @click="
+            @click.stop="
               (evt) => {
                 selected = [t]
                 $refs.context.open(evt)
@@ -51,12 +59,12 @@
 
     <ContextMenu
       ref="context"
-      type="vocab"
+      :type="type"
       :entry="selected"
       :description="title + ' ' + description"
       :additional="additional"
-      @quiz:added="(evt) => reload(evt.entry)"
-      @quiz:removed="(evt) => reload(evt.entry)"
+      @quiz:added="(evt) => reload(evt.entries)"
+      @quiz:removed="(evt) => reload(evt.entries)"
     />
   </section>
 </template>
@@ -83,6 +91,7 @@ import ContextMenu from '../ContextMenu.vue'
 export default class LibraryCard extends Vue {
   @Prop() title!: string
   @Prop() entry!: string[]
+  @Prop() type!: string
   @Prop({ default: '' }) description?: string
 
   @Prop({ default: () => [] }) additional!: {
@@ -115,7 +124,7 @@ export default class LibraryCard extends Vue {
         data: { result = [] },
       } = await this.$axios.quizGetSrsLevel(null, {
         entry,
-        type: 'vocabulary',
+        type: this.type as any,
       })
 
       // eslint-disable-next-line array-callback-return
