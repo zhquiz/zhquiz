@@ -115,7 +115,7 @@
             <b-field label="Filter" grouped>
               <b-input
                 v-model="q"
-                placeholder="Try level>10, level<=20 or tag:HSK4"
+                placeholder="Try hLevel>10, vLevel<=20 or tag:HSK4"
                 type="search"
                 expanded
               />

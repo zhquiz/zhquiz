@@ -559,64 +559,77 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         q = q.trim()
 
-        const $and = [
-          sql`extra."userId" = ${userId}`,
-          makeExtra.parse(q) || sql`TRUE`,
-          sql`extra."english"[1] IS NOT NULL`,
-        ]
-
         const tagCond = makeTag.parse(q)
-        if (tagCond) {
-          $and.push(sql`extra."entry" @> (
-            SELECT array_agg(unnest)
+        const quizCond = makeQuiz.parse(q)
+
+        const [r] = await db.query(sql`
+        WITH match_cte AS (
+          SELECT DISTINCT ON (t2."updatedAt", t2."id")
+            "id",
+            "entry",
+            "reading",
+            "english",
+            "type",
+            "tag"
+          FROM (
+            SELECT
+              t1."id" "id",
+              t1."list" "entry",
+              t1."pinyin" "reading",
+              t1."english" "english",
+              t1."type" "type",
+              t1."tag" "tag",
+              t1."updatedAt" "updatedAt"
             FROM (
-              SELECT unnest("entry"), 1 g
-              FROM entry_tag
-              WHERE (
-                "userId" IS NULL OR "userId" = ${userId}
-              ) AND ${tagCond}
+              SELECT
+                "id",
+                "entry" "list",
+                unnest("entry") "entry",
+                "pinyin",
+                "english",
+                "type",
+                "tag",
+                "updatedAt"
+              FROM "extra"
+              WHERE "userId" = ${userId}
+                AND ${makeExtra.parse(q) || sql`TRUE`}
             ) t1
-            GROUP BY g
-          )`)
-        }
+            ${
+              quizCond
+                ? sql`LEFT JOIN quiz ON quiz."entry" = t1."entry"`
+                : sql``
+            }
+            ${
+              tagCond
+                ? sql`LEFT JOIN entry_tag ON entry_tag."entry" = t1."entry"`
+                : sql``
+            }
+            WHERE TRUE
+              ${quizCond ? sql`AND ${quizCond}` : sql``}
+              ${tagCond ? sql`AND ${tagCond}` : sql``}
+          ) t2
+          ORDER BY t2."updatedAt" DESC, t2."id"
+        )
 
-        const quizCond = q ? makeQuiz.parse(q) : null
-        if (quizCond) {
-          $and.push(quizCond)
-        }
-
-        const result = await db.query(sql`
-        SELECT DISTINCT ON (extra."updatedAt", extra."id")
-          extra."id"  "id",
-          extra."entry" "entry",
-          extra."pinyin" "reading",
-          extra."english" "english",
-          extra."type" "type",
-          extra."tag" "tag"
-        FROM extra
-        ${quizCond ? sql`LEFT JOIN quiz` : sql``}
-        WHERE ${sql.join($and, ' AND ')}
-        ORDER BY extra."updatedAt" DESC, extra."id"
-        LIMIT ${limit} OFFSET ${(page - 1) * limit}
-        `)
-
-        if (!result.length) {
-          return {
-            result: [],
-            count: 0,
-          }
-        }
-        const [rCount] = await db.query(sql`
         SELECT
-          COUNT(*) "count"
-        FROM extra
-        ${quizCond ? sql`LEFT JOIN quiz` : sql``}
-        WHERE ${sql.join($and, ' AND ')}
+          (
+            SELECT json_agg(row_to_json)
+            FROM (
+              SELECT row_to_json(t)
+              FROM (
+                SELECT * FROM match_cte
+                LIMIT ${limit} OFFSET ${(page - 1) * limit}
+              ) t
+            ) t1
+          ) result,
+          (
+            SELECT COUNT(*) FROM match_cte
+          ) "count"
         `)
 
         return {
-          result,
-          count: rCount.count,
+          result: r.result,
+          count: r.count,
         }
       }
     )

@@ -94,109 +94,6 @@ const quizRouter: FastifyPluginAsync = async (f) => {
   }
 
   {
-    const sQuerystring = S.shape({
-      q: S.string().optional(),
-      page: S.integer(),
-      limit: S.integer(),
-      sort: S.string(),
-      sortDirection: S.string().enum('asc', 'desc'),
-    })
-
-    const sResult = S.shape({
-      result: S.list(S.object()),
-      count: S.integer(),
-    })
-
-    f.get<{
-      Querystring: typeof sQuerystring.type
-    }>(
-      '/leech',
-      {
-        schema: {
-          operationId: 'quizListLeech',
-          querystring: sQuerystring.valueOf(),
-          response: {
-            200: sResult.valueOf(),
-          },
-        },
-      },
-      async (req): Promise<typeof sResult.type> => {
-        const { q = '', page, limit, sort, sortDirection } = req.query
-
-        const userId: string = req.session.userId
-        if (!userId) {
-          throw { statusCode: 401 }
-        }
-
-        const sortMap: Record<string, SQLQuery> = {
-          entry: sql`"entry"`,
-          type: sql`"type"`,
-          direction: sql`"direction"`,
-          srsLevel: sql`"srsLevel"`,
-        }
-
-        const directionMap: Record<string, SQLQuery> = {
-          asc: sql`ASC`,
-          desc: sql`DESC`,
-        }
-
-        let sortSQL = sortMap[sort]
-        if (sortSQL) {
-          sortSQL = sql`${sortSQL} ${directionMap[sortDirection] || sql``}`
-        } else {
-          sortSQL = sql`"wrongStreak" DESC, "lastRight" DESC`
-        }
-
-        const [rCount] = await db.query(
-          sql`
-        SELECT COUNT(*) "count"
-        FROM "quiz"
-        WHERE "userId" = ${userId} AND "wrongStreak" >= 2 AND ${parseQ(
-            q,
-            userId
-          )}
-        `
-        )
-
-        if (!rCount) {
-          return {
-            result: [],
-            count: 0,
-          }
-        }
-
-        const result = await db.query(
-          sql`
-        SELECT ${sql.join(
-          [
-            sql`"id"`,
-            sql`"entry"`,
-            sql`"type"`,
-            sql`"direction"`,
-            sql`"srsLevel"`,
-          ],
-          ','
-        )}
-        FROM "quiz"
-        WHERE "userId" = ${userId} AND "wrongStreak" >= 2 AND ${parseQ(
-            q,
-            userId
-          )}
-        ORDER BY ${sortSQL}
-        OFFSET ${(page - 1) * limit}
-        LIMIT ${limit}
-        `
-        )
-
-        return {
-          result,
-          count: rCount.count,
-        }
-      }
-    )
-  }
-
-  {
     const sBody = sPreset
 
     const sResult = S.shape({
@@ -217,6 +114,26 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       stats: S.shape({
         leech: S.integer(),
       }),
+    })
+
+    const makeQuiz = new QSplit({
+      default: () => null,
+      fields: {
+        type: { ':': (v) => sql`"type" = ${v}` },
+        direction: { ':': (v) => sql`"direction" = ${v}` },
+        hint: { ':': (v) => sql`"hint" &@ ${v}` },
+        mnemonic: { ':': (v) => sql`"mnemonic" &@ ${v}` },
+        srsLevel: qParseNum(sql`"srsLevel"`),
+        nextReview: qParseDate(sql`"nextReview"`),
+        lastRight: qParseDate(sql`"lastRight"`),
+        lastWrong: qParseDate(sql`"lastWrong"`),
+        maxRight: qParseNum(sql`"maxRight"`),
+        maxWrong: qParseNum(sql`"maxWrong"`),
+        rightStreak: qParseNum(sql`"rightStreak"`),
+        wrongStreak: qParseNum(sql`"wrongStreak"`),
+        createdAt: qParseNum(sql`"createdAt"`),
+        updatedAt: qParseNum(sql`"updatedAt"`),
+      },
     })
 
     f.post<{
@@ -277,6 +194,33 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           cond = sql`${cond} AND ("wrongStreak" <= 2 OR "wrongStreak" IS NULL)`
         }
 
+        const entryCond = (() => {
+          if (!q) {
+            return sql`TRUE`
+          }
+
+          const cond: SQLQuery[] = []
+          const exCond = makeTag.parse(q)
+          const lvCond = makeLevel.parse(q)
+
+          if (exCond) {
+            cond.push(sql`"entry" IN (
+              SELECT entry_tag."entry"
+              FROM "entry_tag" WHERE (
+                "userId" IS NULL OR "userId" = ${userId}
+              ) AND entry_tag."type" = "type" AND ${exCond}
+            )`)
+          }
+
+          if (lvCond) {
+            cond.push(sql`"entry" IN (
+              SELECT "entry" FROM "level" WHERE ${lvCond}
+            )`)
+          }
+
+          return cond.length ? sql.join(cond, ' AND ') : sql`TRUE`
+        })()
+
         const result = await db.query(
           sql`
         SELECT
@@ -284,12 +228,22 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           "srsLevel",
           "wrongStreak",
           "id"
-        FROM "quiz"
-        WHERE "userId" = ${userId}
-          AND "type" = ANY(${type})
-          AND "direction" = ANY(${direction})
-          AND ${cond}
-          AND ${parseQ(q, userId)}
+        FROM (
+          SELECT
+            "nextReview",
+            "srsLevel",
+            "wrongStreak",
+            "id",
+            "entry",
+            "type"
+          FROM "quiz"
+          WHERE "userId" = ${userId}
+            AND "type" = ANY(${type})
+            AND "direction" = ANY(${direction})
+            AND ${cond}
+            AND ${makeQuiz.parse(q) || sql`TRUE`}
+        ) t1
+        WHERE ${entryCond}
         `
         )
 
@@ -770,53 +724,6 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         }
       }
     )
-  }
-
-  function parseQ(q: string, userId: string): SQLQuery {
-    if (!q.trim()) {
-      return sql`TRUE`
-    }
-
-    const makeQuiz = new QSplit({
-      default: () => null,
-      fields: {
-        type: { ':': (v) => sql`"type" = ${v}` },
-        direction: { ':': (v) => sql`"direction" = ${v}` },
-        hint: { ':': (v) => sql`"hint" &@ ${v}` },
-        mnemonic: { ':': (v) => sql`"mnemonic" &@ ${v}` },
-        srsLevel: qParseNum(sql`"srsLevel"`),
-        nextReview: qParseDate(sql`"nextReview"`),
-        lastRight: qParseDate(sql`"lastRight"`),
-        lastWrong: qParseDate(sql`"lastWrong"`),
-        maxRight: qParseNum(sql`"maxRight"`),
-        maxWrong: qParseNum(sql`"maxWrong"`),
-        rightStreak: qParseNum(sql`"rightStreak"`),
-        wrongStreak: qParseNum(sql`"wrongStreak"`),
-        createdAt: qParseNum(sql`"createdAt"`),
-        updatedAt: qParseNum(sql`"updatedAt"`),
-      },
-    })
-
-    const cond = [makeQuiz.parse(q) || sql`TRUE`]
-    const exCond = makeTag.parse(q)
-    const lvCond = makeLevel.parse(q)
-
-    if (exCond) {
-      cond.push(sql`"entry" IN (
-        SELECT entry_tag."entry"
-        FROM "entry_tag" WHERE (
-          "userId" IS NULL OR "userId" = ${userId}
-        ) AND entry_tag."type" = "type" AND ${exCond}
-      )`)
-    }
-
-    if (lvCond) {
-      cond.push(sql`"entry" IN (
-        SELECT "entry" FROM "level" WHERE ${lvCond}
-      )`)
-    }
-
-    return sql.join(cond, ' AND ')
   }
 }
 
