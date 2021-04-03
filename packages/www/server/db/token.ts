@@ -297,14 +297,14 @@ export const makeLevel = new QSplit({
           sql`(${sql.join(
             [
               sql`("type" = 'hanzi' AND ${qParseNum(sql`"hLevel"`)[k](v)})`,
-              sql`("type" = 'vocabulary' AND ${qParseNum(sql`"vLevel"`)[k](
-                v
-              )})`,
+              sql`("type" != 'hanzi' AND ${qParseNum(sql`"vLevel"`)[k](v)})`,
             ],
             ' OR '
           )})`,
       }),
       {}
     ),
+    hLevel: qParseNum(sql`"hLevel"`),
+    vLevel: qParseNum(sql`"vLevel"`),
   },
 })

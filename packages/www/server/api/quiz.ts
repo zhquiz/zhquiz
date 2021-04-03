@@ -5,7 +5,7 @@ import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
 
-import { QSplit, makeTag, qParseDate, qParseNum } from '../db/token'
+import { QSplit, makeLevel, makeTag, qParseDate, qParseNum } from '../db/token'
 import { db } from '../shared'
 import { lookupCharacter } from './character'
 import { sPreset } from './preset'
@@ -797,28 +797,6 @@ const quizRouter: FastifyPluginAsync = async (f) => {
       },
     })
 
-    const makeLevel = new QSplit({
-      default: () => null,
-      fields: {
-        level: [':', '>', '<'].reduce(
-          (prev, k) => ({
-            ...prev,
-            [k]: (v: string) =>
-              sql`(${sql.join(
-                [
-                  sql`("type" = 'hanzi' AND ${qParseNum(sql`"hLevel"`)[k](v)})`,
-                  sql`("type" = 'vocabulary' AND ${qParseNum(sql`"vLevel"`)[k](
-                    v
-                  )})`,
-                ],
-                ' OR '
-              )})`,
-          }),
-          {}
-        ),
-      },
-    })
-
     const cond = [makeQuiz.parse(q) || sql`TRUE`]
     const exCond = makeTag.parse(q)
     const lvCond = makeLevel.parse(q)
@@ -834,7 +812,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
 
     if (lvCond) {
       cond.push(sql`"entry" IN (
-        SELECT "entry" FROM dict.zhlevel WHERE ${lvCond}
+        SELECT "entry" FROM "level" WHERE ${lvCond}
       )`)
     }
 
