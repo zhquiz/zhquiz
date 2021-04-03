@@ -134,9 +134,7 @@ export async function populate(
       .query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`)
       .then(() =>
         Promise.all([
-          db.query(
-            sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "sentence_isTrad"`
-          ),
+          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "level"`),
           db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view`)
         ])
       )

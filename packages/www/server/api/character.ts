@@ -199,9 +199,9 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         let result = await db.query(sql`
         WITH match_cte AS (
-          SELECT s.entry "entry", s."english"[1] english, "isTrad"
+          SELECT s.entry "entry", s."english"[1] english, ("hLevel" > 50) "isTrad"
           FROM sentence s
-          JOIN "sentence_isTrad" si ON si.entry = s.entry
+          JOIN "level" si ON si.entry = s.entry
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
           ) AND s."entry" &@ ${entry}
@@ -366,6 +366,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       default: () => null,
       fields: {
         level: qParseNum(sql`"hLevel"`),
+        hLevel: qParseNum(sql`"hLevel"`),
       },
     })
 

@@ -20,7 +20,39 @@ CREATE TABLE dict.zhlevel (
 CREATE INDEX "idx_zhlevel_hLevel" ON dict.zhlevel ("hLevel");
 CREATE INDEX "idx_zhlevel_vLevel" ON dict.zhlevel ("vLevel");
 
-CREATE OR REPLACE FUNCTION zhlevel_sentence (TEXT) RETURNS FLOAT AS
+CREATE OR REPLACE FUNCTION "f_hLevel" (TEXT) RETURNS INT AS
+$func$
+DECLARE
+  m   INT := 0;
+  t   TEXT;
+  lv  INT;
+BEGIN
+  FOR t IN (SELECT regexp_split_to_table($1, ''))
+  LOOP
+    lv = (
+      SELECT "hLevel" FROM (
+        SELECT "hLevel"
+        FROM dict.zhlevel
+        WHERE "hLevel" IS NOT NULL AND "entry" = t
+        UNION ALL
+        SELECT NULL "hLevel"
+      ) t1
+      LIMIT 1
+    );
+    IF lv > m THEN
+      m = lv;
+    END IF;
+  END LOOP;
+
+  IF m = 0 THEN
+    RETURN NULL;
+  END IF;
+  
+  RETURN m;
+END;
+$func$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION "f_vLevel" (TEXT) RETURNS INT AS
 $func$
 DECLARE
   segments  TEXT[];
@@ -34,51 +66,10 @@ BEGIN
   );
 
   RETURN (
-    SELECT max("vLevel")::FLOAT * array_length(segments, 1) / COUNT("vLevel") FROM (
+    SELECT max("vLevel") * array_length(segments, 1) / COUNT("vLevel") FROM (
       SELECT "vLevel", 1 g FROM dict.zhlevel WHERE entry = ANY(segments) 
     ) t1
     GROUP BY g
   );
 END;
 $func$ LANGUAGE plpgsql IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION f_sentence_random (
-  IN min INT, IN max INT,
-  OUT result TEXT, OUT english TEXT, OUT "level" INT
-) AS $$
-DECLARE
-  r   RECORD;
-BEGIN
-  FOR r IN (
-    WITH match_cte AS (
-      SELECT s.entry "entry", s."english" eng, "isTrad"
-      FROM sentence s
-      JOIN "sentence_isTrad" si ON si.entry = s.entry
-    )
-
-    SELECT * FROM (
-      SELECT "entry", eng FROM match_cte s
-      WHERE NOT "isTrad"
-      ORDER BY random()
-    ) t1
-    UNION ALL
-    SELECT * FROM (
-      SELECT "entry", eng FROM match_cte s
-      WHERE "isTrad"
-      ORDER BY random()
-    ) t1
-  )
-  LOOP
-    "level" = round(zhlevel_sentence(r.entry));
-    IF "level" >= $1 AND "level" <= $2 THEN
-      result = r.entry;
-      english = r.eng[1];
-      RETURN;
-    END IF;
-  END LOOP;
-
-  result = NULL;
-  english = NULL;
-  "level" = NULL;
-END;
-$$ LANGUAGE plpgsql;

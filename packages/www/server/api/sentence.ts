@@ -112,7 +112,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         let result = await db.query(sql`
         WITH match_cte AS (
           SELECT DISTINCT ON ("entry")
-            "entry", "isTrad"
+            "entry", (SELECT "hLevel" > 50 FROM "level" WHERE "entry" = sentence."entry") "isTrad"
           FROM "sentence"
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
@@ -192,8 +192,15 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         u['level.max'] = u['level.max'] || 10
 
         const [r] = await db.query(sql`
-        SELECT "result", "english", "level"
-        FROM f_sentence_random(${u['level.min']}, ${u['level.max']})
+        SELECT "entry" "result", (
+          SELECT "english"[1] FROM "sentence" WHERE "entry" = t1."entry"
+        ) "english", "vLevel" "level"
+        FROM (
+          SELECT "entry", "vLevel" FROM "level"
+          WHERE "vLevel" >= ${u['level.min']} AND "vLevel" <= ${u['level.max']}
+          ORDER BY RANDOM()
+          LIMIT 1
+        ) t1
         `)
 
         if (!r) {
@@ -311,10 +318,7 @@ export async function lookupJukuu(
 
       if (out.length) {
         refresh('sentence').then(() =>
-          Promise.all([
-            refresh('"sentence_isTrad"'),
-            refresh('dict.cedict_view'),
-          ])
+          Promise.all([refresh('"level"'), refresh('dict.cedict_view')])
         )
       }
 

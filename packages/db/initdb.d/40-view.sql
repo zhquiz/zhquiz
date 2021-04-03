@@ -66,20 +66,8 @@ CREATE INDEX idx_sentence_english ON "sentence"
   WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
 CREATE INDEX "idx_sentence_userId" ON "sentence" ("userId");
 
-CREATE MATERIALIZED VIEW "sentence_isTrad" AS
-  SELECT
-    "entry",
-    ("f_sentence_hLevel"("entry") > 50) "isTrad"
-  FROM (
-    SELECT DISTINCT "entry"
-    FROM sentence
-  ) t1;
-
-CREATE UNIQUE INDEX "idx_sentence_isTrad_unique" ON "sentence_isTrad" ("entry");
-CREATE INDEX "idx_sentence_isTrad_isTrad" ON "sentence_isTrad" ("isTrad");
-
 CREATE MATERIALIZED VIEW "entry_tag" AS
-  SELECT
+  SELECT DISTINCT
     "entry",
     unnest("tag") "tag",
     "type",

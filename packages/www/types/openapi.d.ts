@@ -499,29 +499,6 @@ declare namespace Paths {
       }
     }
   }
-  namespace QuizListLeech {
-    namespace Parameters {
-      export type Limit = number;
-      export type Page = number;
-      export type Q = string;
-      export type Sort = string;
-      export type SortDirection = "asc" | "desc";
-    }
-    export interface QueryParameters {
-      q?: Parameters.Q;
-      page: Parameters.Page;
-      limit: Parameters.Limit;
-      sort: Parameters.Sort;
-      sortDirection: Parameters.SortDirection;
-    }
-    namespace Responses {
-      export interface $200 {
-        result: {
-        }[];
-        count: number;
-      }
-    }
-  }
   namespace QuizUpdate {
     namespace Parameters {
       export type Id = string;
@@ -976,14 +953,6 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.QuizGetMany.Responses.$200>
   /**
-   * quizListLeech
-   */
-  'quizListLeech'(
-    parameters?: Parameters<Paths.QuizListLeech.QueryParameters> | null,
-    data?: any,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.QuizListLeech.Responses.$200>
-  /**
    * quizInit
    */
   'quizInit'(
@@ -1407,16 +1376,6 @@ export interface PathsDictionary {
       data?: Paths.QuizGetMany.RequestBody,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.QuizGetMany.Responses.$200>
-  }
-  ['/api/quiz/leech']: {
-    /**
-     * quizListLeech
-     */
-    'get'(
-      parameters?: Parameters<Paths.QuizListLeech.QueryParameters> | null,
-      data?: any,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.QuizListLeech.Responses.$200>
   }
   ['/api/quiz/init']: {
     /**

@@ -5,7 +5,7 @@ CREATE MATERIALIZED VIEW dict.cedict_view AS
     (array_agg(DISTINCT "reading") FILTER (WHERE "reading" IS NOT NULL))||'{}'::text[] "pinyin",
     (array_agg(DISTINCT "english") FILTER (WHERE "english" IS NOT NULL))||'{}'::text[] "english",
     (
-      SELECT COUNT("entry") * length("simplified") FROM "sentence" WHERE "entry" &@ "simplified"
+      SELECT COUNT("entry") * length("simplified") FROM "sentence" WHERE "userId" IS NULL AND "entry" &@ "simplified"
     ) "frequency"
   FROM (
     SELECT

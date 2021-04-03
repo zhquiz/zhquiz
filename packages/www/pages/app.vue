@@ -122,6 +122,7 @@ import QuizTab from '@/components/tabs/QuizTab.vue'
 import RandomTab from '@/components/tabs/RandomTab.vue'
 import SettingsTab from '@/components/tabs/SettingsTab.vue'
 import VocabularyTab from '@/components/tabs/VocabularyTab.vue'
+import UtilityTab from '@/components/tabs/UtilityTab.vue'
 import { Component, Vue } from 'nuxt-property-decorator'
 
 @Component<AppPage>({
@@ -134,6 +135,7 @@ import { Component, Vue } from 'nuxt-property-decorator'
     RandomTab,
     SettingsTab,
     VocabularyTab,
+    UtilityTab,
   },
   async mounted() {
     await this.$accessor.setCredentials()
@@ -190,6 +192,10 @@ export default class AppPage extends Vue {
       {
         component: 'Library',
         icon: 'book-reader',
+      },
+      {
+        component: 'Utility',
+        icon: 'tools',
       },
       {
         component: 'Settings',

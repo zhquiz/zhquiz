@@ -290,21 +290,8 @@ export const makeTag = new QSplit({
 export const makeLevel = new QSplit({
   default: () => null,
   fields: {
-    level: [':', '>', '<'].reduce(
-      (prev, k) => ({
-        ...prev,
-        [k]: (v: string) =>
-          sql`(${sql.join(
-            [
-              sql`("type" = 'hanzi' AND ${qParseNum(sql`"hLevel"`)[k](v)})`,
-              sql`("type" = 'vocabulary' AND ${qParseNum(sql`"vLevel"`)[k](
-                v
-              )})`,
-            ],
-            ' OR '
-          )})`,
-      }),
-      {}
-    ),
+    level: qParseNum(sql`"level"."vLevel"`),
+    hLevel: qParseNum(sql`"level"."hLevel"`),
+    vLevel: qParseNum(sql`"level"."vLevel"`),
   },
 })

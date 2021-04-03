@@ -46,9 +46,9 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 
         let result = await db.query(sql`
         WITH match_cte AS (
-          SELECT s.entry "entry", s."english"[1] english, "isTrad"
+          SELECT s.entry "entry", s."english"[1] english, ("hLevel" > 50) "isTrad"
           FROM sentence s
-          JOIN "sentence_isTrad" si ON si.entry = s.entry
+          JOIN "level" si ON si.entry = s.entry
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
           ) AND to_tsvector('jiebaqry', s."entry") @@ to_tsquery('jiebaqry', ${entry})
@@ -81,9 +81,9 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           result.push(
             ...(await db.query(sql`
             WITH match_cte AS (
-              SELECT s.entry "entry", s."english"[1] english, "isTrad"
+              SELECT s.entry "entry", s."english"[1] english, ("hLevel" > 50) "isTrad"
               FROM sentence s
-              JOIN "sentence_isTrad" si ON si.entry = s.entry
+              JOIN "level" si ON si.entry = s.entry
               WHERE (
                 "userId" IS NULL OR "userId" = ${userId}
               ) AND s."entry" &@ ${entry} ${
@@ -215,6 +215,8 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
       default: () => null,
       fields: {
         level: qParseNum(sql`"vLevel"`),
+        vLevel: qParseNum(sql`"vLevel"`),
+        hLevel: qParseNum(sql`"hLevel"`),
       },
     })
 
@@ -292,7 +294,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
                   )`
                 : null,
               lvCond
-                ? sql`"entry" IN (SELECT "entry" FROM dict.zhlevel WHERE ${lvCond})`
+                ? sql`"entry" IN (SELECT "entry" FROM "level" WHERE ${lvCond})`
                 : null,
               sql`TRUE`,
             ]

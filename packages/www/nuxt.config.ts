@@ -107,6 +107,7 @@ export default (): NuxtConfig => {
               'faBars',
               'faSave',
               'faTrash',
+              'faTools',
             ],
           },
         },
