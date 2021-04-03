@@ -564,7 +564,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const [r] = await db.query(sql`
         WITH match_cte AS (
-          SELECT DISTINCT ON (t2."updatedAt", t2."id")
+          SELECT DISTINCT ON (t2."updatedAt", t2."createdAt", t2."id")
             "id",
             "entry",
             "reading",
@@ -579,7 +579,8 @@ const extraRouter: FastifyPluginAsync = async (f) => {
               t1."english" "english",
               t1."type" "type",
               t1."tag" "tag",
-              t1."updatedAt" "updatedAt"
+              t1."updatedAt" "updatedAt",
+              t1."createdAt" "createdAt"
             FROM (
               SELECT
                 "id",
@@ -589,7 +590,8 @@ const extraRouter: FastifyPluginAsync = async (f) => {
                 "english",
                 "type",
                 "tag",
-                "updatedAt"
+                "updatedAt",
+                "createdAt"
               FROM "extra"
               WHERE "userId" = ${userId}
                 AND ${makeExtra.parse(q) || sql`TRUE`}
@@ -608,7 +610,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
               ${quizCond ? sql`AND ${quizCond}` : sql``}
               ${tagCond ? sql`AND ${tagCond}` : sql``}
           ) t2
-          ORDER BY t2."updatedAt" DESC, t2."id"
+          ORDER BY t2."updatedAt" DESC, t2."createdAt" DESC, t2."id"
         )
 
         SELECT

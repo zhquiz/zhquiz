@@ -115,7 +115,7 @@ const presetRouter: FastifyPluginAsync = async (f) => {
           WHERE "userId" = ${userId} ${
             q.trim() ? sql` AND "name" &@ ${q}` : sql``
           }
-          ORDER BY "updatedAt" DESC
+          ORDER BY "updatedAt" DESC, "createdAt" DESC
         )
 
         SELECT

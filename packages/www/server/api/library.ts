@@ -163,7 +163,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
             WHERE (
               "isShared" OR "userId" = ${userId}
             ) AND ${makeZh.parse(q) || sql`TRUE`}
-            ORDER BY "updatedAt" DESC, "title"
+            ORDER BY "updatedAt" DESC, "createdAt" DESC, "title"
           )
 
           SELECT
