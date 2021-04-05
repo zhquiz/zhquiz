@@ -105,23 +105,9 @@ const presetRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
-        const [rCount] = await db.query(
+        const [r] = await db.query(
           sql`
-          SELECT
-            COUNT(*) "count"
-          FROM "quiz_preset"
-          WHERE "userId" = ${userId} ${
-            q.trim() ? sql` AND "name" &@ ${q}` : sql``
-          }
-          `
-        )
-
-        if (!rCount) {
-          return { result: [], count: 0 }
-        }
-
-        const result = await db.query(
-          sql`
+        WITH match_cte AS (
           SELECT
             "id",
             "name"
@@ -129,13 +115,27 @@ const presetRouter: FastifyPluginAsync = async (f) => {
           WHERE "userId" = ${userId} ${
             q.trim() ? sql` AND "name" &@ ${q}` : sql``
           }
-          ORDER BY "updatedAt" DESC
-          LIMIT ${limit}
-          OFFSET ${(page - 1) * limit}
-          `
+          ORDER BY "updatedAt" DESC, "createdAt" DESC
         )
 
-        return { result, count: rCount.count }
+        SELECT
+          (
+            SELECT json_agg(row_to_json)
+            FROM (
+              SELECT row_to_json(t)
+              FROM (
+                SELECT * FROM match_cte
+                LIMIT ${limit} OFFSET ${(page - 1) * limit}
+              ) t
+            ) t1
+          ) result,
+          (
+            SELECT COUNT(*) FROM match_cte
+          ) "count"
+        `
+        )
+
+        return { result: r.result, count: r.count }
       }
     )
   }

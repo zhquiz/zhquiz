@@ -47,7 +47,21 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 404 }
         }
 
-        return r
+        const [{ tag = [] }] = await db.query(sql`
+        SELECT
+          (
+            SELECT array_agg(DISTINCT "tag")
+            FROM entry_tag
+            WHERE (
+              "userId" IS NULL OR "userId" = ${userId}
+            ) AND "type" = 'character' AND "entry" = ${r.entry}
+          )||'{}'::text[] "tag"
+        `)
+
+        return {
+          ...r,
+          tag,
+        }
       }
     )
   }
@@ -225,24 +239,14 @@ export async function lookupSentence(
 ): Promise<{
   entry: string
   english: string[]
-  tag: string[]
 } | null> {
   const [r] = await db.query(sql`
-  SELECT *, (
-    SELECT array_agg(DISTINCT "tag")
-    FROM entry_tag
-    WHERE (
-      "userId" IS NULL OR "userId" = ${userId}
-    ) AND "type" = 'vocabulary' AND "entry" = t1."entry"
-  )||'{}'::text[] "tag"
-  FROM (
-    SELECT
-      "entry", "english"
-    FROM "sentence"
-    WHERE (
-      "userId" IS NULL OR "userId" = ${userId}
-    ) AND "entry" = ${entry}
-  ) t1
+  SELECT
+    "entry", "english"
+  FROM "sentence"
+  WHERE (
+    "userId" IS NULL OR "userId" = ${userId}
+  ) AND "entry" = ${entry}
   `)
 
   return r || null

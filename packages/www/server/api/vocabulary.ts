@@ -153,6 +153,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
       reading: S.list(S.string()),
       english: S.list(S.string()),
       tag: S.list(S.string()),
+      level: S.integer().optional(),
     })
 
     f.get<{
@@ -182,7 +183,27 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 404 }
         }
 
-        return r
+        const [{ tag = [], level }] = await db.query(sql`
+        SELECT
+          (
+            SELECT array_agg(DISTINCT "tag")
+            FROM entry_tag
+            WHERE (
+              "userId" IS NULL OR "userId" = ${userId}
+            ) AND "type" = 'vocabulary' AND "entry" = ${r.entry}
+          )||'{}'::text[] "tag",
+          (
+            SELECT "vLevel"
+            FROM dict.zhlevel
+            WHERE "entry" = ${r.entry}
+          ) "level"
+        `)
+
+        return {
+          ...r,
+          tag,
+          level: level || undefined,
+        }
       }
     )
   }
@@ -436,27 +457,17 @@ export async function lookupVocabulary(
   alt: string[]
   reading: string[]
   english: string[]
-  tag: string[]
 }> {
   const [r] = await db.query(sql`
-  SELECT *, (
-    SELECT array_agg(DISTINCT "tag")
-    FROM entry_tag
-    WHERE (
-      "userId" IS NULL OR "userId" = ${userId}
-    ) AND "type" = 'vocabulary' AND "entry" = t1."entry"
-  )||'{}'::text[] "tag"
-  FROM (
-    SELECT
-      "entry"[1] "entry",
-      "entry"[2:]||'{}'::text[] "alt",
-      "pinyin" "reading",
-      "english"
-    FROM "vocabulary"
-    WHERE (
-      "userId" IS NULL OR "userId" = ${userId}
-    ) AND ${entry} = ANY("entry")
-  ) t1
+  SELECT
+    "entry"[1] "entry",
+    "entry"[2:]||'{}'::text[] "alt",
+    "pinyin" "reading",
+    "english"
+  FROM "vocabulary"
+  WHERE (
+    "userId" IS NULL OR "userId" = ${userId}
+  ) AND ${entry} = ANY("entry")
   `)
 
   if (!r) {
@@ -472,7 +483,6 @@ export async function lookupVocabulary(
       alt: [],
       reading: [await makeReading(entry)],
       english: [],
-      tag: [],
     }
   }
 

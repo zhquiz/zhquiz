@@ -31,10 +31,9 @@ export async function populate(db: ConnectionPool, dir = '/app/library') {
       VALUES ${sql.join(
         rs.map(
           (r) =>
-            sql`(${r.id}, ${r.title}, ${r.entry}, ${r.type || 'vocabulary'}, ${[
-              ...filename.replace(/\.ya?ml$/i, '').split('/'),
-              ...(r.tag || [])
-            ]}, ${r.createdAt || new Date()}, ${
+            sql`(${r.id}, ${r.title}, ${r.entry}, ${r.type || 'vocabulary'}, ${
+              r.tag || []
+            }, ${r.createdAt || new Date()}, ${
               r.updatedAt || r.createdAt || new Date()
             }, ${r.description || ''}, ${r.isShared !== false})`
         ),

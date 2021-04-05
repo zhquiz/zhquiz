@@ -32,6 +32,7 @@ declare namespace Paths {
         reading: string[];
         english: string[];
         tag: string[];
+        level?: number;
       }
     }
   }
@@ -680,6 +681,7 @@ declare namespace Paths {
         reading: string[];
         english: string[];
         tag: string[];
+        level?: number;
       }
     }
   }

@@ -265,6 +265,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       reading: S.list(S.string()),
       english: S.list(S.string()),
       tag: S.list(S.string()),
+      level: S.integer().optional(),
     })
 
     f.get<{
@@ -294,7 +295,27 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 404 }
         }
 
-        return r
+        const [{ tag = [], level }] = await db.query(sql`
+        SELECT
+          (
+            SELECT array_agg(DISTINCT "tag")
+            FROM entry_tag
+            WHERE (
+              "userId" IS NULL OR "userId" = ${userId}
+            ) AND "type" = 'character' AND "entry" = ${r.entry}
+          )||'{}'::text[] "tag",
+          (
+            SELECT "hLevel"
+            FROM dict.zhlevel
+            WHERE "entry" = ${r.entry}
+          ) "level"
+        `)
+
+        return {
+          ...r,
+          tag,
+          level: level || undefined,
+        }
       }
     )
   }
@@ -563,27 +584,17 @@ export async function lookupCharacter(
   entry: string
   reading: string[]
   english: string[]
-  tag: string[]
 }> {
   if (!/^\p{sc=Han}$/u.test(entry)) {
     throw { statusCode: 400, message: 'not Character' }
   }
 
   const [r] = await db.query(sql`
-  SELECT *, (
-    SELECT array_agg(DISTINCT "tag")
-    FROM entry_tag
-    WHERE (
-      "userId" IS NULL OR "userId" = ${userId}
-    ) AND "type" = 'character' AND "entry" = t1."entry"
-  )||'{}'::text[] "tag"
-  FROM (
-    SELECT "entry", "pinyin" "reading", "english"
-    FROM "character"
-    WHERE (
-      "userId" IS NULL OR "userId" = ${userId}
-    ) AND "entry" = ${entry}
-  ) t1
+  SELECT "entry", "pinyin" "reading", "english"
+  FROM "character"
+  WHERE (
+    "userId" IS NULL OR "userId" = ${userId}
+  ) AND "entry" = ${entry}
   `)
 
   if (!r) {
@@ -598,7 +609,6 @@ export async function lookupCharacter(
       entry,
       reading: [await makeReading(entry)],
       english: [],
-      tag: [],
     }
   }
 

@@ -147,23 +147,8 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 401 }
         }
 
-        const [rCount] = await db.query(
+        const [r] = await db.query(
           sql`
-          SELECT
-            COUNT(*) "count"
-          FROM "library"
-          WHERE (
-            "isShared" OR "userId" = ${userId}
-          ) AND ${makeZh.parse(q) || sql`TRUE`}
-          `
-        )
-        if (!rCount) {
-          return { result: [], count: 0 }
-        }
-
-        const result = await db
-          .query(
-            sql`
           WITH match_cte AS (
             SELECT
               "entry",
@@ -178,38 +163,49 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
             WHERE (
               "isShared" OR "userId" = ${userId}
             ) AND ${makeZh.parse(q) || sql`TRUE`}
-            ORDER BY "updatedAt" DESC, "title"
+            ORDER BY "updatedAt" DESC, "createdAt" DESC, "title"
           )
 
-          SELECT * FROM (
-            SELECT * FROM (
-              SELECT * FROM match_cte
-              WHERE "id" IS NOT NULL
-            ) t1
-            UNION ALL
-            SELECT * FROM (
-              SELECT * FROM match_cte
-              WHERE "id" IS NULL
-            ) t1
-          ) t2
-          LIMIT ${limit}
-          OFFSET ${(page - 1) * limit}
+          SELECT
+          (
+            SELECT json_agg(row_to_json)
+            FROM (
+              SELECT row_to_json(t)
+              FROM (
+                SELECT * FROM (
+                  SELECT * FROM (
+                    SELECT * FROM match_cte
+                    WHERE "id" IS NOT NULL
+                  ) t1
+                  UNION ALL
+                  SELECT * FROM (
+                    SELECT * FROM match_cte
+                    WHERE "id" IS NULL
+                  ) t1
+                ) t2
+                LIMIT ${limit} OFFSET ${(page - 1) * limit}
+              ) t
+            ) t3
+          ) result,
+          (
+            SELECT COUNT(*) FROM match_cte
+          ) "count"
           `
-          )
-          .then((rs) =>
-            rs.map((r) => {
-              return {
-                id: r.id || undefined,
-                entry: r.entry,
-                title: r.title,
-                type: r.type,
-                description: r.description,
-                tag: r.tag,
-              }
-            })
-          )
+        )
 
-        return { result, count: rCount.count }
+        return {
+          result: r.result.map((r: any) => {
+            return {
+              id: r.id || undefined,
+              entry: r.entry,
+              title: r.title,
+              type: r.type,
+              description: r.description,
+              tag: r.tag,
+            }
+          }),
+          count: r.count,
+        }
       }
     )
   }
