@@ -1,7 +1,7 @@
 <template>
   <section>
     <div class="VocabPage">
-      <form class="field" @submit.prevent="$set(query, 'q', q0)">
+      <form class="field" @submit.prevent="q = q0">
         <div class="control">
           <input
             v-model="q0"
@@ -60,6 +60,15 @@
                 type="is-info"
               >
                 {{ t }}
+              </b-tag>
+            </b-taglist>
+          </div>
+
+          <div v-if="current.level" class="mb-4">
+            <b-taglist attached>
+              <b-tag type="is-dark">vLevel</b-tag>
+              <b-tag type="is-primary">
+                {{ current.level }}
               </b-tag>
             </b-taglist>
           </div>
@@ -193,7 +202,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Ref, Vue } from 'nuxt-property-decorator'
+import { Component, Prop, Ref, Vue, Watch } from 'nuxt-property-decorator'
 import toPinyin from 'chinese-to-pinyin'
 import ContextMenu from '@/components/ContextMenu.vue'
 
@@ -201,73 +210,10 @@ import ContextMenu from '@/components/ContextMenu.vue'
   components: {
     ContextMenu,
   },
-  watch: {
-    'query.q'() {
-      this.onQChange(this.query.q || '')
-    },
-    current() {
-      this.loadContent()
-    },
-  },
-})
-export default class VocabularyTab extends Vue {
-  @Prop({ default: () => ({}) }) query!: {
-    q?: string
-  }
-
-  @Ref() context!: ContextMenu
-
-  entries: {
-    id: string
-    entry: string
-    alt: string[]
-    reading: string[]
-    english: string[]
-    tag: string[]
-    sentences: {
-      entry: string
-      english: string
-    }[]
-  }[] = []
-
-  i = 0
-
-  selected: {
-    entry: string
-    type: string
-  } = {
-    entry: '',
-    type: '',
-  }
-
-  q0 = ''
-
-  get current() {
-    return (
-      this.entries[this.i] || {
-        entry: '',
-        alt: [],
-        reading: [],
-        english: [],
-        sentences: [],
-      }
-    )
-  }
-
-  get simplified() {
-    const { entry = '' } = this.current
-
-    if (/\p{sc=Han}/u.test(entry)) {
-      return entry
-    }
-
-    return ''
-  }
-
   async created() {
     this.$emit('title', 'Vocabulary')
 
-    let entry = this.$route.query.entry as string
+    let entry = this.query.entry as string
 
     if (!(entry || this.query.q)) {
       const {
@@ -294,12 +240,69 @@ export default class VocabularyTab extends Vue {
         },
       ]
     } else {
-      await this.onQChange(this.q0)
+      this.q = this.q0
     }
+  },
+})
+export default class VocabularyTab extends Vue {
+  @Prop({ default: () => ({}) }) query!: {
+    q?: string
+    entry?: string
+  }
+
+  @Ref() context!: ContextMenu
+
+  entries: {
+    id: string
+    entry: string
+    alt: string[]
+    reading: string[]
+    english: string[]
+    tag: string[]
+    level?: number
+    sentences: {
+      entry: string
+      english: string
+    }[]
+  }[] = []
+
+  i = 0
+
+  selected: {
+    entry: string
+    type: string
+  } = {
+    entry: '',
+    type: '',
+  }
+
+  q = ''
+  q0 = ''
+
+  get current() {
+    return (
+      this.entries[this.i] || {
+        entry: '',
+        alt: [],
+        reading: [],
+        english: [],
+        sentences: [],
+      }
+    )
+  }
+
+  get simplified() {
+    const { entry = '' } = this.current
+
+    if (/\p{sc=Han}/u.test(entry)) {
+      return entry
+    }
+
+    return ''
   }
 
   get additionalContext() {
-    if (!this.query.q) {
+    if (!this.q) {
       return [
         {
           name: 'Reload',
@@ -309,6 +312,7 @@ export default class VocabularyTab extends Vue {
             } = await this.$axios.vocabularyRandom()
 
             this.q0 = result
+            this.q = result
           },
         },
       ]
@@ -326,6 +330,7 @@ export default class VocabularyTab extends Vue {
     this.context.open(evt)
   }
 
+  @Watch('q')
   async onQChange(q: string) {
     this.$emit('title', (q ? q + ' - ' : '') + 'Vocabulary')
 
@@ -352,7 +357,7 @@ export default class VocabularyTab extends Vue {
         } = await this.$axios.vocabularyRandom()
 
         this.q0 = result
-        this.$set(this.query, 'q', result)
+        this.q = result
         return
       }
 
@@ -372,6 +377,7 @@ export default class VocabularyTab extends Vue {
     this.i = 0
   }
 
+  @Watch('current')
   async loadContent() {
     let entry = this.entries[this.i]
     if (!entry) {

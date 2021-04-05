@@ -1,7 +1,7 @@
 <template>
   <section>
     <div class="HanziPage">
-      <form class="field" @submit.prevent="$set(query, 'q', q0)">
+      <form class="field" @submit.prevent="q = q0">
         <div class="control">
           <input
             v-model="q0"
@@ -50,6 +50,15 @@
             <b-taglist style="display: inline-flex">
               <b-tag v-for="t in tag.slice(0, 5)" :key="t" type="is-info">
                 {{ t }}
+              </b-tag>
+            </b-taglist>
+          </div>
+
+          <div v-if="level" class="mb-4">
+            <b-taglist attached>
+              <b-tag type="is-dark">hLevel</b-tag>
+              <b-tag type="is-primary">
+                {{ level }}
               </b-tag>
             </b-taglist>
           </div>
@@ -223,13 +232,11 @@ import ContextMenu from '@/components/ContextMenu.vue'
   async created() {
     this.$emit('title', 'Character')
 
-    this.q0 = this.query.q || ''
+    this.q = this.query.q || ''
 
     if (this.additionalContext[0]) {
       await this.additionalContext[0].handler()
     }
-
-    this.onQChange(this.q0)
   },
 })
 export default class CharacterTab extends Vue {
@@ -247,6 +254,7 @@ export default class CharacterTab extends Vue {
   variants: string[] = []
 
   tag: string[] = []
+  level = 0
 
   vocabs: {
     entry: string
@@ -267,6 +275,7 @@ export default class CharacterTab extends Vue {
     type: '',
   }
 
+  q = ''
   q0 = ''
 
   get current() {
@@ -274,7 +283,7 @@ export default class CharacterTab extends Vue {
   }
 
   get additionalContext() {
-    if (!(this.query.q || '').trim()) {
+    if (!(this.q || '').trim()) {
       return [
         {
           name: 'Reload',
@@ -284,6 +293,7 @@ export default class CharacterTab extends Vue {
             } = await this.$axios.characterRandom()
 
             this.q0 = result
+            this.q = result
           },
         },
       ]
@@ -301,7 +311,7 @@ export default class CharacterTab extends Vue {
     this.context.open(evt)
   }
 
-  @Watch('query.q')
+  @Watch('q')
   async onQChange(q: string) {
     this.$emit('title', (q ? q + ' - ' : '') + 'Character')
 
@@ -315,7 +325,7 @@ export default class CharacterTab extends Vue {
         } = await this.$axios.characterRandom()
 
         this.q0 = result
-        this.$set(this.query, 'q', result)
+        this.q = result
         return
       }
 
@@ -337,6 +347,7 @@ export default class CharacterTab extends Vue {
       this.sup = []
       this.variants = []
       this.tag = []
+      this.level = 0
       this.vocabs = []
       this.sentences = []
     }
@@ -348,6 +359,7 @@ export default class CharacterTab extends Vue {
       this.sup = []
       this.variants = []
       this.tag = []
+      this.level = 0
       return
     }
 
@@ -364,6 +376,7 @@ export default class CharacterTab extends Vue {
         entry: this.current,
       })
       this.tag = r.tag
+      this.level = r.level || 0
     }
   }
 
