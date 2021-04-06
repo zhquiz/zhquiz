@@ -4,6 +4,13 @@
   </div>
 </template>
 
+<script>
+window.onbeforeunload = function (e) {
+  e.preventDefault()
+  e.returnValue = 'not returned'
+}
+</script>
+
 <style lang="scss">
 html,
 body,
