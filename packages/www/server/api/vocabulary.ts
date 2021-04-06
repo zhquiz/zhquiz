@@ -41,7 +41,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         let result = await db.query(sql`
@@ -174,7 +174,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const r = await lookupVocabulary(entry, userId)
@@ -267,7 +267,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         q = q.trim()
@@ -367,7 +367,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [u] = await db.query(sql`
@@ -375,13 +375,13 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         `)
 
         if (!u) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         u['level.min'] = u['level.min'] || 1
         u['level.max'] = u['level.max'] || 10
 
-        const [r] = await db.query(sql`
+        let [r] = await db.query(sql`
         SELECT "entry" "result", "level", (
           SELECT "english"
           FROM "vocabulary" v
@@ -392,11 +392,37 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         FROM (
           SELECT "entry", "vLevel" "level"
           FROM dict.zhlevel
-          WHERE "vLevel" >= ${u['level.min']} AND "vLevel" <= ${u['level.max']}
+          WHERE
+            "vLevel" >= ${u['level.min']}
+            AND "vLevel" <= ${u['level.max']}
+            AND "entry" NOT IN (
+              SELECT "entry" FROM "quiz" WHERE "type" = 'vocabulary'
+            )
           ORDER BY RANDOM()
           LIMIT 1
         ) t1
         `)
+
+        if (!r) {
+          ;[r] = await db.query(sql`
+          SELECT "entry" "result", "level", (
+            SELECT "english"
+            FROM "vocabulary" v
+            WHERE (
+              "userId" IS NULL OR "userId" = ${userId}
+            ) AND t1."entry" = ANY(v."entry")
+          ) "english"
+          FROM (
+            SELECT "entry", "vLevel" "level"
+            FROM dict.zhlevel
+            WHERE
+              "vLevel" >= ${u['level.min']}
+              AND "vLevel" <= ${u['level.max']}
+            ORDER BY RANDOM()
+            LIMIT 1
+          ) t1
+          `)
+        }
 
         if (!r) {
           throw { statusCode: 404 }

@@ -40,7 +40,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [r] = await db
@@ -144,7 +144,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [r] = await db.query(
@@ -242,7 +242,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const id = await db.tx(async (db) => {
@@ -305,7 +305,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         await db.tx(async (db) => {
@@ -373,7 +373,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [x] = await db.query(sql`

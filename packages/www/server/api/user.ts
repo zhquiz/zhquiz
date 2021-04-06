@@ -37,7 +37,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const selMap: Record<keyof typeof sResult.type, SQLQuery> = {
@@ -63,7 +63,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
         `
         )
         if (!r) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         return {
@@ -105,7 +105,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
       async (req, reply): Promise<typeof sResult.type> => {
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         if (!Object.keys(req.body).length) {
@@ -148,7 +148,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
     async (req, reply) => {
       const userId: string = req.session.userId
       if (!userId) {
-        throw { statusCode: 401 }
+        throw { statusCode: 403 }
       }
 
       if (magic) {
@@ -170,7 +170,7 @@ const userRouter: FastifyPluginAsync = async (f) => {
     async (req, reply) => {
       const userId: string = req.session.userId
       if (!userId) {
-        throw { statusCode: 401 }
+        throw { statusCode: 403 }
       }
 
       await db.tx(async (db) => {

@@ -38,7 +38,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const r = await lookupSentence(entry, userId)
@@ -107,7 +107,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         q = q.trim()
@@ -191,7 +191,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [u] = await db.query(sql`
@@ -199,23 +199,44 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         `)
 
         if (!u) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         u['level.min'] = u['level.min'] || 1
         u['level.max'] = u['level.max'] || 10
 
-        const [r] = await db.query(sql`
+        let [r] = await db.query(sql`
         SELECT "entry" "result", (
           SELECT "english"[1] FROM "sentence" WHERE "entry" = t1."entry"
         ) "english", "vLevel" "level"
         FROM (
           SELECT "entry", "vLevel" FROM "level"
-          WHERE "vLevel" >= ${u['level.min']} AND "vLevel" <= ${u['level.max']}
+          WHERE
+            "vLevel" >= ${u['level.min']}
+            AND "vLevel" <= ${u['level.max']}
+            AND "entry" NOT IN (
+              SELECT "entry" FROM "quiz" WHERE "type" = 'sentence'
+            )
           ORDER BY RANDOM()
           LIMIT 1
         ) t1
         `)
+
+        if (!r) {
+          ;[r] = await db.query(sql`
+          SELECT "entry" "result", (
+            SELECT "english"[1] FROM "sentence" WHERE "entry" = t1."entry"
+          ) "english", "vLevel" "level"
+          FROM (
+            SELECT "entry", "vLevel" FROM "level"
+            WHERE
+              "vLevel" >= ${u['level.min']}
+              AND "vLevel" <= ${u['level.max']}
+            ORDER BY RANDOM()
+            LIMIT 1
+          ) t1
+          `)
+        }
 
         if (!r) {
           throw { statusCode: 404 }

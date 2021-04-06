@@ -37,7 +37,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         if (!/^\p{sc=Han}$/u.test(entry)) {
@@ -93,7 +93,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         if (!/^\p{sc=Han}$/u.test(entry)) {
@@ -190,7 +190,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         if (!/^\p{sc=Han}$/u.test(entry)) {
@@ -286,7 +286,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const r = await lookupCharacter(entry, userId)
@@ -417,7 +417,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         q = q.trim()
@@ -495,7 +495,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [u] = await db.query(sql`
@@ -503,13 +503,13 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         `)
 
         if (!u) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         u['level.min'] = u['level.min'] || 1
         u['level.max'] = u['level.max'] || 10
 
-        const [r] = await db.query(sql`
+        let [r] = await db.query(sql`
         SELECT "entry" "result", "level", (
           SELECT "english"
           FROM "character" c
@@ -520,11 +520,37 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         FROM (
           SELECT "entry", "hLevel" "level"
           FROM dict.zhlevel
-          WHERE "hLevel" >= ${u['level.min']} AND "hLevel" <= ${u['level.max']}
+          WHERE
+            "hLevel" >= ${u['level.min']}
+            AND "hLevel" <= ${u['level.max']}
+            AND "entry" NOT IN (
+              SELECT "entry" FROM "quiz" WHERE "type" = 'character'
+            )
           ORDER BY RANDOM()
           LIMIT 1
         ) t1
         `)
+
+        if (!r) {
+          ;[r] = await db.query(sql`
+          SELECT "entry" "result", "level", (
+            SELECT "english"
+            FROM "character" c
+            WHERE (
+              "userId" IS NULL OR "userId" = ${userId}
+            ) AND c."entry" = t1."entry"
+          ) "english"
+          FROM (
+            SELECT "entry", "hLevel" "level"
+            FROM dict.zhlevel
+            WHERE
+              "hLevel" >= ${u['level.min']}
+              AND "hLevel" <= ${u['level.max']}
+            ORDER BY RANDOM()
+            LIMIT 1
+          ) t1
+          `)
+        }
 
         if (!r) {
           throw { statusCode: 404 }
