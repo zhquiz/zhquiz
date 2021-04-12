@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node -r tsconfig-paths/register server-dist/index.js",
-    "dev": "run-p 'dev:*'",
+    "dev": "export SERVER_PORT=${SERVER_PORT:-27082} && run-p 'dev:*'",
     "dev:nuxt": "nuxt dev",
     "dev:server": "yarn nodemon server/api/index.ts",
     "build": "run-s 'build:*'",

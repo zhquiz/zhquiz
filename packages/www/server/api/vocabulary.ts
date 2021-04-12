@@ -51,7 +51,10 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           JOIN "level" si ON si.entry = s.entry
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND to_tsvector('jiebaqry', s."entry") @@ to_tsquery('jiebaqry', ${entry})
+          ) AND s."entry" LIKE '%'||${entry.replace(
+            /[^\p{sc=Han}]+/gu,
+            '%'
+          )}||'%'
         )
 
         SELECT DISTINCT ON ("entry") *
@@ -76,52 +79,6 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         ) t2
         LIMIT ${limit}
         `)
-
-        if (result.length < limit) {
-          result.push(
-            ...(await db.query(sql`
-            WITH match_cte AS (
-              SELECT s.entry "entry", s."english"[1] english, ("hLevel" > 50) "isTrad"
-              FROM sentence s
-              JOIN "level" si ON si.entry = s.entry
-              WHERE (
-                "userId" IS NULL OR "userId" = ${userId}
-              ) AND s."entry" &@ ${entry} ${
-              result.length
-                ? sql` AND s."entry" != ANY(${result.map((r) => r.entry)})`
-                : sql``
-            }
-            )
-    
-            SELECT DISTINCT ON ("entry") *
-            FROM (
-              SELECT * FROM (
-                SELECT "entry", "english"
-                FROM match_cte WHERE NOT "isTrad" AND length("entry") <= 20
-                ORDER BY RANDOM()
-              ) t1
-              UNION
-              SELECT * FROM (
-                SELECT "entry", "english"
-                FROM match_cte WHERE "isTrad" AND length("entry") <= 20
-                ORDER BY RANDOM()
-              ) t1
-              UNION
-              SELECT * FROM (
-                SELECT "entry", "english"
-                FROM match_cte WHERE length("entry") > 20
-                ORDER BY RANDOM()
-              ) t1
-            ) t2
-            LIMIT ${limit - result.length}
-            `))
-          )
-        }
-
-        const entries = result.map((r) => r.entry)
-        result = result
-          .filter((a, i) => entries.indexOf(a.entry) === i)
-          .slice(0, limit)
 
         if (result.length < limit) {
           result.push(
