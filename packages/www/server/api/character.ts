@@ -289,10 +289,9 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 403 }
         }
 
-        const r = await lookupCharacter(entry, userId)
-
-        if (!r) {
-          throw { statusCode: 404 }
+        const r = (await lookupCharacter(entry, userId)) || {
+          entry,
+          reading: [makeReading(entry)],
         }
 
         const out: typeof sResult.type = {

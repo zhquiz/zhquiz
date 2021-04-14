@@ -51,10 +51,8 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 403 }
         }
 
-        const r = await lookupSentence(entry, userId)
-
-        if (!r) {
-          throw { statusCode: 404 }
+        const r = (await lookupSentence(entry, userId)) || {
+          entry,
         }
 
         const out: typeof sResult.type = {
@@ -69,15 +67,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
             if (!out.english.length) {
               out.english = await makeEnglish(r.entry, userId)
             } else {
-              out.vocabulary = await Promise.all(
-                jiebaCutForSearch(r.entry).map(async (seg) => {
-                  const r = await lookupVocabulary(seg, userId)
-                  return {
-                    ...r,
-                    english: r.english || [],
-                  }
-                })
-              )
+              out.vocabulary = await cutForVocabulary(r.entry, userId)
             }
           })(),
           (async () => {
@@ -97,6 +87,48 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         ])
 
         return out
+      }
+    )
+  }
+
+  {
+    const sQuery = S.shape({
+      q: S.string(),
+    })
+
+    const sResponse = S.shape({
+      result: S.list(
+        S.shape({
+          entry: S.string(),
+          alt: S.list(S.string()),
+          reading: S.list(S.string()),
+          english: S.list(S.string()),
+        })
+      ),
+    })
+
+    f.get<{
+      Querystring: typeof sQuery.type
+    }>(
+      '/vocabulary',
+      {
+        schema: {
+          operationId: 'sentenceVocabulary',
+          querystring: sQuery.valueOf(),
+          response: {
+            200: sResponse.valueOf(),
+          },
+        },
+      },
+      async (req): Promise<typeof sResponse.type> => {
+        const userId: string = req.session.userId
+        if (!userId) {
+          throw { statusCode: 403 }
+        }
+
+        return {
+          result: await cutForVocabulary(req.query.q, userId),
+        }
       }
     )
   }
@@ -387,4 +419,16 @@ export async function lookupJukuu(
   }
 
   return rs.slice(0, 10)
+}
+
+async function cutForVocabulary(q: string, userId: string) {
+  return Promise.all(
+    jiebaCutForSearch(q).map(async (seg) => {
+      const r = await lookupVocabulary(seg, userId)
+      return {
+        ...r,
+        english: r.english || [],
+      }
+    })
+  )
 }
