@@ -12,7 +12,7 @@
   ],
   "settings": {
     "files.associations": {
-      "*.sql": "postgres",
+      "*.sql": "sql",
       "Dockerfile.*": "dockerfile"
     }
   }

@@ -135,7 +135,10 @@ const presetRouter: FastifyPluginAsync = async (f) => {
         `
         )
 
-        return { result: r.result, count: r.count }
+        return {
+          result: r.result || [],
+          count: r.count,
+        }
       }
     )
   }

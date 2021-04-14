@@ -630,7 +630,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         `)
 
         return {
-          result: r.result,
+          result: r.result || [],
           count: r.count,
         }
       }

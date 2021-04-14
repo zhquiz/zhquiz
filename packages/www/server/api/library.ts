@@ -194,7 +194,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         )
 
         return {
-          result: r.result.map((r: any) => {
+          result: (r.result || []).map((r: any) => {
             return {
               id: r.id || undefined,
               entry: r.entry,

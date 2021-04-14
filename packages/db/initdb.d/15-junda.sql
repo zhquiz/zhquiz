@@ -14,7 +14,7 @@ DECLARE
   new_arr TEXT[] := '{}';
 BEGIN
   FOREACH s IN ARRAY $1||'{}'::text[] LOOP
-    new_arr := new_arr || normalize_pinyin(s);
+    new_arr := new_arr||ARRAY[s, regexp_replace(s, '\d( |$)', '\1', 'g')];
   END LOOP;
   RETURN new_arr;
 END;
