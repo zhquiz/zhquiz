@@ -20,6 +20,8 @@ CREATE TRIGGER "t_extra_updatedAt"
   FOR EACH ROW
   EXECUTE PROCEDURE "f_updatedAt"();
 
+CREATE UNIQUE INDEX idx_extra_u ON extra (("entry"[1]));
+
 CREATE INDEX "idx_extra_updatedAt" ON "extra" ("updatedAt");
 CREATE INDEX "idx_extra_userId" ON "extra" ("userId");
 CREATE INDEX "idx_extra_type" ON "extra" ("type");

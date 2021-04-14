@@ -4,13 +4,13 @@ import dayjs from 'dayjs'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
+import { refresh } from '../db/refresh'
 
 import { QSplit, makeLevel, makeTag, qParseDate, qParseNum } from '../db/token'
 import { db } from '../shared'
 import { lookupCharacter } from './character'
 import { sPreset } from './preset'
 import { lookupSentence } from './sentence'
-import { makeEnglish } from './util'
 import { lookupVocabulary } from './vocabulary'
 
 const quizRouter: FastifyPluginAsync = async (f) => {
@@ -227,7 +227,13 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           "nextReview",
           "srsLevel",
           "wrongStreak",
-          "id"
+          "id",
+          (CASE
+            WHEN (CASE
+              WHEN "type" = 'character' THEN (SELECT 1 FROM "character" WHERE "entry" = t1."entry" LIMIT 1)
+              WHEN "type" = 'sentence' THEN (SELECT 1 FROM "sentence" WHERE "entry" = t1."entry" LIMIT 1)
+            END) IS NULL THEN ARRAY["entry", "type"]
+          END) it
         FROM (
           SELECT
             "nextReview",
@@ -245,6 +251,21 @@ const quizRouter: FastifyPluginAsync = async (f) => {
         ) t1
         WHERE ${entryCond}
         `
+        )
+
+        const typeMap = new Map<string, string[]>()
+        result.map(({ it }) => {
+          if (it) {
+            const v = typeMap.get(it[1]) || []
+            v.push(it[0])
+            typeMap.set(it[1], v)
+          }
+        })
+
+        await Promise.all(
+          Array.from(typeMap).map(([type, entries]) =>
+            generateMissingEntries(entries, type, userId)
+          )
         )
 
         const [rLeech] = await db.query(sql`
@@ -513,58 +534,7 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 403 }
         }
 
-        const lookups: {
-          entry: string
-          alt?: string[]
-          reading: string[]
-          english: string[]
-          type: string
-        }[] = await Promise.all(
-          entries.map(async (el) => {
-            switch (type) {
-              case 'character':
-                return lookupCharacter(el, userId).then(async (r) => ({
-                  ...r,
-                  type,
-                }))
-              case 'sentence':
-                return lookupSentence(el, userId).then(async (r) => ({
-                  reading: [],
-                  ...(r || {
-                    entry: el,
-                    english: [],
-                  }),
-                  type,
-                }))
-            }
-
-            return lookupVocabulary(el, userId).then((r) => ({
-              ...r,
-              type,
-            }))
-          })
-        )
-        const missingEntries = lookups.filter((r) => !r.english.length)
-
-        if (missingEntries.length) {
-          await db.tx(async (db) => {
-            await db.query(sql`
-            INSERT INTO "extra" ("entry", "pinyin", "english", "userId", "id", "type")
-            VALUES ${sql.join(
-              await Promise.all(
-                missingEntries.map(
-                  async (it) =>
-                    sql`(${[it.entry]}, ${it.reading}, ${await makeEnglish(
-                      it.entry,
-                      userId
-                    )}, ${userId}, ${shortUUID.uuid()}, ${it.type})`
-                )
-              ),
-              ','
-            )}
-            `)
-          })
-        }
+        const lookups = await generateMissingEntries(entries, type, userId)
 
         const hasTeMap = new Map<string, string[]>()
         lookups.map((it) => {
@@ -728,3 +698,69 @@ const quizRouter: FastifyPluginAsync = async (f) => {
 }
 
 export default quizRouter
+
+async function generateMissingEntries(
+  entries: string[],
+  type: string,
+  userId: string
+) {
+  const lookups: {
+    entry: string
+    alt?: string[]
+    reading: string[]
+    english?: string[]
+    type: string
+  }[] = await Promise.all(
+    entries
+      .filter((a, i, r) => r.indexOf(a) === i)
+      .map(async (el) => {
+        switch (type) {
+          case 'character':
+            return lookupCharacter(el, userId).then((r) => ({
+              ...r,
+              type,
+            }))
+          case 'sentence':
+            return lookupSentence(el, userId).then((r) => ({
+              ...r,
+              reading: [],
+              type,
+            }))
+        }
+
+        return lookupVocabulary(el, userId).then((r) => ({
+          ...r,
+          type,
+        }))
+      })
+  )
+  const missingEntries = lookups.filter((r) => !r.english)
+
+  if (missingEntries.length) {
+    await db.tx(async (db) => {
+      await db.query(sql`
+      INSERT INTO "extra" ("entry", "pinyin", "english", "userId", "id", "type")
+      VALUES ${sql.join(
+        await Promise.all(
+          missingEntries.map(
+            async (it) =>
+              sql`(${[it.entry]}, ${
+                it.reading
+              }, ${[]}, ${userId}, ${shortUUID.uuid()}, ${it.type})`
+          )
+        ),
+        ','
+      )}
+      ON CONFLICT DO NOTHING
+      `)
+    })
+
+    if (type === 'character') {
+      await refresh('character')
+    } else if (type === 'sentence') {
+      await refresh('sentence')
+    }
+  }
+
+  return lookups
+}

@@ -7,6 +7,8 @@ import S from 'jsonschema-definer'
 import { refresh } from '../db/refresh'
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
+import { jiebaCutForSearch, makeEnglish } from './util'
+import { lookupVocabulary } from './vocabulary'
 
 const sentenceRouter: FastifyPluginAsync = async (f) => {
   {
@@ -17,6 +19,14 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
     const sResult = S.shape({
       entry: S.string(),
       english: S.list(S.string()),
+      vocabulary: S.list(
+        S.shape({
+          entry: S.string(),
+          alt: S.list(S.string()),
+          reading: S.list(S.string()),
+          english: S.list(S.string()),
+        })
+      ),
       tag: S.list(S.string()),
     })
 
@@ -47,21 +57,46 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 404 }
         }
 
-        const [{ tag = [] }] = await db.query(sql`
-        SELECT
-          (
-            SELECT array_agg(DISTINCT "tag")
-            FROM entry_tag
-            WHERE (
-              "userId" IS NULL OR "userId" = ${userId}
-            ) AND "type" = 'character' AND "entry" = ${r.entry}
-          )||'{}'::text[] "tag"
-        `)
-
-        return {
+        const out: typeof sResult.type = {
           ...r,
-          tag,
+          english: r.english || [],
+          vocabulary: [],
+          tag: [],
         }
+
+        await Promise.all([
+          (async () => {
+            if (!out.english.length) {
+              out.english = await makeEnglish(r.entry, userId)
+            } else {
+              out.vocabulary = await Promise.all(
+                jiebaCutForSearch(r.entry).map(async (seg) => {
+                  const r = await lookupVocabulary(seg, userId)
+                  return {
+                    ...r,
+                    english: r.english || [],
+                  }
+                })
+              )
+            }
+          })(),
+          (async () => {
+            const [{ tag }] = await db.query(sql`
+            SELECT
+              (
+                SELECT array_agg(DISTINCT "tag")
+                FROM entry_tag
+                WHERE (
+                  "userId" IS NULL OR "userId" = ${userId}
+                ) AND "type" = 'character' AND "entry" = ${r.entry}
+              )||'{}'::text[] "tag"
+            `)
+
+            out.tag = tag || []
+          })(),
+        ])
+
+        return out
       }
     )
   }
@@ -259,8 +294,8 @@ export async function lookupSentence(
   userId: string
 ): Promise<{
   entry: string
-  english: string[]
-} | null> {
+  english?: string[]
+}> {
   const [r] = await db.query(sql`
   SELECT
     "entry", "english"
@@ -270,7 +305,7 @@ export async function lookupSentence(
   ) AND "entry" = ${entry}
   `)
 
-  return r || null
+  return r || { entry }
 }
 
 export async function lookupJukuu(

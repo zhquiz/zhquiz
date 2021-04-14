@@ -5,7 +5,7 @@ import S from 'jsonschema-definer'
 import { QSplit, makeQuiz, makeTag, qParseNum } from '../db/token'
 import { db } from '../shared'
 import { lookupJukuu } from './sentence'
-import { makeReading } from './util'
+import { makeEnglish, makeReading } from './util'
 
 const characterRouter: FastifyPluginAsync = async (f) => {
   {
@@ -295,27 +295,41 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 404 }
         }
 
-        const [{ tag = [], level }] = await db.query(sql`
-        SELECT
-          (
-            SELECT array_agg(DISTINCT "tag")
-            FROM entry_tag
-            WHERE (
-              "userId" IS NULL OR "userId" = ${userId}
-            ) AND "type" = 'character' AND "entry" = ${r.entry}
-          )||'{}'::text[] "tag",
-          (
-            SELECT "hLevel"
-            FROM dict.zhlevel
-            WHERE "entry" = ${r.entry}
-          ) "level"
-        `)
-
-        return {
+        const out: typeof sResult.type = {
           ...r,
-          tag,
-          level: level || undefined,
+          english: r.english || [],
+          tag: [],
         }
+
+        await Promise.all([
+          (async () => {
+            if (!out.english.length) {
+              out.english = await makeEnglish(r.entry, userId)
+            }
+          })(),
+          (async () => {
+            const [{ tag, level }] = await db.query(sql`
+            SELECT
+              (
+                SELECT array_agg(DISTINCT "tag")
+                FROM entry_tag
+                WHERE (
+                  "userId" IS NULL OR "userId" = ${userId}
+                ) AND "type" = 'character' AND "entry" = ${r.entry}
+              )||'{}'::text[] "tag",
+              (
+                SELECT "hLevel"
+                FROM dict.zhlevel
+                WHERE "entry" = ${r.entry}
+              ) "level"
+            `)
+
+            out.tag = tag || []
+            out.level = level || undefined
+          })(),
+        ])
+
+        return out
       }
     )
   }
@@ -609,7 +623,7 @@ export async function lookupCharacter(
 ): Promise<{
   entry: string
   reading: string[]
-  english: string[]
+  english?: string[]
 }> {
   if (!/^\p{sc=Han}$/u.test(entry)) {
     throw { statusCode: 400, message: 'not Character' }
@@ -634,7 +648,6 @@ export async function lookupCharacter(
     return {
       entry,
       reading: [await makeReading(entry)],
-      english: [],
     }
   }
 
