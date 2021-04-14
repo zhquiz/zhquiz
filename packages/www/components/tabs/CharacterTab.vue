@@ -266,7 +266,7 @@ import ContextMenu from '@/components/ContextMenu.vue'
     ContextMenu,
   },
   async created() {
-    this.$emit('title', 'Character')
+    this.$emit('title', 'Hanzi')
 
     this.q = this.query.q || ''
 
@@ -350,7 +350,7 @@ export default class CharacterTab extends Vue {
 
   @Watch('q')
   async onQChange(q: string) {
-    this.$emit('title', (q ? q + ' - ' : '') + 'Character')
+    this.$emit('title', (q ? q + ' - ' : '') + 'Hanzi')
 
     if (/\p{sc=Han}/u.test(q)) {
       const qs = q.split('').filter((h) => /\p{sc=Han}/u.test(h))

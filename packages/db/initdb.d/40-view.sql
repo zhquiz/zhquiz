@@ -81,7 +81,14 @@ CREATE MATERIALIZED VIEW "entry_tag" AS
     FROM (
       SELECT "entry", "tag", "type", "userId" FROM "extra"
       WHERE "tag"[1] IS NOT NULL
-      UNION ALL
+    ) t2
+    UNION ALL
+    SELECT
+      (jsonb_array_elements("entries") ->> 'entry') "entry",
+      "tag",
+      "type",
+      "userId"
+    FROM (
       SELECT "entry", "tag", "type", "userId" FROM "library"
       WHERE "tag"[1] IS NOT NULL
     ) t2

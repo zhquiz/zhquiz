@@ -90,7 +90,12 @@ import ContextMenu from '../ContextMenu.vue'
 })
 export default class LibraryCard extends Vue {
   @Prop() title!: string
-  @Prop() entry!: string[]
+  @Prop() entries!: {
+    entry: string
+    alt?: string[]
+    reading?: string[]
+    english?: string[]
+  }[]
   @Prop() type!: string
   @Prop({ default: '' }) description?: string
 
@@ -115,7 +120,9 @@ export default class LibraryCard extends Vue {
   ]
 
   get currentData() {
-    return this.entry.filter((a, i, arr) => arr.indexOf(a) === i)
+    return this.entries
+      .map(({ entry }) => entry)
+      .filter((a, i, arr) => arr.indexOf(a) === i)
   }
 
   async reload(entry: string[]) {

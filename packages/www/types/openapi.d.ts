@@ -243,7 +243,12 @@ declare namespace Paths {
   }
   namespace LibraryCreate {
     export interface RequestBody {
-      entry: string[];
+      entries: {
+        entry: string;
+        alt?: string[];
+        reading?: string[];
+        english?: string[];
+      }[];
       title: string;
       type: string;
       description: string;
@@ -278,7 +283,12 @@ declare namespace Paths {
     }
     namespace Responses {
       export interface $200 {
-        entry: string[];
+        entries: {
+          entry: string;
+          alt?: string[];
+          reading?: string[];
+          english?: string[];
+        }[];
         title: string;
         type: string;
         description: string;
@@ -302,7 +312,12 @@ declare namespace Paths {
       export interface $200 {
         result: {
           id?: string;
-          entry: string[];
+          entries: {
+            entry: string;
+            alt?: string[];
+            reading?: string[];
+            english?: string[];
+          }[];
           title: string;
           type: string;
           description: string;
@@ -321,7 +336,12 @@ declare namespace Paths {
       id: Parameters.Id;
     }
     export interface RequestBody {
-      entry?: string[];
+      entries?: {
+        entry: string;
+        alt?: string[];
+        reading?: string[];
+        english?: string[];
+      }[];
       title?: string;
       type?: string;
       description?: string;

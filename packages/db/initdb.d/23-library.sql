@@ -5,7 +5,7 @@ CREATE TABLE "library" (
   "userId"          UUID,
   "isShared"        BOOLEAN,
   "type"            TEXT NOT NULL,
-  "entry"           TEXT[] NOT NULL CHECK ("entry"[1] IS NOT NULL),
+  "entries"         JSONB NOT NULL CHECK ("entries" -> 0 -> 'entry' IS NOT NULL),
   "title"           TEXT NOT NULL,
   "description"     TEXT NOT NULL DEFAULT '',
   "tag"             TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
