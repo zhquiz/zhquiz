@@ -343,7 +343,7 @@ export async function lookupJukuu(
 
       if (out.length) {
         refresh('sentence').then(() =>
-          Promise.all([refresh('"level"'), refresh('dict.cedict_view')])
+          Promise.all([refresh('level'), refresh('cedict_view')])
         )
       }
 

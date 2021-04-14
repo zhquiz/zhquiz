@@ -14,7 +14,7 @@ CREATE VIEW "vocabulary" AS
     "english",
     NULL "userId",
     "frequency"
-  FROM dict.cedict_view;
+  FROM cedict_view;
 
 CREATE MATERIALIZED VIEW "level" AS
   SELECT

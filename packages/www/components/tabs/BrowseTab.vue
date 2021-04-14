@@ -306,8 +306,6 @@ export default class BrowseTab extends Vue {
   async onTableContextmenu(row: IExtra, evt: MouseEvent) {
     evt.preventDefault()
 
-    console.log(row)
-
     this.selected = row
     this.context.open(evt)
   }

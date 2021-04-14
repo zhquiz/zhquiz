@@ -241,8 +241,6 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           return { result: [] }
         }
 
-        console.dir({ hCond, qCond, tagCond, lvCond }, { depth: null })
-
         let result = await db.query(sql`
         WITH match_cte AS (
           SELECT

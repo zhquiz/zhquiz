@@ -129,7 +129,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         switch (type) {
           case 'character':
-            refresh('"character"')
+            refresh('character')
             break
           case 'sentence':
             refresh('sentence')
@@ -216,7 +216,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         switch (type) {
           case 'character':
-            refresh('"character"')
+            refresh('character')
             break
           case 'sentence':
             refresh('sentence')
@@ -470,7 +470,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         switch (x.type) {
           case 'character':
-            refresh('"character"')
+            refresh('character')
             break
           case 'sentence':
             refresh('sentence')
