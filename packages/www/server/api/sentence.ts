@@ -7,6 +7,8 @@ import S from 'jsonschema-definer'
 import { refresh } from '../db/refresh'
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
+import { jiebaCutForSearch, makeEnglish } from './util'
+import { lookupVocabulary } from './vocabulary'
 
 const sentenceRouter: FastifyPluginAsync = async (f) => {
   {
@@ -17,6 +19,14 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
     const sResult = S.shape({
       entry: S.string(),
       english: S.list(S.string()),
+      vocabulary: S.list(
+        S.shape({
+          entry: S.string(),
+          alt: S.list(S.string()),
+          reading: S.list(S.string()),
+          english: S.list(S.string()),
+        })
+      ),
       tag: S.list(S.string()),
     })
 
@@ -38,7 +48,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const r = await lookupSentence(entry, userId)
@@ -47,21 +57,46 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 404 }
         }
 
-        const [{ tag = [] }] = await db.query(sql`
-        SELECT
-          (
-            SELECT array_agg(DISTINCT "tag")
-            FROM entry_tag
-            WHERE (
-              "userId" IS NULL OR "userId" = ${userId}
-            ) AND "type" = 'character' AND "entry" = ${r.entry}
-          )||'{}'::text[] "tag"
-        `)
-
-        return {
+        const out: typeof sResult.type = {
           ...r,
-          tag,
+          english: r.english || [],
+          vocabulary: [],
+          tag: [],
         }
+
+        await Promise.all([
+          (async () => {
+            if (!out.english.length) {
+              out.english = await makeEnglish(r.entry, userId)
+            } else {
+              out.vocabulary = await Promise.all(
+                jiebaCutForSearch(r.entry).map(async (seg) => {
+                  const r = await lookupVocabulary(seg, userId)
+                  return {
+                    ...r,
+                    english: r.english || [],
+                  }
+                })
+              )
+            }
+          })(),
+          (async () => {
+            const [{ tag }] = await db.query(sql`
+            SELECT
+              (
+                SELECT array_agg(DISTINCT "tag")
+                FROM entry_tag
+                WHERE (
+                  "userId" IS NULL OR "userId" = ${userId}
+                ) AND "type" = 'character' AND "entry" = ${r.entry}
+              )||'{}'::text[] "tag"
+            `)
+
+            out.tag = tag || []
+          })(),
+        ])
+
+        return out
       }
     )
   }
@@ -107,7 +142,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         q = q.trim()
@@ -191,7 +226,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
       async (req): Promise<typeof sResult.type> => {
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [u] = await db.query(sql`
@@ -199,23 +234,44 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         `)
 
         if (!u) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         u['level.min'] = u['level.min'] || 1
         u['level.max'] = u['level.max'] || 10
 
-        const [r] = await db.query(sql`
+        let [r] = await db.query(sql`
         SELECT "entry" "result", (
           SELECT "english"[1] FROM "sentence" WHERE "entry" = t1."entry"
         ) "english", "vLevel" "level"
         FROM (
           SELECT "entry", "vLevel" FROM "level"
-          WHERE "vLevel" >= ${u['level.min']} AND "vLevel" <= ${u['level.max']}
+          WHERE
+            "vLevel" >= ${u['level.min']}
+            AND "vLevel" <= ${u['level.max']}
+            AND "entry" NOT IN (
+              SELECT "entry" FROM "quiz" WHERE "type" = 'sentence'
+            )
           ORDER BY RANDOM()
           LIMIT 1
         ) t1
         `)
+
+        if (!r) {
+          ;[r] = await db.query(sql`
+          SELECT "entry" "result", (
+            SELECT "english"[1] FROM "sentence" WHERE "entry" = t1."entry"
+          ) "english", "vLevel" "level"
+          FROM (
+            SELECT "entry", "vLevel" FROM "level"
+            WHERE
+              "vLevel" >= ${u['level.min']}
+              AND "vLevel" <= ${u['level.max']}
+            ORDER BY RANDOM()
+            LIMIT 1
+          ) t1
+          `)
+        }
 
         if (!r) {
           throw { statusCode: 404 }
@@ -238,8 +294,8 @@ export async function lookupSentence(
   userId: string
 ): Promise<{
   entry: string
-  english: string[]
-} | null> {
+  english?: string[]
+}> {
   const [r] = await db.query(sql`
   SELECT
     "entry", "english"
@@ -249,7 +305,7 @@ export async function lookupSentence(
   ) AND "entry" = ${entry}
   `)
 
-  return r || null
+  return r || { entry }
 }
 
 export async function lookupJukuu(
@@ -322,7 +378,7 @@ export async function lookupJukuu(
 
       if (out.length) {
         refresh('sentence').then(() =>
-          Promise.all([refresh('"level"'), refresh('dict.cedict_view')])
+          Promise.all([refresh('level'), refresh('cedict_view')])
         )
       }
 

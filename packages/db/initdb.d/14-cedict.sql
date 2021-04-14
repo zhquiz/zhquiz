@@ -10,7 +10,7 @@ CREATE TABLE dict.cedict (
 CREATE OR REPLACE FUNCTION normalize_pinyin (TEXT) RETURNS TEXT[] AS
 $func$
 BEGIN
-    RETURN ARRAY[$1, regexp_replace($1, '\d( |$)', '\1')];
+    RETURN ARRAY[$1, regexp_replace($1, '\d( |$)', '\1', 'g')];
 END;
 $func$ LANGUAGE plpgsql IMMUTABLE;
 

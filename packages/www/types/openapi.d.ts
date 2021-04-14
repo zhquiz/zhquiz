@@ -121,6 +121,19 @@ declare namespace Paths {
       }
     }
   }
+  namespace English {
+    namespace Parameters {
+      export type Q = string;
+    }
+    export interface QueryParameters {
+      q: Parameters.Q;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: string[];
+      }
+    }
+  }
   namespace ExtraCreate {
     export interface RequestBody {
       entry: string[];
@@ -571,6 +584,12 @@ declare namespace Paths {
       export interface $200 {
         entry: string;
         english: string[];
+        vocabulary: {
+          entry: string;
+          alt: string[];
+          reading: string[];
+          english: string[];
+        }[];
         tag: string[];
       }
     }
@@ -1075,6 +1094,14 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.Reading.Responses.$200>
   /**
+   * english
+   */
+  'english'(
+    parameters?: Parameters<Paths.English.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.English.Responses.$200>
+  /**
    * speak
    */
   'speak'(
@@ -1524,6 +1551,16 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.Reading.Responses.$200>
+  }
+  ['/api/util/english']: {
+    /**
+     * english
+     */
+    'get'(
+      parameters?: Parameters<Paths.English.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.English.Responses.$200>
   }
   ['/api/util/speak']: {
     /**

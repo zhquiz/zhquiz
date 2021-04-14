@@ -45,9 +45,15 @@
           </span>
         </b-table-column>
         <b-table-column field="reading" label="Pinyin" v-slot="props">
-          <div v-for="it in props.row.reading" :key="it">
-            {{ it }}
-          </div>
+          <span
+            class="clickable"
+            @click="(ev) => onTableContextmenu(props.row, ev)"
+            @contextmenu.prevent="(ev) => onTableContextmenu(props.row, ev)"
+          >
+            <div v-for="it in props.row.reading" :key="it">
+              {{ it }}
+            </div>
+          </span>
         </b-table-column>
         <b-table-column
           field="english"
@@ -55,9 +61,15 @@
           v-slot="props"
           width="40vw"
         >
-          <div v-for="it in props.row.english" :key="it">
-            {{ it }}
-          </div>
+          <span
+            class="clickable"
+            @click="(ev) => onTableContextmenu(props.row, ev)"
+            @contextmenu.prevent="(ev) => onTableContextmenu(props.row, ev)"
+          >
+            <div v-for="it in props.row.english" :key="it">
+              {{ it }}
+            </div>
+          </span>
         </b-table-column>
       </b-table>
     </div>
@@ -70,23 +82,45 @@
         </header>
         <div class="card-content">
           <b-field label="Chinese">
+            <template slot="label">
+              Chinese
+              <b-tooltip
+                type="is-dark"
+                label="Space separated"
+                position="is-right"
+              >
+                <b-icon size="is-small" icon="info-circle"></b-icon>
+              </b-tooltip>
+            </template>
             <b-input
               :value="selected.entry.join(' ')"
-              @input="(ev) => (selected.entry = ev.split(' '))"
+              @input="(ev) => (selected.entry = ev.trim().split(' '))"
               placeholder="Must not be empty"
             ></b-input>
           </b-field>
           <b-field label="Pinyin">
+            <template slot="label">
+              Pinyin
+              <b-tooltip type="is-dark" label="Slash (/) separated">
+                <b-icon size="is-small" icon="info-circle"></b-icon>
+              </b-tooltip>
+            </template>
             <b-input
               :value="selected.reading.join(' / ')"
-              @input="(ev) => (selected.reading = ev.split(' / '))"
+              @input="(ev) => (selected.reading = ev.trim().split(' / '))"
               placeholder="Must not be empty"
             ></b-input>
           </b-field>
           <b-field label="English">
+            <template slot="label">
+              English
+              <b-tooltip type="is-dark" label="New-line separated">
+                <b-icon size="is-small" icon="info-circle"></b-icon>
+              </b-tooltip>
+            </template>
             <b-input
               :value="selected.english.join('\n')"
-              @input="(ev) => (selected.english = ev.split('\n'))"
+              @input="(ev) => (selected.english = ev.trim().split('\n'))"
               type="textarea"
               placeholder="Must not be empty"
             ></b-input>
@@ -107,7 +141,7 @@
             <b-input v-model="selected.description" type="textarea"></b-input>
           </b-field>
           <b-field label="Tag">
-            <b-input v-model="selected.tag"></b-input>
+            <b-taginput v-model="selected.tag"></b-taginput>
           </b-field>
         </div>
         <footer class="card-footer">
@@ -210,14 +244,22 @@ export default class BrowseTab extends Vue {
     },
   ]
 
-  openEditModal() {
-    if (!this.selected.reading.length && this.selected.reading.length) {
-      this.selected.reading = [
-        toPinyin(this.selected.entry[0], {
-          keepRest: true,
-          toneToNumber: true,
-        }),
-      ]
+  async openEditModal() {
+    if (this.selected.entry.length) {
+      if (!this.selected.reading.length) {
+        this.selected.reading = [
+          toPinyin(this.selected.entry[0], {
+            keepRest: true,
+            toneToNumber: true,
+          }),
+        ]
+      }
+
+      if (!this.selected.english.length) {
+        this.selected.english = await this.$axios
+          .english(this.selected.entry[0])
+          .then((r) => r.data.result)
+      }
     }
 
     if (!this.selected.description) {
@@ -306,9 +348,7 @@ export default class BrowseTab extends Vue {
   async onTableContextmenu(row: IExtra, evt: MouseEvent) {
     evt.preventDefault()
 
-    console.log(row)
-
-    this.selected = row
+    this.selected = JSON.parse(JSON.stringify(row))
     this.context.open(evt)
   }
 

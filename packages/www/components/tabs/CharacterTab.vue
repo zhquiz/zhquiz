@@ -65,6 +65,42 @@
         </div>
 
         <div class="column is-6">
+          <b-collapse class="card" animation="slide" :open="false">
+            <div
+              slot="trigger"
+              slot-scope="props"
+              class="card-header"
+              role="button"
+            >
+              <h2 class="card-header-title">Reading</h2>
+              <a role="button" class="card-header-icon">
+                <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
+              </a>
+            </div>
+
+            <div class="card-content">
+              {{ reading.join(' / ') }}
+            </div>
+          </b-collapse>
+
+          <b-collapse class="card" animation="slide" :open="!!english.length">
+            <div
+              slot="trigger"
+              slot-scope="props"
+              class="card-header"
+              role="button"
+            >
+              <h2 class="card-header-title">English</h2>
+              <a role="button" class="card-header-icon">
+                <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
+              </a>
+            </div>
+
+            <div class="card-content">
+              {{ english.join(' / ') }}
+            </div>
+          </b-collapse>
+
           <b-collapse class="card" animation="slide" :open="!!sub.length">
             <div
               slot="trigger"
@@ -252,7 +288,8 @@ export default class CharacterTab extends Vue {
   sub: string[] = []
   sup: string[] = []
   variants: string[] = []
-
+  reading: string[] = []
+  english: string[] = []
   tag: string[] = []
   level = 0
 
@@ -346,6 +383,8 @@ export default class CharacterTab extends Vue {
       this.sub = []
       this.sup = []
       this.variants = []
+      this.reading = []
+      this.english = []
       this.tag = []
       this.level = 0
       this.vocabs = []
@@ -358,26 +397,33 @@ export default class CharacterTab extends Vue {
       this.sub = []
       this.sup = []
       this.variants = []
+      this.english = []
       this.tag = []
       this.level = 0
       return
     }
 
-    const { data: r } = await this.$axios.characterRadical({
-      entry: this.current,
-    })
+    await Promise.all([
+      (async () => {
+        const { data: r } = await this.$axios.characterRadical({
+          entry: this.current,
+        })
 
-    this.sub = r.sub
-    this.sup = r.sup
-    this.variants = r.var
+        this.sub = r.sub
+        this.sup = r.sup
+        this.variants = r.var
+      })(),
+      (async () => {
+        const { data: r } = await this.$axios.characterGetByEntry({
+          entry: this.current,
+        })
 
-    if (r.sub.length || r.sub.length || r.var.length) {
-      const { data: r } = await this.$axios.characterGetByEntry({
-        entry: this.current,
-      })
-      this.tag = r.tag
-      this.level = r.level || 0
-    }
+        this.reading = r.reading
+        this.english = r.english
+        this.tag = r.tag
+        this.level = r.level || 0
+      })(),
+    ])
   }
 
   async loadVocab() {

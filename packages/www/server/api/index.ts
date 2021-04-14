@@ -136,7 +136,7 @@ const apiRouter: FastifyPluginAsync = async (f) => {
         /^Bearer (.+)$/.exec(req.headers.authorization || '') || []
 
       if (!apiKey) {
-        throw { statusCode: 401 }
+        return
       }
 
       try {

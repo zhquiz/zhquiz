@@ -13,6 +13,10 @@ export let magic: Magic | null = null
 
 const apiClient = new OpenAPIClientAxios({
   definition: require('~/assets/openapi.json'),
+  axiosConfigDefaults: {
+    validateStatus: (code) =>
+      (code >= 200 && code < 300) || code === 401 || code === 403,
+  },
 })
 
 let loading: {
@@ -61,7 +65,7 @@ const plugin: Plugin = async ({ redirect }, inject) => {
   })
 
   api.interceptors.response.use(
-    (config) => {
+    (r) => {
       if (loading) {
         loading.requestEnded = true
         loading.close()
@@ -73,7 +77,11 @@ const plugin: Plugin = async ({ redirect }, inject) => {
         requestTimeout = null
       }
 
-      return config
+      if (r.status === 401 || r.status === 403) {
+        redirect(200, '/')
+      }
+
+      return r
     },
     (err) => {
       if (loading) {
@@ -86,11 +94,6 @@ const plugin: Plugin = async ({ redirect }, inject) => {
         requestTimeout = null
       }
 
-      if (err.status === 401) {
-        redirect(200, '/')
-      }
-
-      // eslint-disable-next-line no-console
       console.error(err)
       Snackbar.open(err.message)
 

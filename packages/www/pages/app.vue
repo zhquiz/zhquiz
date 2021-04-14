@@ -20,18 +20,18 @@
                 <span v-if="n.text" :class="'icon ' + n.className">
                   {{ n.text }}
                 </span>
-                {{ n.component }}
+                {{ n.title || n.component }}
               </a>
             </li>
 
             <li>
               <a
-                href="https://github.com/zhquiz/zhquiz"
+                href="https://github.com/zhquiz/zhquiz/discussions"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <b-icon pack="fab" icon="github"></b-icon>
-                About
+                Support
               </a>
             </li>
           </ul>
@@ -81,7 +81,7 @@
                 <span v-if="n.text" :class="'icon ' + n.className">
                   {{ n.text }}
                 </span>
-                {{ n.component }}
+                {{ n.title || n.component }}
               </b-dropdown-item>
             </b-dropdown>
 
@@ -157,6 +157,7 @@ export default class AppPage extends Vue {
   isDrawer = false
 
   get navItems(): {
+    title?: string
     component: string
     icon?: string | string[]
     text?: string
@@ -172,6 +173,7 @@ export default class AppPage extends Vue {
         icon: 'chalkboard-teacher',
       },
       {
+        title: 'Hanzi',
         component: 'Character',
         text: '字',
         className: 'font-han',
@@ -186,6 +188,7 @@ export default class AppPage extends Vue {
         text: this.level,
       },
       {
+        title: 'User content',
         component: 'Browse',
         icon: 'list-ol',
       },

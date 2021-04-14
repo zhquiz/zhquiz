@@ -1,4 +1,4 @@
-CREATE MATERIALIZED VIEW dict.cedict_view AS
+CREATE MATERIALIZED VIEW cedict_view AS
   SELECT
     "simplified",
     ARRAY["simplified"]||(array_agg(DISTINCT "entry") FILTER (WHERE "entry" IS NOT NULL AND "entry" != "simplified")) "entry",
@@ -17,12 +17,12 @@ CREATE MATERIALIZED VIEW dict.cedict_view AS
   ) t1
   GROUP BY "simplified";
 
-CREATE UNIQUE INDEX "idx_cedict_view_simplified" ON dict.cedict_view ("simplified");
-CREATE INDEX "idx_cedict_view_entry" ON dict.cedict_view
+CREATE UNIQUE INDEX "idx_cedict_view_simplified" ON cedict_view ("simplified");
+CREATE INDEX "idx_cedict_view_entry" ON cedict_view
   USING pgroonga("entry");
-CREATE INDEX "idx_cedict_view_pinyin" ON dict.cedict_view
+CREATE INDEX "idx_cedict_view_pinyin" ON cedict_view
   USING pgroonga (normalize_pinyin("pinyin"));
-CREATE INDEX "idx_cedict_view_english" ON dict.cedict_view
+CREATE INDEX "idx_cedict_view_english" ON cedict_view
   USING pgroonga("english")
   WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
-CREATE INDEX "idx_cedict_view_frequency" ON dict.cedict_view ("frequency")
+CREATE INDEX "idx_cedict_view_frequency" ON cedict_view ("frequency")

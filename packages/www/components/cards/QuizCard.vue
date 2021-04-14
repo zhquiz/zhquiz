@@ -211,9 +211,27 @@
               {{ current.entry }}
             </h2>
 
-            <ul>
+            <ul v-if="current.english.length">
               <li v-for="(it, i) in current.english" :key="i">
                 {{ it }}
+              </li>
+            </ul>
+
+            <ul v-if="current.vocabulary.length">
+              <li v-for="(it, i) in current.vocabulary" :key="i">
+                <span
+                  class="has-context"
+                  @click="(ev) => openContext(ev, it, 'vocabulary')"
+                  @contextmenu.prevent="
+                    (ev) => openContext(ev, it, 'vocabulary')
+                  "
+                >
+                  {{ it.entry }}
+                </span>
+                <span>[{{ it.reading.join(' | ') }}]</span>
+                <span>
+                  {{ it.english.join(' / ') }}
+                </span>
               </li>
             </ul>
           </div>
@@ -371,6 +389,12 @@ export default class QuizCard extends Vue {
       {
         reading: string[]
         english: string[]
+        vocabulary: {
+          entry: string
+          alt: string[]
+          reading: string[]
+          english: string[]
+        }[]
         tag: string[]
       }
     >,
@@ -589,6 +613,7 @@ export default class QuizCard extends Vue {
                     }),
                   ],
                   english: [english],
+                  vocabulary: [],
                   tag: [],
                 }
               }
@@ -641,6 +666,7 @@ export default class QuizCard extends Vue {
                       }),
                     ],
                     english: [english],
+                    vocabulary: [],
                     tag: [],
                   }
                 }
@@ -665,7 +691,7 @@ export default class QuizCard extends Vue {
             .sentenceGetByEntry({
               entry,
             })
-            .then(({ data: { english, tag } }) => {
+            .then(({ data: { english, vocabulary, tag } }) => {
               this.dictionaryData.sentence[entry] = {
                 reading: [
                   toPinyin(entry, {
@@ -674,6 +700,7 @@ export default class QuizCard extends Vue {
                   }),
                 ],
                 english,
+                vocabulary,
                 tag,
               }
 

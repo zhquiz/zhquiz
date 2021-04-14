@@ -69,24 +69,30 @@
             ></b-input>
           </b-field>
           <b-field label="Entries">
+            <template slot="label">
+              Entries
+              <b-tooltip type="is-dark" label="Space or new-line separated">
+                <b-icon size="is-small" icon="info-circle"></b-icon>
+              </b-tooltip>
+            </template>
             <b-input
               v-model="entryString"
               type="textarea"
-              placeholder="Space separated, must not be empty"
+              placeholder="Space or new-line separated, must not be empty"
             ></b-input>
           </b-field>
           <b-field label="Description">
             <b-input v-model="edited.description" type="textarea"></b-input>
           </b-field>
           <b-field label="Tag">
-            <b-input v-model="edited.tag"></b-input>
+            <b-taginput v-model="edited.tag"></b-taginput>
           </b-field>
           <b-field label="Additional options">
             <b-checkbox
               :value="edited.isShared"
               @input="(ev) => $set(edited, 'isShared', ev)"
             >
-              Make it availble for others (shared library)?
+              Make it availble for others (shared library)
             </b-checkbox>
           </b-field>
         </div>
@@ -178,14 +184,14 @@ export default class LibraryTab extends Vue {
   }
 
   get entryString() {
-    return this.edited.entry.join(' ')
+    return this.edited.entry.join('\n')
   }
 
   set entryString(s) {
     const out: string[] = []
 
     let m: RegExpExecArray | null = null
-    const re = /\p{sc=Han}+/gu
+    const re = /\p{sc=Han}+/gsu
     while ((m = re.exec(s))) {
       out.push(m[0])
     }

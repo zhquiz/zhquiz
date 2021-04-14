@@ -41,7 +41,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [r] = await db.query(sql`
@@ -98,7 +98,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         if (
@@ -129,7 +129,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         switch (type) {
           case 'character':
-            refresh('"character"')
+            refresh('character')
             break
           case 'sentence':
             refresh('sentence')
@@ -182,7 +182,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         if (
@@ -216,7 +216,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         switch (type) {
           case 'character':
-            refresh('"character"')
+            refresh('character')
             break
           case 'sentence':
             refresh('sentence')
@@ -258,7 +258,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const rs = await db.query(sql`
@@ -305,7 +305,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [r] = await db.query(sql`
@@ -380,7 +380,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [r] = await db.query(sql`
@@ -445,7 +445,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         const [x] = await db.query(sql`
@@ -470,7 +470,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         switch (x.type) {
           case 'character':
-            refresh('"character"')
+            refresh('character')
             break
           case 'sentence':
             refresh('sentence')
@@ -554,7 +554,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const userId: string = req.session.userId
         if (!userId) {
-          throw { statusCode: 401 }
+          throw { statusCode: 403 }
         }
 
         q = q.trim()
@@ -630,7 +630,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         `)
 
         return {
-          result: r.result,
+          result: r.result || [],
           count: r.count,
         }
       }
