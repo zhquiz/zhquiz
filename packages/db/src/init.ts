@@ -35,7 +35,8 @@ if (require.main === module) {
       await junda.populate(db, path.join(__dirname, '../assets'))
       await radical.populate(db, path.join(__dirname, '../assets'))
       await level.populate(db, path.join(__dirname, '../assets'))
-      await lib.populate(db)
+      await lib.constraint(db)
+      await lib.populate(db, '../library')
       await jukuu.populate(db, path.join(__dirname, '../assets'))
     } catch (e) {
       console.error(e)
