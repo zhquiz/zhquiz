@@ -100,26 +100,44 @@ export async function populate(
   }
 
   await db.tx(async (db) => {
-    const batchSize = 10000
+    const batchSize = 1000
 
     const lots = s3
       .prepare(
         /* sql */ `
-    SELECT "simplified", "traditional", "reading", "english"
+    SELECT
+      "simplified",
+      json_group_array("traditional") "alt",
+      json_group_array("reading") "reading",
+      json_group_array(json("english")) "english"
     FROM cedict
+    GROUP BY "simplified"
     `
       )
       .all()
-      .map((p) => {
-        return sql`(${p.simplified}, ${p.traditional}, ${
+      .map((p, i) => {
+        const entry: string[] = [
+          p.simplified,
+          ...(JSON.parse(p.alt) as string[]).filter((it) => it)
+        ].filter((a, i, r) => r.indexOf(a) === i)
+
+        const english = (JSON.parse(p.english) as string[][])
+          .flat()
+          .filter((a, i, r) => r.indexOf(a) === i)
+
+        return sql`('vocabulary', 'cedict', ${i}, ${entry}, ${JSON.parse(
           p.reading
-        }, ${JSON.parse(p.english)})`
+        )}, ${english}, (
+          SELECT COUNT("entry") * ${
+            entry[0].length
+          } FROM dict.entries WHERE type = 'sentence' AND "entry" &@ ${entry[0]}
+        ))`
       })
 
     for (let i = 0; i < lots.length; i += batchSize) {
       console.log(i)
       await db.query(sql`
-        INSERT INTO dict.cedict ("simplified", "traditional", "reading", "english")
+        INSERT INTO dict.entries ("type", "source", "originalId", "entry", "pinyin", "english", "frequency")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
         ON CONFLICT DO NOTHING
       `)
@@ -127,18 +145,6 @@ export async function populate(
   })
 
   s3.close()
-
-  if (!process.cwd().startsWith('/app')) {
-    console.log('Updating materialized view')
-    await db
-      .query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY sentence`)
-      .then(() =>
-        Promise.all([
-          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY "level"`),
-          db.query(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY dict.cedict_view`)
-        ])
-      )
-  }
 }
 
 if (require.main === module) {

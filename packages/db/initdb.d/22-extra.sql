@@ -2,7 +2,7 @@ CREATE TABLE "extra" (
   "id"              UUID NOT NULL DEFAULT uuid_generate_v4(),
   "createdAt"       TIMESTAMPTZ DEFAULT now(),
   "updatedAt"       TIMESTAMPTZ DEFAULT now(),
-  "userId"          UUID,
+  "userId"          UUID NOT NULL,
   "type"            TEXT NOT NULL,
   "entry"           TEXT[] NOT NULL CHECK ("entry"[1] IS NOT NULL),
   "pinyin"          TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
@@ -20,7 +20,7 @@ CREATE TRIGGER "t_extra_updatedAt"
   FOR EACH ROW
   EXECUTE PROCEDURE "f_updatedAt"();
 
-CREATE UNIQUE INDEX idx_extra_u ON extra (("entry"[1]));
+CREATE UNIQUE INDEX idx_extra_u ON extra (("entry"[1]), "type");
 
 CREATE INDEX "idx_extra_updatedAt" ON "extra" ("updatedAt");
 CREATE INDEX "idx_extra_userId" ON "extra" ("userId");
@@ -36,4 +36,6 @@ CREATE INDEX "idx_extra_english_description" ON "extra"
   WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
 
 CREATE INDEX "idx_extra_entry" ON "extra" USING pgroonga("entry");
+CREATE INDEX "idx_extra_entry_gin" ON "extra" USING GIN("entry");
+
 CREATE INDEX "idx_extra_tag" ON "extra" USING pgroonga ("tag");

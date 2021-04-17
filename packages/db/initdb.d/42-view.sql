@@ -1,21 +1,3 @@
-CREATE VIEW "vocabulary" AS
-  SELECT
-    "entry",
-    "pinyin",
-    "english",
-    "userId",
-    NULL "frequency"
-  FROM "extra"
-  WHERE "type" = 'vocabulary'
-  UNION ALL
-  SELECT
-    "entry",
-    "pinyin",
-    "english",
-    NULL "userId",
-    "frequency"
-  FROM cedict_view;
-
 CREATE MATERIALIZED VIEW "level" AS
   SELECT
     "entry",

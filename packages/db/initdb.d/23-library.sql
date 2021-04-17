@@ -1,3 +1,18 @@
+CREATE OR REPLACE FUNCTION unwrap_entries (JSONB) RETURNS TEXT[] AS
+$func$
+DECLARE
+  it    JSONB;
+  "out" TEXT[] := '{}'::text[];
+BEGIN
+  FOR it IN (SELECT * FROM jsonb_array_elements($1))
+  LOOP
+    "out" := "out"||(it ->> 'entry');
+  END LOOP;
+
+  RETURN "out";
+END;
+$func$ LANGUAGE plpgsql IMMUTABLE;
+
 CREATE TABLE "library" (
   "id"              UUID NOT NULL DEFAULT uuid_generate_v4(),
   "createdAt"       TIMESTAMPTZ DEFAULT now(),
@@ -6,6 +21,7 @@ CREATE TABLE "library" (
   "isShared"        BOOLEAN,
   "type"            TEXT NOT NULL,
   "entries"         JSONB NOT NULL CHECK ("entries" -> 0 -> 'entry' IS NOT NULL),
+  "entry"           TEXT[] GENERATED ALWAYS AS (unwrap_entries("entries")) STORED,
   "title"           TEXT NOT NULL,
   "description"     TEXT NOT NULL DEFAULT '',
   "tag"             TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
