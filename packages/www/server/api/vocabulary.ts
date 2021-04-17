@@ -224,7 +224,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         FROM "vocabulary"
         WHERE (
           "userId" IS NULL OR "userId" = ${userId}
-        ) AND "entry" &@ ${entry}
+        ) AND "entry" &@ ${entry} AND ${entry} != ANY("entry")
         ORDER BY frequency DESC
         LIMIT 5
         `)

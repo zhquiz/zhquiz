@@ -272,7 +272,9 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
 
           await db.query(sql`
           INSERT INTO "library" ("id", "userId", "title", "type", "description", "tag", "entries", "isShared")
-          VALUES (${id}, ${userId} ${title}, ${type}, ${description}, ${tag}, ${entries}, ${isShared})
+          VALUES (${id}, ${userId} ${title}, ${type}, ${description}, ${tag}, ${JSON.stringify(
+            entries
+          )}::jsonb, ${isShared})
           `)
 
           return id
@@ -353,7 +355,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
                 : []),
               ...(typeof tag !== 'undefined' ? [sql`"tag" = ${tag}`] : []),
               ...(typeof entries !== 'undefined'
-                ? [sql`"entries" = ${entries}`]
+                ? [sql`"entries" = ${JSON.stringify(entries)}::jsonb`]
                 : []),
               ...(typeof isShared !== 'undefined'
                 ? [sql`"isShared" = ${isShared}`]
