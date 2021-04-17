@@ -810,6 +810,24 @@ declare namespace Paths {
       }
     }
   }
+  namespace VocabularySuper {
+    namespace Parameters {
+      export type Entry = string;
+    }
+    export interface QueryParameters {
+      entry: Parameters.Entry;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: {
+          entry: string;
+          alt: string[];
+          reading: string[];
+          english: string[];
+        }[];
+      }
+    }
+  }
 }
 
 export interface OperationMethods {
@@ -1189,6 +1207,14 @@ export interface OperationMethods {
     data?: any,
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.VocabularyGetByEntry.Responses.$200>
+  /**
+   * vocabularySuper
+   */
+  'vocabularySuper'(
+    parameters?: Parameters<Paths.VocabularySuper.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.VocabularySuper.Responses.$200>
   /**
    * vocabularyGetByEntries
    */
@@ -1673,6 +1699,16 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.VocabularyGetByEntry.Responses.$200>
+  }
+  ['/api/vocabulary/super']: {
+    /**
+     * vocabularySuper
+     */
+    'get'(
+      parameters?: Parameters<Paths.VocabularySuper.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.VocabularySuper.Responses.$200>
   }
   ['/api/vocabulary/entries']: {
     /**

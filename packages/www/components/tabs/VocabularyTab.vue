@@ -155,6 +155,58 @@
           <b-collapse
             class="card"
             animation="slide"
+            :open="!!current.vocabulary.length"
+          >
+            <div
+              slot="trigger"
+              slot-scope="props"
+              class="card-header"
+              role="button"
+            >
+              <h2 class="card-header-title">Vocabularies</h2>
+              <a role="button" class="card-header-icon">
+                <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
+              </a>
+            </div>
+
+            <div class="card-content">
+              <div
+                v-for="(s, i) in current.vocabulary"
+                :key="i"
+                class="sentence-entry"
+              >
+                <span
+                  class="clickable"
+                  @click="(evt) => openContext(evt, s.entry, 'vocabulary')"
+                  @contextmenu.prevent="
+                    (evt) => openContext(evt, s.entry, 'vocabulary')
+                  "
+                >
+                  {{ s.entry }}
+                </span>
+
+                <span
+                  class="clickable"
+                  v-for="(a, j) in s.alt"
+                  :key="j"
+                  @click="(evt) => openContext(evt, s.entry, 'vocabulary')"
+                  @contextmenu.prevent="
+                    (evt) => openContext(evt, s.entry, 'vocabulary')
+                  "
+                >
+                  {{ a }}
+                </span>
+
+                <span>[{{ s.reading.join(' | ') }}]</span>
+
+                <span>{{ s.english.join(' / ') }}</span>
+              </div>
+            </div>
+          </b-collapse>
+
+          <b-collapse
+            class="card"
+            animation="slide"
             :open="!!current.sentences.length"
           >
             <div
@@ -235,6 +287,7 @@ import ContextMenu from '@/components/ContextMenu.vue'
           alt: [],
           reading: [],
           english: [],
+          vocabulary: [],
           sentences: [],
           tag: [],
         },
@@ -258,6 +311,12 @@ export default class VocabularyTab extends Vue {
     alt: string[]
     reading: string[]
     english: string[]
+    vocabulary: {
+      entry: string
+      alt: string[]
+      reading: string[]
+      english: string[]
+    }[]
     tag: string[]
     level?: number
     sentences: {
@@ -286,6 +345,7 @@ export default class VocabularyTab extends Vue {
         alt: [],
         reading: [],
         english: [],
+        vocabulary: [],
         sentences: [],
       }
     )
@@ -347,6 +407,7 @@ export default class VocabularyTab extends Vue {
         alt: [],
         reading: [],
         english: [],
+        vocabulary: [],
         sentences: [],
         tag: [],
       }))
@@ -368,6 +429,7 @@ export default class VocabularyTab extends Vue {
           alt: [],
           reading: [],
           english: [],
+          vocabulary: [],
           sentences: [],
           tag: [],
         },
@@ -388,21 +450,22 @@ export default class VocabularyTab extends Vue {
 
     if (!entry.reading.length) {
       if (/\p{sc=Han}/u.test(entry.entry)) {
-        const { data } = await this.$axios
+        const r1 = await this.$axios
           .vocabularyGetByEntry({ entry: entry.entry }, null, {
             validateStatus: (n) => (n >= 200 && n < 300) || n === 404,
           })
           .catch(() => ({ data: null }))
 
         const i = this.entries.findIndex((it) => it.id === id) || this.i
-        if (data) {
+        if (r1.data) {
           this.entries = [
             ...this.entries.slice(0, i),
             {
-              ...data,
+              ...r1.data,
               id,
-              entry: data.entry || '',
-              reading: data.reading || [],
+              entry: r1.data.entry || '',
+              reading: r1.data.reading || [],
+              vocabulary: [],
               sentences: [],
             },
             ...this.entries.slice(i + 1),
@@ -433,13 +496,24 @@ export default class VocabularyTab extends Vue {
             alt: [],
             reading: [],
             english: [],
+            vocabulary: [],
             sentences: [],
             tag: [],
           })),
           ...this.entries.slice(i + 1),
         ]
       }
-    } else if (!entry.sentences.length) {
+    }
+
+    if (!entry.vocabulary.length) {
+      const {
+        data: { result },
+      } = await this.$axios.vocabularySuper({ entry: entry.entry })
+
+      entry.vocabulary = result
+    }
+
+    if (!entry.sentences.length) {
       const {
         data: { result },
       } = await this.$axios.vocabularySentence({

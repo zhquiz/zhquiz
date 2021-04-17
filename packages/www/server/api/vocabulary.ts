@@ -180,6 +180,62 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 
   {
     const sQuery = S.shape({
+      entry: S.string(),
+    })
+
+    const sResult = S.shape({
+      result: S.list(
+        S.shape({
+          entry: S.string(),
+          alt: S.list(S.string()),
+          reading: S.list(S.string()),
+          english: S.list(S.string()),
+        })
+      ),
+    })
+
+    f.get<{
+      Querystring: typeof sQuery.type
+    }>(
+      '/super',
+      {
+        schema: {
+          operationId: 'vocabularySuper',
+          querystring: sQuery.valueOf(),
+          response: {
+            200: sResult.valueOf(),
+          },
+        },
+      },
+      async (req): Promise<typeof sResult.type> => {
+        const { entry } = req.query
+
+        const userId: string = req.session.userId
+        if (!userId) {
+          throw { statusCode: 403 }
+        }
+
+        const result = await db.query(sql`
+        SELECT
+          "entry"[1] "entry",
+          "entry"[2:]||'{}'::text[] "alt",
+          "pinyin" "reading",
+          "english"
+        FROM "vocabulary"
+        WHERE (
+          "userId" IS NULL OR "userId" = ${userId}
+        ) AND "entry" &@ ${entry}
+        ORDER BY frequency DESC
+        LIMIT 5
+        `)
+
+        return { result }
+      }
+    )
+  }
+
+  {
+    const sQuery = S.shape({
       entries: S.list(S.string()),
     })
 
