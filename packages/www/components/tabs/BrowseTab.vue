@@ -198,7 +198,7 @@ interface IExtra {
     ContextMenu,
   },
   created() {
-    this.$emit('title', 'Browse')
+    this.$emit('title', 'User content')
     this.load()
   },
 })

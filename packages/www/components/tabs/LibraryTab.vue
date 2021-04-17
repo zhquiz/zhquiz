@@ -34,7 +34,7 @@
                 :id="it.id"
                 :key="i"
                 :title="it.title"
-                :entry="it.entry"
+                :entries="it.entries"
                 :type="it.type"
                 :description="it.description"
                 :additional="additionalContext(it)"
@@ -126,7 +126,12 @@ import LibraryCard from '../cards/LibraryCard.vue'
 interface ILocal {
   id?: string
   title: string
-  entry: string[]
+  entries: {
+    entry: string
+    alt?: string[]
+    reading?: string[]
+    english?: string[]
+  }[]
   type: 'vocabulary' | 'character' | 'sentence'
   description: string
   tag: string[]
@@ -177,14 +182,14 @@ export default class LibraryTab extends Vue {
   edited: ILocal = {
     id: '',
     title: '',
-    entry: [],
+    entries: [],
     type: 'vocabulary',
     description: '',
     tag: [],
   }
 
   get entryString() {
-    return this.edited.entry.join('\n')
+    return this.edited.entries.map(({ entry }) => entry).join('\n')
   }
 
   set entryString(s) {
@@ -196,7 +201,7 @@ export default class LibraryTab extends Vue {
       out.push(m[0])
     }
 
-    this.edited.entry = out
+    this.edited.entries = out.map((entry) => ({ entry }))
   }
 
   additionalContext(it: ILocal) {
@@ -226,7 +231,7 @@ export default class LibraryTab extends Vue {
     this.edited = it || {
       id: '',
       title: '',
-      entry: [],
+      entries: [],
       type: 'vocabulary',
       description: '',
       tag: [],

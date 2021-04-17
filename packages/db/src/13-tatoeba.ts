@@ -245,13 +245,13 @@ export async function populate(
       .all()
       .map((p) => {
         const tr = JSON.parse(p.translation)
-        return sql`(${p.id}, ${tr.cmn || null}, ${p.eng})`
+        return sql`('sentence', 'tatoeba', ${p.id}, ${[tr.cmn]}, ${[p.eng]})`
       })
 
     for (let i = 0; i < lots.length; i += batchSize) {
       console.log(i)
       await db.query(sql`
-        INSERT INTO dict.tatoeba ("id", "cmn", "eng")
+        INSERT INTO dict.entries ("type", "source", "originalId", "entry", "english")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
         ON CONFLICT DO NOTHING
       `)

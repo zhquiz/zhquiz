@@ -8,7 +8,7 @@ import { db } from '../src/init'
 async function main() {
   {
     const rs = await db.query(sql`
-    SELECT "id", "createdAt", "updatedAt", "isShared", "type", "entry", "title", "description", "tag"
+    SELECT "id", "createdAt", "updatedAt", "isShared", "type", "entries", "title", "description", "tag"
     FROM "library"
     WHERE "userId" IS NULL
     ORDER BY "updatedAt", "title"
@@ -17,7 +17,7 @@ async function main() {
     fs.writeFileSync(
       './library/_export.yaml',
       yaml.dump(rs, {
-        flowLevel: 2
+        flowLevel: 3
       })
     )
   }

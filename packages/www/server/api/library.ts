@@ -14,7 +14,14 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
     })
 
     const sResult = S.shape({
-      entry: S.list(S.string()),
+      entries: S.list(
+        S.shape({
+          entry: S.string(),
+          alt: S.list(S.string()).optional(),
+          reading: S.list(S.string()).optional(),
+          english: S.list(S.string()).optional(),
+        })
+      ),
       title: S.string(),
       type: S.string(),
       description: S.string(),
@@ -47,7 +54,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           .query(
             sql`
         SELECT
-          "entry",
+          "entries",
           "title",
           "type",
           "description",
@@ -60,7 +67,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           .then((rs) =>
             rs.map((r) => {
               return {
-                entry: r.entry,
+                entries: r.entries,
                 title: r.title,
                 type: r.type,
                 description: r.description,
@@ -89,7 +96,14 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       result: S.list(
         S.shape({
           id: S.string().optional(),
-          entry: S.list(S.string()),
+          entries: S.list(
+            S.shape({
+              entry: S.string(),
+              alt: S.list(S.string()).optional(),
+              reading: S.list(S.string()).optional(),
+              english: S.list(S.string()).optional(),
+            })
+          ),
           title: S.string(),
           type: S.string(),
           description: S.string(),
@@ -151,7 +165,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           sql`
           WITH match_cte AS (
             SELECT
-              "entry",
+              "entries",
               "title",
               "type",
               "description",
@@ -194,14 +208,15 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         )
 
         return {
-          result: (r.result || []).map((r: any) => {
+          result: ((r.result as any[]) || []).map((r) => {
             return {
               id: r.id || undefined,
-              entry: r.entry,
+              entries: r.entries,
               title: r.title,
               type: r.type,
               description: r.description,
               tag: r.tag,
+              isShared: r.isShared,
             }
           }),
           count: r.count,
@@ -212,7 +227,14 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
 
   {
     const sBody = S.shape({
-      entry: S.list(S.string()),
+      entries: S.list(
+        S.shape({
+          entry: S.string(),
+          alt: S.list(S.string()).optional(),
+          reading: S.list(S.string()).optional(),
+          english: S.list(S.string()).optional(),
+        })
+      ).minItems(1),
       title: S.string(),
       type: S.string(),
       description: S.string(),
@@ -238,7 +260,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         },
       },
       async (req, reply): Promise<typeof sResult.type> => {
-        const { title, type, description, tag, entry, isShared } = req.body
+        const { title, type, description, tag, entries, isShared } = req.body
 
         const userId: string = req.session.userId
         if (!userId) {
@@ -249,8 +271,10 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           const id = shortUUID.uuid()
 
           await db.query(sql`
-          INSERT INTO "library" ("id", "userId", "title", "type", "description", "tag", "entry", "isShared")
-          VALUES (${id}, ${userId} ${title}, ${type}, ${description}, ${tag}, ${entry}, ${isShared})
+          INSERT INTO "library" ("id", "userId", "title", "type", "description", "tag", "entries", "isShared")
+          VALUES (${id}, ${userId} ${title}, ${type}, ${description}, ${tag}, ${JSON.stringify(
+            entries
+          )}::jsonb, ${isShared})
           `)
 
           return id
@@ -272,7 +296,16 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
     })
 
     const sBody = S.shape({
-      entry: S.list(S.string()).optional(),
+      entries: S.list(
+        S.shape({
+          entry: S.string(),
+          alt: S.list(S.string()).optional(),
+          reading: S.list(S.string()).optional(),
+          english: S.list(S.string()).optional(),
+        })
+      )
+        .minItems(1)
+        .optional(),
       title: S.string().optional(),
       type: S.string().optional(),
       description: S.string().optional(),
@@ -301,7 +334,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       },
       async (req, reply): Promise<typeof sResult.type> => {
         const { id } = req.query
-        const { title, type, description, tag, entry, isShared } = req.body
+        const { title, type, description, tag, entries, isShared } = req.body
 
         const userId: string = req.session.userId
         if (!userId) {
@@ -321,8 +354,8 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
                 ? [sql`"description" = ${description}`]
                 : []),
               ...(typeof tag !== 'undefined' ? [sql`"tag" = ${tag}`] : []),
-              ...(typeof entry !== 'undefined'
-                ? [sql`"entry" = ${entry}`]
+              ...(typeof entries !== 'undefined'
+                ? [sql`"entries" = ${JSON.stringify(entries)}::jsonb`]
                 : []),
               ...(typeof isShared !== 'undefined'
                 ? [sql`"isShared" = ${isShared}`]

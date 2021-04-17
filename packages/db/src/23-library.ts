@@ -5,13 +5,20 @@ import fg from 'fast-glob'
 import yaml from 'js-yaml'
 import S from 'jsonschema-definer'
 
+const sEntry = S.shape({
+  entry: S.string(),
+  alt: S.list(S.string()).optional(),
+  reading: S.list(S.string()).optional(),
+  english: S.list(S.string()).optional()
+})
+
 export const sLibrary = S.shape({
   id: S.string().format('uuid'),
   createdAt: S.instanceOf(Date).optional(),
   updatedAt: S.instanceOf(Date).optional(),
   isShared: S.boolean().optional(),
   title: S.string(),
-  entry: S.list(S.string()).minItems(1),
+  entries: S.list(S.anyOf(S.string(), sEntry)).minItems(1),
   type: S.string().enum('character', 'vocabulary', 'sentence').optional(),
   description: S.string().optional(),
   tag: S.list(S.string()).optional()
@@ -27,22 +34,26 @@ export async function populate(db: ConnectionPool, dir = '/app/library') {
       )
 
       await db.query(sql`
-      INSERT INTO "library" ("id", "title", "entry", "type", "tag", "createdAt", "updatedAt", "description", "isShared")
+      INSERT INTO "library" ("id", "title", "entries", "type", "tag", "createdAt", "updatedAt", "description", "isShared")
       VALUES ${sql.join(
         rs.map(
           (r) =>
-            sql`(${r.id}, ${r.title}, ${r.entry}, ${r.type || 'vocabulary'}, ${
-              r.tag || []
-            }, ${r.createdAt || new Date()}, ${
-              r.updatedAt || r.createdAt || new Date()
-            }, ${r.description || ''}, ${r.isShared !== false})`
+            sql`(${r.id}, ${r.title}, ${JSON.stringify(
+              r.entries.map((el) =>
+                typeof el === 'string' ? { entry: el } : el
+              )
+            )}::jsonb, ${r.type || 'vocabulary'}, ${r.tag || []}, ${
+              r.createdAt || new Date()
+            }, ${r.updatedAt || r.createdAt || new Date()}, ${
+              r.description || ''
+            }, ${r.isShared !== false})`
         ),
         ','
       )}
       ON CONFLICT ("id")
       DO UPDATE SET
         "title" = EXCLUDED."title",
-        "entry" = EXCLUDED."entry",
+        "entries" = EXCLUDED."entries",
         "type" = EXCLUDED."type",
         "tag" = EXCLUDED."tag",
         "createdAt" = EXCLUDED."createdAt",
@@ -54,5 +65,13 @@ export async function populate(db: ConnectionPool, dir = '/app/library') {
 
   await db.query(sql`
     REFRESH MATERIALIZED VIEW entry_tag;
+  `)
+}
+
+export async function constraint(db: ConnectionPool) {
+  await db.query(sql`
+  ALTER TABLE "library" ADD CONSTRAINT c_library_entries CHECK (validate_json_schema('${sql.__dangerous__rawValue(
+    JSON.stringify(S.list(sEntry).minItems(1).valueOf())
+  )}', "entries"))
   `)
 }

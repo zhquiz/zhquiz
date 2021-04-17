@@ -25,4 +25,4 @@ CREATE INDEX "idx_cedict_view_pinyin" ON cedict_view
 CREATE INDEX "idx_cedict_view_english" ON cedict_view
   USING pgroonga("english")
   WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
-CREATE INDEX "idx_cedict_view_frequency" ON cedict_view ("frequency")
+CREATE INDEX "idx_cedict_view_frequency" ON cedict_view ("frequency");

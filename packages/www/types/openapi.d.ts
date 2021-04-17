@@ -243,7 +243,12 @@ declare namespace Paths {
   }
   namespace LibraryCreate {
     export interface RequestBody {
-      entry: string[];
+      entries: {
+        entry: string;
+        alt?: string[];
+        reading?: string[];
+        english?: string[];
+      }[];
       title: string;
       type: string;
       description: string;
@@ -278,7 +283,12 @@ declare namespace Paths {
     }
     namespace Responses {
       export interface $200 {
-        entry: string[];
+        entries: {
+          entry: string;
+          alt?: string[];
+          reading?: string[];
+          english?: string[];
+        }[];
         title: string;
         type: string;
         description: string;
@@ -302,7 +312,12 @@ declare namespace Paths {
       export interface $200 {
         result: {
           id?: string;
-          entry: string[];
+          entries: {
+            entry: string;
+            alt?: string[];
+            reading?: string[];
+            english?: string[];
+          }[];
           title: string;
           type: string;
           description: string;
@@ -321,7 +336,12 @@ declare namespace Paths {
       id: Parameters.Id;
     }
     export interface RequestBody {
-      entry?: string[];
+      entries?: {
+        entry: string;
+        alt?: string[];
+        reading?: string[];
+        english?: string[];
+      }[];
       title?: string;
       type?: string;
       description?: string;
@@ -618,6 +638,24 @@ declare namespace Paths {
       }
     }
   }
+  namespace SentenceVocabulary {
+    namespace Parameters {
+      export type Q = string;
+    }
+    export interface QueryParameters {
+      q: Parameters.Q;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: {
+          entry: string;
+          alt: string[];
+          reading: string[];
+          english: string[];
+        }[];
+      }
+    }
+  }
   namespace Settings {
     namespace Responses {
       export interface $200 {
@@ -686,6 +724,24 @@ declare namespace Paths {
       }
     }
   }
+  namespace VocabularyGetByEntries {
+    namespace Parameters {
+      export type Entries = string[];
+    }
+    export interface QueryParameters {
+      entries: Parameters.Entries;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: {
+          entry: string;
+          alt: string[];
+          reading: string[];
+          english: string[];
+        }[];
+      }
+    }
+  }
   namespace VocabularyGetByEntry {
     namespace Parameters {
       export type Entry = string;
@@ -750,6 +806,24 @@ declare namespace Paths {
         result: {
           entry: string;
           english: string;
+        }[];
+      }
+    }
+  }
+  namespace VocabularySuper {
+    namespace Parameters {
+      export type Entry = string;
+    }
+    export interface QueryParameters {
+      entry: Parameters.Entry;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: {
+          entry: string;
+          alt: string[];
+          reading: string[];
+          english: string[];
         }[];
       }
     }
@@ -1030,6 +1104,14 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.SentenceGetByEntry.Responses.$200>
   /**
+   * sentenceVocabulary
+   */
+  'sentenceVocabulary'(
+    parameters?: Parameters<Paths.SentenceVocabulary.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.SentenceVocabulary.Responses.$200>
+  /**
    * sentenceQuery
    */
   'sentenceQuery'(
@@ -1125,6 +1207,22 @@ export interface OperationMethods {
     data?: any,
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.VocabularyGetByEntry.Responses.$200>
+  /**
+   * vocabularySuper
+   */
+  'vocabularySuper'(
+    parameters?: Parameters<Paths.VocabularySuper.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.VocabularySuper.Responses.$200>
+  /**
+   * vocabularyGetByEntries
+   */
+  'vocabularyGetByEntries'(
+    parameters?: Parameters<Paths.VocabularyGetByEntries.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.VocabularyGetByEntries.Responses.$200>
   /**
    * vocabularyQuery
    */
@@ -1474,6 +1572,16 @@ export interface PathsDictionary {
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.SentenceGetByEntry.Responses.$200>
   }
+  ['/api/sentence/vocabulary']: {
+    /**
+     * sentenceVocabulary
+     */
+    'get'(
+      parameters?: Parameters<Paths.SentenceVocabulary.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.SentenceVocabulary.Responses.$200>
+  }
   ['/api/sentence/q']: {
     /**
      * sentenceQuery
@@ -1591,6 +1699,26 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.VocabularyGetByEntry.Responses.$200>
+  }
+  ['/api/vocabulary/super']: {
+    /**
+     * vocabularySuper
+     */
+    'get'(
+      parameters?: Parameters<Paths.VocabularySuper.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.VocabularySuper.Responses.$200>
+  }
+  ['/api/vocabulary/entries']: {
+    /**
+     * vocabularyGetByEntries
+     */
+    'get'(
+      parameters?: Parameters<Paths.VocabularyGetByEntries.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.VocabularyGetByEntries.Responses.$200>
   }
   ['/api/vocabulary/q']: {
     /**

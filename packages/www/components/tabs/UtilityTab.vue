@@ -14,32 +14,59 @@
 
         <div style="display: flex; flex-direction: row">
           <b-button @click="doSegment(q)" type="is-success">Submit</b-button>
-          <b-checkbox class="ml-4" v-model="isRaw">Raw</b-checkbox>
+          <b-checkbox class="ml-4" v-model="isRaw">
+            One item per line
+          </b-checkbox>
         </div>
 
-        <b-taglist class="mt-4">
-          <b-tag
-            size="is-large"
-            type="is-light is-info"
-            class="segment"
-            v-for="(t, i) in segments"
-            :key="i"
-            @click="
-              (evt) => {
-                selected = t
-                $refs.context.open(evt)
-              }
-            "
-            @contextmenu.prevent="
-              (evt) => {
-                selected = t
-                $refs.context.open(evt)
-              }
-            "
-          >
-            {{ t }}
-          </b-tag>
-        </b-taglist>
+        <div class="mt-4 content">
+          <ul class="mt-4">
+            <li class="segment" v-for="(t, i) in segments" :key="i">
+              <span
+                class="has-context"
+                @click="
+                  (evt) => {
+                    selected = t.entry
+                    $refs.context.open(evt)
+                  }
+                "
+                @contextmenu.prevent="
+                  (evt) => {
+                    selected = t.entry
+                    $refs.context.open(evt)
+                  }
+                "
+              >
+                {{ t.entry }}
+              </span>
+              <span
+                class="has-context"
+                v-for="(a, j) in t.alt"
+                :key="j"
+                @click="
+                  (evt) => {
+                    selected = a
+                    $refs.context.open(evt)
+                  }
+                "
+                @contextmenu.prevent="
+                  (evt) => {
+                    selected = a
+                    $refs.context.open(evt)
+                  }
+                "
+              >
+                {{ a }}
+              </span>
+              <span v-if="t.reading.length">
+                [{{ t.reading.join(' | ') }}]
+              </span>
+              <span>
+                {{ t.english.join(' / ') }}
+              </span>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -65,14 +92,26 @@ export default class UtilityTab extends Vue {
   isRaw = false
 
   selected = ''
-  segments: string[] = []
+  segments: {
+    entry: string
+    alt: string[]
+    reading: string[]
+    english: string[]
+  }[] = []
 
   async doSegment(q: string) {
     if (this.isRaw) {
-      this.segments = [q]
+      this.segments = await this.$axios
+        .vocabularyGetByEntries({
+          entries: q
+            .trim()
+            .split('\n')
+            .filter((a, i, r) => r.indexOf(a) === i),
+        })
+        .then((r) => r.data.result)
     } else {
       this.segments = await this.$axios
-        .tokenize({ q })
+        .sentenceVocabulary({ q })
         .then((r) => r.data.result)
     }
   }
@@ -81,11 +120,17 @@ export default class UtilityTab extends Vue {
 
 
 <style lang="scss" scoped>
-.segment {
+.has-context {
   cursor: pointer;
 
   &:hover {
     color: blue;
+  }
+}
+
+li > span {
+  & + & {
+    margin-left: 1em;
   }
 }
 </style>

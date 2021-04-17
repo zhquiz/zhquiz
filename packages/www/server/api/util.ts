@@ -140,7 +140,7 @@ export function jiebaCutForSearch(el: string) {
     .filter((a, i, r) => r.indexOf(a) === i)
 }
 
-export async function makeReading(el: string) {
+export function makeReading(el: string) {
   return toPinyin(el, { keepRest: true, toneToNumber: true })
 }
 
