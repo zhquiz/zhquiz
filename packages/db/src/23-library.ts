@@ -66,8 +66,8 @@ export async function populate(db: ConnectionPool, dir = '/app/library') {
                     typeof el.english === 'string' ? [el.english] : el.english
                 })
               })
-            )}::jsonb, ${r.type || 'vocabulary'}, ${r.tag || []}, ${r.createdAt || new Date()
-              }, ${r.updatedAt || r.createdAt || new Date()}, ${r.description || ''
+            )}::jsonb, ${r.type || 'vocabulary'}, ${r.tag || []}, ${r.createdAt
+              }, ${r.updatedAt}, ${r.description || ''
               }, ${r.isShared !== false})`
         ),
         ','
@@ -78,7 +78,7 @@ export async function populate(db: ConnectionPool, dir = '/app/library') {
         "entries" = EXCLUDED."entries",
         "type" = EXCLUDED."type",
         "tag" = EXCLUDED."tag",
-        "createdAt" = EXCLUDED."createdAt",
+        "createdAt" = COALESCE(EXCLUDED."createdAt", library."createdAt"),
         "description" = EXCLUDED."description",
         "isShared" = EXCLUDED."isShared"
       `)

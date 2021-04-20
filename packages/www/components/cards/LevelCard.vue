@@ -55,7 +55,7 @@
             <span
               v-for="t in props.row.entries"
               :key="t"
-              class="tag clickable"
+              class="tag clickable is-medium"
               :class="getTagClass(t)"
               @click="
                 (evt) => {

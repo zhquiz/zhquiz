@@ -152,9 +152,5 @@ export async function makeEnglish(el: string, userId: string) {
     .map((v) => v!.english!.join(' / ').replace(new RegExp(v.entry, 'g'), ''))
     .filter((v) => v)
 
-  if (segs.length === 0) {
-    return ['???']
-  }
-
   return segs
 }

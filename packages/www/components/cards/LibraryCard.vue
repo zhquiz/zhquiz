@@ -1,42 +1,123 @@
 <template>
   <section>
-    <b-collapse v-model="isOpen" class="card" animation="slide">
-      <div slot="trigger" slot-scope="props" class="card-header" role="button">
-        <p
-          class="card-header-title"
-          @contextmenu.prevent="
-            (evt) => {
-              selected = currentData
-              $refs.context.open(evt)
-            }
-          "
+    <div class="card">
+      <header class="card-header" style="display: flex; flex-direction: row">
+        <div class="card-header-title" style="flex-grow: 1">
+          <p
+            class="has-context"
+            @click="
+              (evt) => {
+                selected = currentData
+                $refs.context.open(evt)
+              }
+            "
+            @contextmenu.prevent="
+              (evt) => {
+                selected = currentData
+                $refs.context.open(evt)
+              }
+            "
+          >
+            {{ title }}
+          </p>
+          <div
+            @click="isOpen = !isOpen"
+            style="flex-grow: 1; height: 100%; cursor: pointer"
+          ></div>
+        </div>
+        <a
+          v-if="isOpen"
+          class="card-header-icon"
+          role="button"
+          @click="isList = !isList"
         >
-          {{ title }}
-        </p>
-        <a class="card-header-icon">
-          <b-icon :icon="props.open ? 'caret-down' : 'caret-up'"> </b-icon>
+          <b-icon :icon="isList ? 'th' : 'list-ul'"> </b-icon>
         </a>
-      </div>
+        <a class="card-header-icon" role="button" @click="isOpen = !isOpen">
+          <b-icon :icon="isOpen ? 'caret-down' : 'caret-up'"> </b-icon>
+        </a>
+      </header>
+
       <div
+        v-if="isOpen"
         class="card-content"
-        @click="
-          (evt) => {
-            selected = currentData
-            $refs.context.open(evt)
-          }
-        "
-        @contextmenu.prevent="
-          (evt) => {
-            selected = currentData
-            $refs.context.open(evt)
-          }
-        "
+        :data-mode="isList ? 'list' : 'item'"
       >
-        <div>
+        <div v-if="isList">
+          <b-table
+            :data="list"
+            paginated
+            :per-page="perPage"
+            @page-change="(p) => makeList(p)"
+          >
+            <b-table-column field="entry" label="Entry" v-slot="props">
+              <span
+                class="tag clickable is-medium"
+                :class="getTagClass(props.row.entry)"
+                @click.stop="
+                  (evt) => {
+                    selected = [props.row.entry]
+                    $refs.context.open(evt)
+                  }
+                "
+                @contextmenu.prevent="
+                  (evt) => {
+                    selected = [props.row.entry]
+                    $refs.context.open(evt)
+                  }
+                "
+              >
+                {{ props.row.entry }}
+              </span>
+
+              <span
+                v-for="t in props.row.alt || []"
+                :key="t"
+                class="tag clickable is-medium"
+                :class="getTagClass(t)"
+                @click.stop="
+                  (evt) => {
+                    selected = [t]
+                    $refs.context.open(evt)
+                  }
+                "
+                @contextmenu.prevent="
+                  (evt) => {
+                    selected = [t]
+                    $refs.context.open(evt)
+                  }
+                "
+              >
+                {{ t }}
+              </span>
+            </b-table-column>
+            <b-table-column field="reading" label="Pinyin" v-slot="props">
+              <div v-for="it in props.row.reading || []" :key="it">
+                {{ it }}
+              </div>
+            </b-table-column>
+            <b-table-column
+              field="english"
+              label="English"
+              v-slot="props"
+              width="40vw"
+            >
+              {{ (props.row.english || []).join(' / ') }}
+            </b-table-column>
+
+            <template slot="empty">
+              <div style="position: relative; height: 120px">
+                <b-loading active :is-full-page="false"></b-loading>
+              </div>
+            </template>
+          </b-table>
+        </div>
+
+        <div v-else>
           <span
             v-for="t in currentData"
             :key="t"
-            class="tag clickable"
+            class="tag clickable is-medium"
             :class="getTagClass(t)"
             @click.stop="
               (evt) => {
@@ -55,7 +136,7 @@
           </span>
         </div>
       </div>
-    </b-collapse>
+    </div>
 
     <ContextMenu
       ref="context"
@@ -70,7 +151,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Ref, Prop } from 'nuxt-property-decorator'
+import { Vue, Component, Ref, Prop, Watch } from 'nuxt-property-decorator'
 import ContextMenu from '../ContextMenu.vue'
 
 @Component<LibraryCard>({
@@ -78,13 +159,11 @@ import ContextMenu from '../ContextMenu.vue'
     ContextMenu,
   },
   watch: {
-    isOpen() {
-      if (this.isOpen) {
-        this.reload(this.currentData)
-      }
-    },
     entry() {
       this.isOpen = false
+    },
+    isList() {
+      this.makeList()
     },
   },
 })
@@ -107,6 +186,16 @@ export default class LibraryCard extends Vue {
   @Ref() context!: ContextMenu
 
   isOpen = false
+  isList = false
+
+  list: {
+    entry: string
+    alt?: string[]
+    reading?: string[]
+    english?: string[]
+  }[] = []
+
+  perPage = 5
 
   selected: string[] = []
   srsLevel: {
@@ -125,7 +214,12 @@ export default class LibraryCard extends Vue {
       .filter((a, i, arr) => arr.indexOf(a) === i)
   }
 
+  @Watch('isOpen')
   async reload(entry: string[]) {
+    if (!this.isOpen) {
+      return
+    }
+
     if (entry.length > 0) {
       const {
         data: { result = [] },
@@ -147,6 +241,48 @@ export default class LibraryCard extends Vue {
       this.$set(this, 'srsLevel', this.srsLevel)
       this.$forceUpdate()
     }
+  }
+
+  async makeList(p = 1) {
+    if (!this.list.length) {
+      this.list = this.entries.map(({ entry }) => ({ entry }))
+    }
+
+    const offset = (p - 1) * this.perPage
+
+    const seg = this.list.slice(offset, offset + this.perPage)
+    if (!seg.length || seg.every((s) => s.english && s.english.length)) {
+      return
+    }
+
+    console.log(seg.map(({ entry }) => entry))
+
+    await this.$axios
+      .vocabularyGetByEntries({
+        entries: seg.map(({ entry }) => entry),
+      })
+      .then((r) =>
+        r.data.result.map((s) => {
+          const ents = new Set([s.entry, ...(s.alt || [])])
+          const i = seg.findIndex((s1) => ents.has(s1.entry))
+
+          if (i >= 0) {
+            if (!s.english.length) {
+              s.english = this.entries[offset + i].english || ['???']
+            }
+
+            seg[i] = s
+          } else {
+            seg[i] = this.entries[offset + i]
+          }
+        })
+      )
+
+    this.list = [
+      ...this.list.slice(0, offset),
+      ...seg,
+      ...this.list.slice(offset + this.perPage),
+    ]
   }
 
   getTagClass(item: string) {
@@ -176,8 +312,13 @@ export default class LibraryCard extends Vue {
   margin-bottom: 0.5rem;
 }
 
-.card-content {
+.card-content[data-mode='item'] {
   max-height: 400px;
   overflow: scroll;
+}
+
+.has-context:hover {
+  color: blue;
+  cursor: pointer;
 }
 </style>

@@ -1,4 +1,5 @@
 - id: bbb0d3ac-6dfa-4744-b1c9-42776c173f69
+  createdAt: 2021-04-18
   title: Money exchange (换钱)
   type: sentence
   tag: [money, finance]
@@ -53,6 +54,7 @@
       reading: Zài nǎlǐ huànqián?
       translation: แลกเงินที่ไหน 
 - id: dd011262-de97-4aaa-93b4-7de694c69991
+  createdAt: 2021-04-18
   title: Chinese idiom (成语) Set 1
   tag: [idiom]
   source: https://pasajeen.com/category/นิทานสำนวนสุภาษิตจีน-成/
