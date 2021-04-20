@@ -52,9 +52,9 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
           ) AND s."entry" LIKE '%'||${entry.replace(
-            /[^\p{sc=Han}]+/gu,
-            '%'
-          )}||'%'
+          /[^\p{sc=Han}]+/gu,
+          '%'
+        )}||'%'
         )
 
         SELECT DISTINCT ON ("entry") *
@@ -235,68 +235,6 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
   }
 
   {
-    const sQuery = S.shape({
-      entries: S.list(S.string()),
-    })
-
-    const sResult = S.shape({
-      result: S.list(
-        S.shape({
-          entry: S.string(),
-          alt: S.list(S.string()),
-          reading: S.list(S.string()),
-          english: S.list(S.string()),
-        })
-      ),
-    })
-
-    f.get<{
-      Querystring: typeof sQuery.type
-    }>(
-      '/entries',
-      {
-        schema: {
-          operationId: 'vocabularyGetByEntries',
-          querystring: sQuery.valueOf(),
-          response: {
-            200: sResult.valueOf(),
-          },
-        },
-      },
-      async (req): Promise<typeof sResult.type> => {
-        const { entries } = req.query
-
-        const userId: string = req.session.userId
-        if (!userId) {
-          throw { statusCode: 403 }
-        }
-
-        const getEntry = async (entry: string) => {
-          const r = await lookupVocabulary(entry, userId)
-
-          let english = r.english || []
-          if (!english.length) {
-            english = await makeEnglish(entry, userId)
-          }
-
-          return {
-            ...r,
-            english,
-          }
-        }
-
-        return {
-          result: await Promise.all(
-            entries
-              .filter((a, i, r) => r.indexOf(a) === i)
-              .map((it) => getEntry(it))
-          ),
-        }
-      }
-    )
-  }
-
-  {
     const makeZh = new QSplit({
       default(v) {
         if (/^\p{sc=Han}+$/u.test(v)) {
@@ -385,30 +323,30 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           ) t2
           WHERE
           ${sql.join(
-            [
-              qCond
-                ? sql`"entry" IN (
+          [
+            qCond
+              ? sql`"entry" IN (
             SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'vocabulary' AND ${qCond}
           )`
-                : null,
-              tagCond
-                ? sql`"entry" IN (
+              : null,
+            tagCond
+              ? sql`"entry" IN (
                     SELECT "entry"
                     FROM entry_tag
                     WHERE (
                       "userId" IS NULL OR "userId" = ${userId}
                     ) AND "type" = 'vocabulary' AND ${tagCond}
                   )`
-                : null,
-              lvCond
-                ? sql`"entry" IN (SELECT "entry" FROM "level" WHERE ${lvCond})`
-                : null,
-              sql`TRUE`,
-            ]
-              .filter((s) => s)
-              .map((s) => s!),
-            ' AND '
-          )}
+              : null,
+            lvCond
+              ? sql`"entry" IN (SELECT "entry" FROM "level" WHERE ${lvCond})`
+              : null,
+            sql`TRUE`,
+          ]
+            .filter((s) => s)
+            .map((s) => s!),
+          ' AND '
+        )}
         )
 
         SELECT "entry", min("isTrad") "isTrad" FROM (
@@ -518,41 +456,6 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           result: r.result,
           english: (r.english || ['???']).join(' / '),
           level: r.level,
-        }
-      }
-    )
-  }
-
-  {
-    const sResult = S.shape({
-      result: S.list(
-        S.shape({
-          entry: S.string(),
-          level: S.integer(),
-        })
-      ),
-    })
-
-    f.get(
-      '/level',
-      {
-        schema: {
-          operationId: 'vocabularyListLevel',
-          response: { 200: sResult.valueOf() },
-        },
-      },
-      async (): Promise<typeof sResult.type> => {
-        const result: {
-          entry: string
-          level: number
-        }[] = await db.query(sql`
-        SELECT "entry", "vLevel" "level"
-        FROM dict.zhlevel
-        WHERE "vLevel" IS NOT NULL
-        `)
-
-        return {
-          result,
         }
       }
     )

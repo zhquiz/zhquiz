@@ -1,7 +1,6 @@
 <template>
   <section>
-    <b-loading v-if="isLoading" active />
-    <div v-if="Object.keys(allData).length > 0" class="LevelPage container">
+    <div class="LevelPage container">
       <div class="field">
         <label class="label">Filter</label>
         <b-field>
@@ -29,72 +28,40 @@
         </b-field>
       </div>
 
-      <b-table :data="currentData">
-        <b-table-column v-slot="props" field="level" label="Level" width="40">
-          <span
-            class="clickable"
-            @click="
-              (evt) => {
-                selected = allData[props.row.level]
-                $refs.context.open(evt)
-              }
-            "
-            @contextmenu.prevent="
-              (evt) => {
-                selected = allData[props.row.level]
-                $refs.context.open(evt)
-              }
-            "
-          >
-            {{ props.row.level }}
-          </span>
-        </b-table-column>
+      <section class="card">
+        <div class="card-content">
+          <LibraryCard
+            v-for="{ level, entries } in sublist"
+            :key="level"
+            :title="`Level ${level}`"
+            :entries="entries.map((entry) => ({ entry }))"
+            :type="type"
+            :open="true"
+          />
 
-        <b-table-column v-slot="props" field="entries" label="Item">
-          <div>
-            <span
-              v-for="t in props.row.entries"
-              :key="t"
-              class="tag clickable is-medium"
-              :class="getTagClass(t)"
-              @click="
-                (evt) => {
-                  selected = [t]
-                  $refs.context.open(evt)
-                }
-              "
-              @contextmenu.prevent="
-                (evt) => {
-                  selected = [t]
-                  $refs.context.open(evt)
-                }
-              "
-            >
-              {{ t }}
-            </span>
-          </div>
-        </b-table-column>
-      </b-table>
+          <b-pagination
+            class="mt-4"
+            v-if="list.length > perPage"
+            v-model="page"
+            :total="list.length"
+            :per-page="perPage"
+            icon-prev="angle-left"
+            icon-next="angle-right"
+            @change="(p) => (page = p)"
+          />
+        </div>
+      </section>
     </div>
-
-    <ContextMenu
-      ref="context"
-      :type="type"
-      :entry="selected"
-      :pinyin="pinyinMap"
-      @quiz:added="(evt) => reload(evt.entries)"
-      @quiz:removed="(evt) => reload(evt.entries)"
-    />
   </section>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Ref, Vue } from 'vue-property-decorator'
-import ContextMenu from '@/components/ContextMenu.vue'
+import { Component, Prop, Vue } from 'vue-property-decorator'
+import LibraryCard from './LibraryCard.vue'
 
 @Component<LevelCard>({
   components: {
-    ContextMenu,
+    LibraryCard,
   },
   created() {
     this.init()
@@ -107,87 +74,23 @@ import ContextMenu from '@/components/ContextMenu.vue'
 })
 export default class LevelCard extends Vue {
   @Prop() type!: 'character' | 'vocabulary'
-  @Ref() context!: ContextMenu
 
   isLoading = true
 
-  allData: {
-    [level: string]: string[]
-  } = {}
-
-  srsLevel: {
-    [entry: string]: number
-  } = {}
-
-  selected: string[] = []
-
-  tagClassMap = [
-    (lv: number) => (lv > 2 ? 'is-success' : ''),
-    (lv: number) => (lv > 0 ? 'is-warning' : ''),
-    (lv: number) => (lv === 0 ? 'is-danger' : ''),
-  ]
-
-  whatToShow = 'all'
-  currentData: {
+  list: {
     level: number
     entries: string[]
   }[] = []
 
-  pinyinMap: Record<string, string> = {}
+  whatToShow = 'all'
+  page = 1
+  perPage = 5
 
-  setCurrentData() {
-    this.currentData = Object.entries(this.allData)
-      .map(([_lv, entries]) => {
-        const level = parseInt(_lv)
-
-        return {
-          level,
-          entries: Array.from(entries)
-            .filter((v) => {
-              if (this.whatToShow === 'all') {
-                return true
-              }
-
-              if (this.whatToShow === 'learning') {
-                if (this.srsLevel[v] <= 2) {
-                  return true
-                }
-              }
-
-              if (this.whatToShow === 'all-quiz') {
-                if (typeof this.srsLevel[v] !== 'undefined') {
-                  return true
-                }
-              }
-
-              return false
-            })
-            .sort(),
-        }
-      })
-      .filter((a) => {
-        return a.entries.length > 0
-      })
-      .sort((a, b) => a.level - b.level)
-  }
-
-  getTagClass(item: string) {
-    const srsLevel = this.srsLevel[item]
-
-    if (typeof srsLevel !== 'undefined') {
-      if (srsLevel === -1) {
-        return 'is-info'
-      }
-
-      for (const fn of this.tagClassMap) {
-        const c = fn(srsLevel)
-        if (c) {
-          return c
-        }
-      }
-    }
-
-    return 'is-light'
+  get sublist() {
+    return this.list.slice(
+      (this.page - 1) * this.perPage,
+      this.page * this.perPage
+    )
   }
 
   async init() {
@@ -201,51 +104,29 @@ export default class LevelCard extends Vue {
       this.whatToShow = whatToShow[0]
     }
 
-    await this.reload([])
+    await this.setCurrentData()
     this.isLoading = false
   }
 
-  async reload(entries: string[]) {
-    if (this.currentData.length === 0) {
-      const {
-        data: { result },
-      } = await (this.type === 'character'
-        ? this.$axios.characterListLevel()
-        : this.$axios.vocabularyListLevel())
+  async setCurrentData() {
+    const {
+      data: { result },
+    } = await this.$axios.libraryListLevel({
+      type: this.type,
+      whatToShow: this.whatToShow,
+    })
 
-      entries = result.map(({ entry, level }) => {
-        const lv = level.toString()
-        const levelData = this.allData[lv] || []
-        levelData.push(entry)
-        this.allData[lv] = levelData
+    const allData = new Map<number, string[]>()
 
-        return entry
-      })
+    result.map(({ entry, level }) => {
+      const levelData = allData.get(level) || []
+      levelData.push(entry)
+      allData.set(level, levelData)
+    })
 
-      this.$set(this, 'allData', this.allData)
-    }
-
-    if (entries.length > 0) {
-      const {
-        data: { result = [] },
-      } = await this.$axios.quizGetSrsLevel(null, {
-        entry: entries,
-        type: this.type,
-      })
-
-      // eslint-disable-next-line array-callback-return
-      entries.map((entry) => {
-        delete this.srsLevel[entry]
-      })
-
-      // eslint-disable-next-line array-callback-return
-      result.map(({ entry, srsLevel }) => {
-        this.srsLevel[entry] = srsLevel
-      })
-
-      this.$set(this, 'srsLevel', this.srsLevel)
-      this.setCurrentData()
-    }
+    this.list = Array.from(allData)
+      .sort(([lv1], [lv2]) => lv1 - lv2)
+      .map(([level, entries]) => ({ level, entries }))
   }
 
   async onWhatToShowChanged() {

@@ -36,16 +36,6 @@ declare namespace Paths {
       }
     }
   }
-  namespace CharacterListLevel {
-    namespace Responses {
-      export interface $200 {
-        result: {
-          entry: string;
-          level: number;
-        }[];
-      }
-    }
-  }
   namespace CharacterQuery {
     namespace Parameters {
       export type Q = string;
@@ -274,6 +264,22 @@ declare namespace Paths {
       }
     }
   }
+  namespace LibraryGetByEntries {
+    export interface RequestBody {
+      type: "character" | "vocabulary" | "sentence";
+      entries: string[];
+    }
+    namespace Responses {
+      export interface $200 {
+        result: {
+          entry: string;
+          alt: string[];
+          reading: string[];
+          english: string[];
+        }[];
+      }
+    }
+  }
   namespace LibraryGetOne {
     namespace Parameters {
       export type Id = string;
@@ -294,6 +300,24 @@ declare namespace Paths {
         description: string;
         tag: string[];
         isShared?: boolean;
+      }
+    }
+  }
+  namespace LibraryListLevel {
+    namespace Parameters {
+      export type Type = "vocabulary" | "character";
+      export type WhatToShow = string;
+    }
+    export interface QueryParameters {
+      type: Parameters.Type;
+      whatToShow: Parameters.WhatToShow;
+    }
+    namespace Responses {
+      export interface $200 {
+        result: {
+          entry: string;
+          level: number;
+        }[];
       }
     }
   }
@@ -724,24 +748,6 @@ declare namespace Paths {
       }
     }
   }
-  namespace VocabularyGetByEntries {
-    namespace Parameters {
-      export type Entries = string[];
-    }
-    export interface QueryParameters {
-      entries: Parameters.Entries;
-    }
-    namespace Responses {
-      export interface $200 {
-        result: {
-          entry: string;
-          alt: string[];
-          reading: string[];
-          english: string[];
-        }[];
-      }
-    }
-  }
   namespace VocabularyGetByEntry {
     namespace Parameters {
       export type Entry = string;
@@ -757,16 +763,6 @@ declare namespace Paths {
         english: string[];
         tag: string[];
         level?: number;
-      }
-    }
-  }
-  namespace VocabularyListLevel {
-    namespace Responses {
-      export interface $200 {
-        result: {
-          entry: string;
-          level: number;
-        }[];
       }
     }
   }
@@ -888,14 +884,6 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.CharacterRandom.Responses.$200>
   /**
-   * characterListLevel
-   */
-  'characterListLevel'(
-    parameters?: Parameters<UnknownParamsObject> | null,
-    data?: any,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.CharacterListLevel.Responses.$200>
-  /**
    * extraGetById
    */
   'extraGetById'(
@@ -999,6 +987,22 @@ export interface OperationMethods {
     data?: any,
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.LibraryQuery.Responses.$200>
+  /**
+   * libraryListLevel
+   */
+  'libraryListLevel'(
+    parameters?: Parameters<Paths.LibraryListLevel.QueryParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.LibraryListLevel.Responses.$200>
+  /**
+   * libraryGetByEntries
+   */
+  'libraryGetByEntries'(
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: Paths.LibraryGetByEntries.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.LibraryGetByEntries.Responses.$200>
   /**
    * presetGetOne
    */
@@ -1216,14 +1220,6 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.VocabularySuper.Responses.$200>
   /**
-   * vocabularyGetByEntries
-   */
-  'vocabularyGetByEntries'(
-    parameters?: Parameters<Paths.VocabularyGetByEntries.QueryParameters> | null,
-    data?: any,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.VocabularyGetByEntries.Responses.$200>
-  /**
    * vocabularyQuery
    */
   'vocabularyQuery'(
@@ -1239,14 +1235,6 @@ export interface OperationMethods {
     data?: any,
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.VocabularyRandom.Responses.$200>
-  /**
-   * vocabularyListLevel
-   */
-  'vocabularyListLevel'(
-    parameters?: Parameters<UnknownParamsObject> | null,
-    data?: any,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.VocabularyListLevel.Responses.$200>
 }
 
 export interface PathsDictionary {
@@ -1319,16 +1307,6 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.CharacterRandom.Responses.$200>
-  }
-  ['/api/character/level']: {
-    /**
-     * characterListLevel
-     */
-    'get'(
-      parameters?: Parameters<UnknownParamsObject> | null,
-      data?: any,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.CharacterListLevel.Responses.$200>
   }
   ['/api/extra/id']: {
     /**
@@ -1449,6 +1427,26 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.LibraryQuery.Responses.$200>
+  }
+  ['/api/library/level']: {
+    /**
+     * libraryListLevel
+     */
+    'get'(
+      parameters?: Parameters<Paths.LibraryListLevel.QueryParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.LibraryListLevel.Responses.$200>
+  }
+  ['/api/library/entries']: {
+    /**
+     * libraryGetByEntries
+     */
+    'post'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: Paths.LibraryGetByEntries.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.LibraryGetByEntries.Responses.$200>
   }
   ['/api/preset/']: {
     /**
@@ -1710,16 +1708,6 @@ export interface PathsDictionary {
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.VocabularySuper.Responses.$200>
   }
-  ['/api/vocabulary/entries']: {
-    /**
-     * vocabularyGetByEntries
-     */
-    'get'(
-      parameters?: Parameters<Paths.VocabularyGetByEntries.QueryParameters> | null,
-      data?: any,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.VocabularyGetByEntries.Responses.$200>
-  }
   ['/api/vocabulary/q']: {
     /**
      * vocabularyQuery
@@ -1739,16 +1727,6 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.VocabularyRandom.Responses.$200>
-  }
-  ['/api/vocabulary/level']: {
-    /**
-     * vocabularyListLevel
-     */
-    'get'(
-      parameters?: Parameters<UnknownParamsObject> | null,
-      data?: any,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.VocabularyListLevel.Responses.$200>
   }
 }
 

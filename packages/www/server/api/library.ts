@@ -6,6 +6,10 @@ import shortUUID from 'short-uuid'
 import { refresh } from '../db/refresh'
 import { QSplit } from '../db/token'
 import { db } from '../shared'
+import { lookupCharacter } from './character'
+import { lookupSentence } from './sentence'
+import { makeEnglish, makeReading } from './util'
+import { lookupVocabulary } from './vocabulary'
 
 const libraryRouter: FastifyPluginAsync = async (f) => {
   {
@@ -432,6 +436,140 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         reply.status(201)
         return {
           result: 'deleted',
+        }
+      }
+    )
+  }
+
+  {
+    const sQuery = S.shape({
+      type: S.string().enum('vocabulary', 'character'),
+      whatToShow: S.string()
+    })
+
+    const sResult = S.shape({
+      result: S.list(
+        S.shape({
+          entry: S.string(),
+          level: S.integer(),
+        })
+      ),
+    })
+
+    f.get<{
+      Querystring: typeof sQuery.type
+    }>(
+      '/level',
+      {
+        schema: {
+          operationId: 'libraryListLevel',
+          querystring: sQuery.valueOf(),
+          response: { 200: sResult.valueOf() },
+        },
+      },
+      async (req): Promise<typeof sResult.type> => {
+        const { type, whatToShow } = req.query
+        const col = type === 'character' ? sql`"hLevel"` : sql`"vLevel"`
+
+        let cond = sql`WHERE ${col} IS NOT NULL`
+
+        if (whatToShow === 'all-quiz') {
+          cond = sql`
+          LEFT JOIN quiz ON quiz."entry" = zh."entry"
+          WHERE "srsLevel" IS NOT NULL AND ${col} IS NOT NULL
+          `
+        } else if (whatToShow === 'learning') {
+          cond = sql`
+          LEFT JOIN quiz ON quiz."entry" = zh."entry"
+          WHERE "srsLevel" <= 2 AND ${col} IS NOT NULL`
+        }
+
+        const result: {
+          entry: string
+          level: number
+        }[] = await db.query(sql`
+        SELECT DISTINCT ON (zh."entry")
+          zh."entry" "entry", ${col} "level"
+        FROM dict.zhlevel zh
+        ${cond}
+        `)
+
+        return {
+          result,
+        }
+      }
+    )
+  }
+
+  {
+    const sBody = S.shape({
+      type: S.string().enum('character', 'vocabulary', 'sentence'),
+      entries: S.list(S.string()),
+    })
+
+    const sResult = S.shape({
+      result: S.list(
+        S.shape({
+          entry: S.string(),
+          alt: S.list(S.string()),
+          reading: S.list(S.string()),
+          english: S.list(S.string()),
+        })
+      ),
+    })
+
+    f.post<{
+      Body: typeof sBody.type
+    }>(
+      '/entries',
+      {
+        schema: {
+          operationId: 'libraryGetByEntries',
+          body: sBody.valueOf(),
+          response: {
+            200: sResult.valueOf(),
+          },
+        },
+      },
+      async (req): Promise<typeof sResult.type> => {
+        const { type, entries } = req.body
+
+        const userId: string = req.session.userId
+        if (!userId) {
+          throw { statusCode: 403 }
+        }
+
+        const getEntry = async (entry: string) => {
+          const r: {
+            entry: string
+            alt?: string[]
+            reading?: string[]
+            english?: string[]
+          } = await (type === 'character'
+            ? lookupCharacter(entry, userId)
+            : type === 'sentence'
+              ? lookupSentence(entry, userId)
+              : lookupVocabulary(entry, userId))
+
+          let english = r.english || []
+          if (!english.length) {
+            english = await makeEnglish(entry, userId)
+          }
+
+          return {
+            ...r,
+            alt: r.alt || [],
+            reading: r.reading || [makeReading(r.entry)],
+            english,
+          }
+        }
+
+        return {
+          result: await Promise.all(
+            entries
+              .filter((a, i, r) => r.indexOf(a) === i)
+              .map((it) => getEntry(it))
+          ),
         }
       }
     )

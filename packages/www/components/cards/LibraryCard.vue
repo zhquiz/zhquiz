@@ -52,8 +52,9 @@
           >
             <b-table-column field="entry" label="Entry" v-slot="props">
               <span
-                class="tag clickable is-medium"
-                :class="getTagClass(props.row.entry)"
+                :class="
+                  'tag clickable is-medium ' + getTagClass(props.row.entry)
+                "
                 @click.stop="
                   (evt) => {
                     selected = [props.row.entry]
@@ -73,8 +74,7 @@
               <span
                 v-for="t in props.row.alt || []"
                 :key="t"
-                class="tag clickable is-medium"
-                :class="getTagClass(t)"
+                :class="'tag clickable is-medium ' + getTagClass(t)"
                 @click.stop="
                   (evt) => {
                     selected = [t]
@@ -92,17 +92,15 @@
               </span>
             </b-table-column>
             <b-table-column field="reading" label="Pinyin" v-slot="props">
-              <div v-for="it in props.row.reading || []" :key="it">
-                {{ it }}
-              </div>
+              {{ (props.row.reading || []).join(' / ') }}
             </b-table-column>
-            <b-table-column
-              field="english"
-              label="English"
-              v-slot="props"
-              width="40vw"
-            >
-              {{ (props.row.english || []).join(' / ') }}
+            <b-table-column field="english" label="English" v-slot="props">
+              <div
+                class="no-scrollbar"
+                style="max-width: 40vw; max-height: 200px"
+              >
+                {{ (props.row.english || []).join(' / ') }}
+              </div>
             </b-table-column>
 
             <template slot="empty">
@@ -117,8 +115,7 @@
           <span
             v-for="t in currentData"
             :key="t"
-            class="tag clickable is-medium"
-            :class="getTagClass(t)"
+            :class="'tag clickable is-medium ' + getTagClass(t)"
             @click.stop="
               (evt) => {
                 selected = [t]
@@ -151,7 +148,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Ref, Prop, Watch } from 'nuxt-property-decorator'
+import { Vue, Component, Ref, Prop } from 'nuxt-property-decorator'
 import ContextMenu from '../ContextMenu.vue'
 
 @Component<LibraryCard>({
@@ -159,12 +156,30 @@ import ContextMenu from '../ContextMenu.vue'
     ContextMenu,
   },
   watch: {
+    open() {
+      this.isOpen = this.open
+    },
     entry() {
       this.isOpen = false
     },
     isList() {
       this.makeList()
     },
+    isOpen() {
+      this.reload(this.currentData)
+    },
+    entries() {
+      this.isList = false
+      this.list = []
+
+      this.$nextTick(() => {
+        this.isList = this.open
+        this.reload(this.currentData)
+      })
+    },
+  },
+  created() {
+    this.isOpen = this.open
   },
 })
 export default class LibraryCard extends Vue {
@@ -175,8 +190,9 @@ export default class LibraryCard extends Vue {
     reading?: string[]
     english?: string[]
   }[]
-  @Prop() type!: string
-  @Prop({ default: '' }) description?: string
+  @Prop() type!: 'character' | 'vocabulary' | 'sentence'
+  @Prop({ default: '' }) description!: string
+  @Prop({ default: false }) open!: boolean
 
   @Prop({ default: () => [] }) additional!: {
     name: string
@@ -214,7 +230,6 @@ export default class LibraryCard extends Vue {
       .filter((a, i, arr) => arr.indexOf(a) === i)
   }
 
-  @Watch('isOpen')
   async reload(entry: string[]) {
     if (!this.isOpen) {
       return
@@ -255,15 +270,19 @@ export default class LibraryCard extends Vue {
       return
     }
 
-    console.log(seg.map(({ entry }) => entry))
+    const entries = seg.map(({ entry }) => entry)
+    let newItems: string[] = []
 
     await this.$axios
-      .vocabularyGetByEntries({
-        entries: seg.map(({ entry }) => entry),
+      .libraryGetByEntries(null, {
+        type: this.type,
+        entries,
       })
       .then((r) =>
         r.data.result.map((s) => {
-          const ents = new Set([s.entry, ...(s.alt || [])])
+          const items = [s.entry, ...(s.alt || [])]
+          newItems.push(...items)
+          const ents = new Set(items)
           const i = seg.findIndex((s1) => ents.has(s1.entry))
 
           if (i >= 0) {
@@ -283,6 +302,12 @@ export default class LibraryCard extends Vue {
       ...seg,
       ...this.list.slice(offset + this.perPage),
     ]
+
+    const entriesSet = new Set(entries)
+    newItems = [...new Set(newItems.filter((s) => entriesSet.has(s)))]
+    if (newItems.length > 0) {
+      await this.reload(newItems)
+    }
   }
 
   getTagClass(item: string) {
