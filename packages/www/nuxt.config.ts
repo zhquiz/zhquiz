@@ -103,11 +103,13 @@ export default (): NuxtConfig => {
               'faRandom',
               'faSearch',
               'faTag',
+              'faListUl',
               'faListOl',
               'faBars',
               'faSave',
               'faTrash',
               'faTools',
+              'faTh'
             ],
           },
         },

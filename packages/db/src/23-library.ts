@@ -18,7 +18,18 @@ export const sLibrary = S.shape({
   updatedAt: S.instanceOf(Date).optional(),
   isShared: S.boolean().optional(),
   title: S.string(),
-  entries: S.list(S.anyOf(S.string(), sEntry)).minItems(1),
+  entries: S.list(
+    S.anyOf(
+      S.string(),
+      S.shape({
+        entry: S.string(),
+        alt: S.list(S.string()).optional(),
+        reading: S.anyOf(S.string(), S.list(S.string())).optional(),
+        translation: S.anyOf(S.string(), S.list(S.string())).optional(),
+        english: S.anyOf(S.string(), S.list(S.string())).optional()
+      }).additionalProperties(true)
+    )
+  ).minItems(1),
   type: S.string().enum('character', 'vocabulary', 'sentence').optional(),
   description: S.string().optional(),
   tag: S.list(S.string()).optional()
@@ -39,14 +50,25 @@ export async function populate(db: ConnectionPool, dir = '/app/library') {
         rs.map(
           (r) =>
             sql`(${r.id}, ${r.title}, ${JSON.stringify(
-              r.entries.map((el) =>
-                typeof el === 'string' ? { entry: el } : el
-              )
-            )}::jsonb, ${r.type || 'vocabulary'}, ${r.tag || []}, ${
-              r.createdAt || new Date()
-            }, ${r.updatedAt || r.createdAt || new Date()}, ${
-              r.description || ''
-            }, ${r.isShared !== false})`
+              r.entries.map((el) => {
+                if (typeof el === 'string') {
+                  return sEntry.ensure({ entry: el })
+                }
+
+                el.english = el.english || el.translation
+
+                return sEntry.ensure({
+                  entry: el.entry,
+                  alt: el.alt,
+                  reading:
+                    typeof el.reading === 'string' ? [el.reading] : el.reading,
+                  english:
+                    typeof el.english === 'string' ? [el.english] : el.english
+                })
+              })
+            )}::jsonb, ${r.type || 'vocabulary'}, ${r.tag || []}, ${r.createdAt
+              }, ${r.updatedAt}, ${r.description || ''
+              }, ${r.isShared !== false})`
         ),
         ','
       )}
@@ -56,7 +78,7 @@ export async function populate(db: ConnectionPool, dir = '/app/library') {
         "entries" = EXCLUDED."entries",
         "type" = EXCLUDED."type",
         "tag" = EXCLUDED."tag",
-        "createdAt" = EXCLUDED."createdAt",
+        "createdAt" = COALESCE(EXCLUDED."createdAt", library."createdAt"),
         "description" = EXCLUDED."description",
         "isShared" = EXCLUDED."isShared"
       `)

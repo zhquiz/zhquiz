@@ -577,41 +577,6 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       }
     )
   }
-
-  {
-    const sResult = S.shape({
-      result: S.list(
-        S.shape({
-          entry: S.string(),
-          level: S.integer(),
-        })
-      ),
-    })
-
-    f.get(
-      '/level',
-      {
-        schema: {
-          operationId: 'characterListLevel',
-          response: { 200: sResult.valueOf() },
-        },
-      },
-      async (): Promise<typeof sResult.type> => {
-        const result: {
-          entry: string
-          level: number
-        }[] = await db.query(sql`
-        SELECT "entry", "hLevel" "level"
-        FROM dict.zhlevel
-        WHERE "hLevel" IS NOT NULL
-        `)
-
-        return {
-          result,
-        }
-      }
-    )
-  }
 }
 
 export default characterRouter
