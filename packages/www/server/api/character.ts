@@ -110,10 +110,10 @@ const characterRouter: FastifyPluginAsync = async (f) => {
             "pinyin" "reading",
             "english",
             "frequency"
-          FROM vocabulary
+          FROM entries
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND "entry" &@ ${entry}
+          ) AND "type" = 'vocabulary' AND "entry" &@ ${entry}
           ORDER BY RANDOM()
         )
 
@@ -199,12 +199,12 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         let result = await db.query(sql`
         WITH match_cte AS (
-          SELECT s.entry "entry", s."english"[1] english, ("hLevel" > 50) "isTrad"
-          FROM sentence s
-          JOIN "level" si ON si.entry = s.entry
+          SELECT s.entry[1] "entry", s."english"[1] english, ("hLevel" > 50) "isTrad"
+          FROM entries s
+          JOIN "level" si ON si.entry = s.entry[1]
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND s."entry" &@ ${entry}
+          ) AND s.type = 'sentence' AND s."entry" &@ ${entry}
         )
 
         SELECT *
@@ -310,11 +310,14 @@ const characterRouter: FastifyPluginAsync = async (f) => {
             const [{ tag, level }] = await db.query(sql`
             SELECT
               (
-                SELECT array_agg(DISTINCT "tag")
-                FROM entry_tag
-                WHERE (
-                  "userId" IS NULL OR "userId" = ${userId}
-                ) AND "type" = 'character' AND "entry" = ${r.entry}
+                SELECT array_agg(DISTINCT unnest)
+                FROM (
+                  SELECT unnest("tag")
+                  FROM tag
+                  WHERE (
+                    "userId" IS NULL OR "userId" = ${userId}
+                  ) AND "type" = 'character' AND ${r.entry} = ANY("entry")
+                ) t1
               )||'{}'::text[] "tag",
               (
                 SELECT "hLevel"
@@ -450,36 +453,39 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         const result = await db.query(sql`
         SELECT DISTINCT "entry"
-        FROM "character"
-        WHERE ${sql.join(
-          [
-            sql`("userId" IS NULL OR "userId" = ${userId})`,
-            hCond,
-            radCond
-              ? sql`"entry" IN (SELECT "entry" FROM dict.radical WHERE ${radCond})`
-              : null,
-            qCond
-              ? sql`"entry" IN (
-            SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'character' AND ${qCond}
-          )`
-              : null,
-            tagCond
-              ? sql`"entry" IN (
-            SELECT "entry"
-            FROM entry_tag
-            WHERE (
-              "userId" IS NULL OR "userId" = ${userId}
-            ) AND "type" = 'character' AND ${tagCond}
-          )`
-              : null,
-            lvCond
-              ? sql`"entry" IN (SELECT "entry" FROM dict.zhlevel WHERE ${lvCond})`
-              : null,
-          ]
-            .filter((s) => s)
-            .map((s) => s!),
-          ' AND '
-        )}
+        FROM (
+          SELECT unnest("entry") "entry"
+          FROM entries
+          WHERE ${sql.join(
+            [
+              sql`("userId" IS NULL OR "userId" = ${userId})`,
+              hCond,
+              radCond
+                ? sql`"entry" IN (SELECT "entry" FROM dict.radical WHERE ${radCond})`
+                : null,
+              qCond
+                ? sql`"entry" IN (
+              SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'character' AND ${qCond}
+            )`
+                : null,
+              tagCond
+                ? sql`"entry" IN (
+                  SELECT unnest("tag")
+                  FROM tag
+                  WHERE (
+                    "userId" IS NULL OR "userId" = ${userId}
+                  ) AND "type" = 'character' AND ${tagCond}
+            )`
+                : null,
+              lvCond
+                ? sql`"entry" IN (SELECT "entry" FROM dict.zhlevel WHERE ${lvCond})`
+                : null,
+            ]
+              .filter((s) => s)
+              .map((s) => s!),
+            ' AND '
+          )}
+        ) t1
         LIMIT 20
         `)
 
@@ -525,10 +531,11 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         let [r] = await db.query(sql`
         SELECT "entry" "result", "level", (
           SELECT "english"
-          FROM "character" c
+          FROM entries c
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND c."entry" = t1."entry"
+          ) AND "type" = 'character' AND t1."entry" = ANY(c."entry")
+          LIMIT 1
         ) "english"
         FROM (
           SELECT "entry", "hLevel" "level"
@@ -548,10 +555,11 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           ;[r] = await db.query(sql`
           SELECT "entry" "result", "level", (
             SELECT "english"
-            FROM "character" c
+            FROM entries c
             WHERE (
               "userId" IS NULL OR "userId" = ${userId}
-            ) AND c."entry" = t1."entry"
+            ) AND "type" = 'character' AND t1."entry" = ANY(c."entry")
+            LIMIT 1
           ) "english"
           FROM (
             SELECT "entry", "hLevel" "level"
@@ -594,11 +602,11 @@ export async function lookupCharacter(
   }
 
   const [r] = await db.query(sql`
-  SELECT "entry", "pinyin" "reading", "english"
-  FROM "character"
+  SELECT "entry"[1] "entry", "pinyin" "reading", "english"
+  FROM entries
   WHERE (
     "userId" IS NULL OR "userId" = ${userId}
-  ) AND "entry" = ${entry}
+  ) AND "type" = 'character' AND "entry" = ${entry}
   `)
 
   if (!r) {

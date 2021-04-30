@@ -4,7 +4,6 @@ import cheerio from 'cheerio'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 
-import { refresh } from '../db/refresh'
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
 import { jiebaCutForSearch, makeEnglish } from './util'
@@ -72,14 +71,14 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
           })(),
           (async () => {
             const [{ tag }] = await db.query(sql`
-            SELECT
-              (
-                SELECT array_agg(DISTINCT "tag")
-                FROM entry_tag
-                WHERE (
-                  "userId" IS NULL OR "userId" = ${userId}
-                ) AND "type" = 'character' AND "entry" = ${r.entry}
-              )||'{}'::text[] "tag"
+            SELECT DISTINCT unnest "tag"
+            FROM (
+              SELECT unnest("tag")
+              FROM tag
+              WHERE (
+                "userId" IS NULL OR "userId" = ${userId}
+              ) AND "type" = 'character' AND ${entry} = ANY("entry")
+            ) t1
             `)
 
             out.tag = tag || []
@@ -192,28 +191,31 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
 
         let result = await db.query(sql`
         WITH match_cte AS (
-          SELECT DISTINCT ON ("entry")
-            "entry", (SELECT "hLevel" > 50 FROM "level" WHERE "entry" = sentence."entry") "isTrad"
-          FROM "sentence"
-          WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
-          ) ${hCond ? sql` AND ${hCond}` : sql``} ${
+          SELECT DISTINCT ON ("entry") *
+          FROM (
+            SELECT
+              "entry"[1] "entry", (SELECT "hLevel" > 50 FROM "level" WHERE "entry" = sentence."entry") "isTrad"
+            FROM entries
+            WHERE (
+              "userId" IS NULL OR "userId" = ${userId}
+            ) AND "type" = 'sentence' ${hCond ? sql` AND ${hCond}` : sql``} ${
           tagCond
             ? sql` AND "entry" IN (
-              SELECT "entry"
-              FROM entry_tag
-              WHERE (
-                "userId" IS NULL OR "userId" = ${userId}
-              ) AND "type" = 'sentence' AND ${tagCond}
-            )`
+                SELECT unnest("tag")
+                FROM tag
+                WHERE (
+                  "userId" IS NULL OR "userId" = ${userId}
+                ) AND "type" = 'sentence' AND ${tagCond}
+              )`
             : sql``
         } ${
           qCond
             ? sql` AND "entry" IN (
-            SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'sentence' AND ${qCond}
-          )`
+              SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'sentence' AND ${qCond}
+            )`
             : sql``
         }
+          ) t1
         )
 
         SELECT "entry" FROM (
@@ -274,7 +276,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
 
         let [r] = await db.query(sql`
         SELECT "entry" "result", (
-          SELECT "english"[1] FROM "sentence" WHERE "entry" = t1."entry"
+          SELECT "english"[1] FROM entries s WHERE t1."entry" = ANY(s."entry")
         ) "english", "vLevel" "level"
         FROM (
           SELECT "entry", "vLevel" FROM "level"
@@ -292,7 +294,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         if (!r) {
           ;[r] = await db.query(sql`
           SELECT "entry" "result", (
-            SELECT "english"[1] FROM "sentence" WHERE "entry" = t1."entry"
+            SELECT "english"[1] FROM entries s WHERE t1."entry" = ANY(s."entry")
           ) "english", "vLevel" "level"
           FROM (
             SELECT "entry", "vLevel" FROM "level"
@@ -330,11 +332,11 @@ export async function lookupSentence(
 }> {
   const [r] = await db.query(sql`
   SELECT
-    "entry", "english"
-  FROM "sentence"
+    "entry"[1] "entry", "english"
+  FROM entries
   WHERE (
     "userId" IS NULL OR "userId" = ${userId}
-  ) AND "entry" = ${entry}
+  ) AND "type" = 'sentence' AND ${entry} = ANY("entry")
   `)
 
   return r || { entry }
@@ -407,12 +409,6 @@ export async function lookupJukuu(
           `)
         }
       })
-
-      if (out.length) {
-        refresh('sentence').then(() =>
-          Promise.all([refresh('level'), refresh('cedict_view')])
-        )
-      }
 
       rs.push(...out)
     }

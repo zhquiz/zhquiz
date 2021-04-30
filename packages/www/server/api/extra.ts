@@ -3,7 +3,6 @@ import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
 
-import { refresh } from '../db/refresh'
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
 import { makeReading } from './util'
@@ -123,18 +122,6 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           return id
         })
 
-        if (tag.length) {
-          refresh('entry_tag')
-        }
-
-        switch (type) {
-          case 'character':
-            refresh('character')
-            break
-          case 'sentence':
-            refresh('sentence')
-        }
-
         reply.status(201)
         return {
           id,
@@ -210,18 +197,6 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           `)
         })
 
-        if (tag.length) {
-          refresh('entry_tag')
-        }
-
-        switch (type) {
-          case 'character':
-            refresh('character')
-            break
-          case 'sentence':
-            refresh('sentence')
-        }
-
         reply.status(201)
         return {
           result: 'updated',
@@ -262,11 +237,14 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         }
 
         const rs = await db.query(sql`
-        SELECT "tag"
-        FROM entry_tag
-        WHERE (
-          "userId" IS NULL OR "userId" = ${userId}
-        ) AND "type" = ${type} AND "entry" = ${entry}
+        SELECT DISTINCT unnest "tag"
+        FROM (
+          SELECT unnest("tag")
+          FROM tag
+          WHERE (
+            "userId" IS NULL OR "userId" = ${userId}
+          ) AND "type" = ${type} AND ${entry} = ANY("entry")
+        ) t1
         `)
 
         return {
@@ -326,8 +304,6 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           WHERE "id" = ${r.id}
           `)
 
-          refresh('entry_tag')
-
           reply.status(201)
           return {
             result: 'updated',
@@ -338,8 +314,6 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           INSERT INTO "extra" ("entry", "tag", "type", "userId", "id")
           VALUES (${entry}, ${tag}, ${type}, ${userId}, ${id})
           `)
-
-          refresh('entry_tag')
 
           reply.status(201)
           return {
@@ -402,8 +376,6 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           WHERE "id" =${r.id}
           `)
 
-          refresh('entry_tag')
-
           reply.status(201)
           return {
             result: 'updated',
@@ -463,18 +435,6 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           WHERE "userId" = ${userId} AND "id" = ${id}
           `)
         })
-
-        if (x.tag.length) {
-          refresh('entry_tag')
-        }
-
-        switch (x.type) {
-          case 'character':
-            refresh('character')
-            break
-          case 'sentence':
-            refresh('sentence')
-        }
 
         reply.status(201)
         return {

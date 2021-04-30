@@ -3,7 +3,6 @@ import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
 
-import { refresh } from '../db/refresh'
 import { QSplit } from '../db/token'
 import { db } from '../shared'
 import { lookupCharacter } from './character'
@@ -284,10 +283,6 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           return id
         })
 
-        if (tag.length) {
-          refresh('entry_tag')
-        }
-
         reply.status(201)
         return { id }
       }
@@ -371,10 +366,6 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           `)
         })
 
-        if (tag) {
-          refresh('entry_tag')
-        }
-
         reply.status(201)
         return {
           result: 'updated',
@@ -429,10 +420,6 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           `)
         })
 
-        if (x.tag.length) {
-          refresh('entry_tag')
-        }
-
         reply.status(201)
         return {
           result: 'deleted',
@@ -444,7 +431,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
   {
     const sQuery = S.shape({
       type: S.string().enum('vocabulary', 'character'),
-      whatToShow: S.string()
+      whatToShow: S.string(),
     })
 
     const sResult = S.shape({
@@ -548,8 +535,8 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           } = await (type === 'character'
             ? lookupCharacter(entry, userId)
             : type === 'sentence'
-              ? lookupSentence(entry, userId)
-              : lookupVocabulary(entry, userId))
+            ? lookupSentence(entry, userId)
+            : lookupVocabulary(entry, userId))
 
           let english = r.english || []
           if (!english.length) {
