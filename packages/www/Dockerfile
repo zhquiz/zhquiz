@@ -11,7 +11,7 @@ RUN yarn build
 RUN jq 'del(.devDependencies)' package.json > tmp.json && mv tmp.json package.json
 RUN yarn --frozen-lockfile
 
-ENTRYPOINT [ "yarn", "start" ]
+# ENTRYPOINT [ "yarn", "start" ]
 
 FROM node:12
 COPY --from=builder /app/node_modules /node_modules

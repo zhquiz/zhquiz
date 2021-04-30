@@ -4,13 +4,12 @@ services:
     restart: always
     build: ./packages/db
     environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
+      POSTGRES_USER: &pguser postgres
+      POSTGRES_PASSWORD: &pgpass postgress
+      POSTGRES_DB: &pgdb postgres
 
-      - TZ=Asia/Bangkok
-      - PGTZ=Asia/Bangkok
-
+      TZ: &tz Asia/Bangkok
+      PGTZ: *tz
     ports:
       - 5433:5432 # pgAdmin connection port
 
@@ -25,19 +24,19 @@ services:
     restart: always
     build: ./packages/www
     environment: 
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-      - POSTGRES_HOST=db
-      - PORT=35594
+      POSTGRES_USER: *pguser
+      POSTGRES_PASSWORD: *pgpass
+      POSTGRES_DB: *pgdb
+      POSTGRES_HOST: db
+      PORT: 35594
 
       # Try randomkeygen.com
-      - SECRET=7JMqUYvB4tn1RdMIBvWzUL6O4LNk7QH5
+      SECRET: 7JMqUYvB4tn1RdMIBvWzUL6O4LNk7QH5
 
       # See https://magic.link for signing in and authorization
-      - MAGIC_PUBLIC
-      - MAGIC_SECRET
+      MAGIC_PUBLIC:
+      MAGIC_SECRET:
     ports:
-      - 80:35594 # $EXTERNAL_PORT:$PORT - Go to http://localhost:$EXTERNAL_PORT
+      - 35594:35594 # $EXTERNAL_PORT:$PORT - Go to http://localhost:$EXTERNAL_PORT
 volumes:
   pgdata:

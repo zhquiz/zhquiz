@@ -1,3 +1,22 @@
+CREATE VIEW "vocabulary" AS
+  SELECT
+    "entry",
+    "pinyin",
+    "english",
+    "userId",
+    NULL "frequency"
+  FROM "extra"
+  WHERE "type" = 'vocabulary'
+  UNION ALL
+  SELECT
+    "entry",
+    "pinyin",
+    "english",
+    NULL "userId",
+    "frequency"
+  FROM cedict_view;
+
+
 CREATE MATERIALIZED VIEW "level" AS
   SELECT
     "entry",
@@ -20,21 +39,3 @@ CREATE MATERIALIZED VIEW "level" AS
 CREATE UNIQUE INDEX "idx_level_entry" ON "level" ("entry");
 CREATE INDEX "idx_level_hLevel" ON "level" ("hLevel");
 CREATE INDEX "idx_level_vLevel" ON "level" ("vLevel");
-
-CREATE VIEW "vocabulary" AS
-  SELECT
-    "entry",
-    "pinyin",
-    "english",
-    "userId",
-    NULL "frequency"
-  FROM "extra"
-  WHERE "type" = 'vocabulary'
-  UNION ALL
-  SELECT
-    "entry",
-    "pinyin",
-    "english",
-    NULL "userId",
-    "frequency"
-  FROM cedict_view;
