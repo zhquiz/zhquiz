@@ -330,6 +330,13 @@ export async function lookupSentence(
   entry: string
   english?: string[]
 }> {
+  if (!/\p{sc=Han}/u.test(entry)) {
+    return {
+      entry: '',
+      english: [],
+    }
+  }
+
   const [r] = await db.query(sql`
   SELECT
     "entry"[1] "entry", "english"
@@ -350,6 +357,10 @@ export async function lookupJukuu(
     e: string
   }[]
 > {
+  if (!/\p{sc=Han}/u.test(q)) {
+    return []
+  }
+
   const rs: {
     c: string
     e: string

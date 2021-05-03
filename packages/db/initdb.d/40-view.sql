@@ -4,7 +4,8 @@ CREATE VIEW "entries" AS
     "pinyin",
     "english",
     "userId",
-    "type"
+    "type",
+    1000000.0  "frequency"
   FROM "extra"
   UNION ALL
   SELECT
@@ -12,13 +13,15 @@ CREATE VIEW "entries" AS
     "pinyin",
     "english",
     NULL,
-    "type"
+    "type",
+    "frequency"
   FROM (
     SELECT
       "entry",
       "pinyin",
       "english",
-      "type"
+      "type",
+      "frequency"
     FROM dict.entries
     ORDER BY "frequency" DESC NULLS LAST
   ) t1;

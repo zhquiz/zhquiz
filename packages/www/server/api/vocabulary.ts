@@ -51,10 +51,10 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           JOIN "level" si ON si.entry = s.entry[1]
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND s."type" = 'sentence' AND s."entry" LIKE '%'||${entry.replace(
+          ) AND s."type" = 'sentence' AND s."entry" &@ ${entry.replace(
             /[^\p{sc=Han}]+/gu,
-            '%'
-          )}||'%'
+            ' '
+          )}
         )
 
         SELECT DISTINCT ON ("entry") *
@@ -161,7 +161,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
                   FROM tag
                   WHERE (
                     "userId" IS NULL OR "userId" = ${userId}
-                  ) AND "type" = 'vocabulary' AND "entry" = ${r.entry}
+                  ) AND "type" = 'vocabulary' AND ${r.entry} = ANY("entry")
                 ) t1
               )||'{}'::text[] "tag",
               (
@@ -228,7 +228,6 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         WHERE (
           "userId" IS NULL OR "userId" = ${userId}
         ) AND "type" = 'vocabulary' AND "entry" &@ ${entry} AND ${entry} != ANY("entry")
-        ORDER BY frequency DESC
         LIMIT 5
         `)
 
@@ -476,6 +475,15 @@ export async function lookupVocabulary(
   reading: string[]
   english?: string[]
 }> {
+  if (!/\p{sc=Han}/u.test(entry)) {
+    return {
+      entry: '',
+      alt: [],
+      reading: [],
+      english: [],
+    }
+  }
+
   const [r] = await db.query(sql`
   SELECT
     "entry"[1] "entry",

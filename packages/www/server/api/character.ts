@@ -606,7 +606,7 @@ export async function lookupCharacter(
   FROM entries
   WHERE (
     "userId" IS NULL OR "userId" = ${userId}
-  ) AND "type" = 'character' AND "entry" = ${entry}
+  ) AND "type" = 'character' AND ${entry} = ANY("entry")
   `)
 
   if (!r) {
