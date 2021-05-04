@@ -6,7 +6,7 @@ CREATE TABLE dict.entries (
   "entry"           TEXT[] NOT NULL CHECK ("entry"[1] IS NOT NULL),
   "pinyin"          TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
   "english"         TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
-  "tag"             TEXT[] NOT NULL GENERATED ALWAYS AS (ARRAY["source"]) STORED,
+  "tag"             TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
   "frequency"       FLOAT,
   PRIMARY KEY ("id")
 );
