@@ -46,15 +46,15 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 
         let result = await db.query(sql`
         WITH match_cte AS (
-          SELECT s.entry "entry", s."english"[1] english, ("hLevel" > 50) "isTrad"
-          FROM sentence s
-          JOIN "level" si ON si.entry = s.entry
+          SELECT s.entry[1] "entry", s."english"[1] english, ("hLevel" > 50) "isTrad"
+          FROM entries s
+          JOIN "level" si ON si.entry = s.entry[1]
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND s."entry" LIKE '%'||${entry.replace(
-          /[^\p{sc=Han}]+/gu,
-          '%'
-        )}||'%'
+          ) AND s."type" = 'sentence' AND s."entry" &@ ${entry.replace(
+            /[^\p{sc=Han}]+/gu,
+            ' '
+          )}
         )
 
         SELECT DISTINCT ON ("entry") *
@@ -155,11 +155,14 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
             const [{ tag, level }] = await db.query(sql`
             SELECT
               (
-                SELECT array_agg(DISTINCT "tag")
-                FROM entry_tag
-                WHERE (
-                  "userId" IS NULL OR "userId" = ${userId}
-                ) AND "type" = 'vocabulary' AND "entry" = ${r.entry}
+                SELECT array_agg(DISTINCT unnest) "tag"
+                FROM (
+                  SELECT unnest("tag")
+                  FROM tag
+                  WHERE (
+                    "userId" IS NULL OR "userId" = ${userId}
+                  ) AND "type" = 'vocabulary' AND ${r.entry} = ANY("entry")
+                ) t1
               )||'{}'::text[] "tag",
               (
                 SELECT "vLevel"
@@ -221,11 +224,10 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           "entry"[2:]||'{}'::text[] "alt",
           "pinyin" "reading",
           "english"
-        FROM "vocabulary"
+        FROM entries
         WHERE (
           "userId" IS NULL OR "userId" = ${userId}
-        ) AND "entry" &@ ${entry} AND ${entry} != ANY("entry")
-        ORDER BY frequency DESC
+        ) AND "type" = 'vocabulary' AND "entry" &@ ${entry} AND ${entry} != ANY("entry")
         LIMIT 5
         `)
 
@@ -316,37 +318,37 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
             "simplified", "traditional", "frequency"
           FROM (
             SELECT unnest("entry") "entry", "entry"[1] "simplified", unnest("entry"[2:]) "traditional", "frequency"
-            FROM "vocabulary"
+            FROM entries
             WHERE (
               "userId" IS NULL OR "userId" = ${userId}
-            ) AND ${hCond || sql`TRUE`}
+            ) AND "type" = 'vocabulary' AND ${hCond || sql`TRUE`}
           ) t2
           WHERE
           ${sql.join(
-          [
-            qCond
-              ? sql`"entry" IN (
+            [
+              qCond
+                ? sql`"entry" IN (
             SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'vocabulary' AND ${qCond}
           )`
-              : null,
-            tagCond
-              ? sql`"entry" IN (
-                    SELECT "entry"
-                    FROM entry_tag
+                : null,
+              tagCond
+                ? sql`"entry" IN (
+                    SELECT unnest("tag")
+                    FROM tag
                     WHERE (
                       "userId" IS NULL OR "userId" = ${userId}
                     ) AND "type" = 'vocabulary' AND ${tagCond}
                   )`
-              : null,
-            lvCond
-              ? sql`"entry" IN (SELECT "entry" FROM "level" WHERE ${lvCond})`
-              : null,
-            sql`TRUE`,
-          ]
-            .filter((s) => s)
-            .map((s) => s!),
-          ' AND '
-        )}
+                : null,
+              lvCond
+                ? sql`"entry" IN (SELECT "entry" FROM "level" WHERE ${lvCond})`
+                : null,
+              sql`TRUE`,
+            ]
+              .filter((s) => s)
+              .map((s) => s!),
+            ' AND '
+          )}
         )
 
         SELECT "entry", min("isTrad") "isTrad" FROM (
@@ -408,10 +410,10 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         let [r] = await db.query(sql`
         SELECT "entry" "result", "level", (
           SELECT "english"
-          FROM "vocabulary" v
+          FROM entries v
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND t1."entry" = ANY(v."entry")
+          ) AND v.type = 'vocabulary' AND t1."entry" = ANY(v."entry")
         ) "english"
         FROM (
           SELECT "entry", "vLevel" "level"
@@ -431,10 +433,10 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           ;[r] = await db.query(sql`
           SELECT "entry" "result", "level", (
             SELECT "english"
-            FROM "vocabulary" v
+            FROM entries v
             WHERE (
               "userId" IS NULL OR "userId" = ${userId}
-            ) AND t1."entry" = ANY(v."entry")
+            ) AND v.type = 'vocabulary' AND t1."entry" = ANY(v."entry")
           ) "english"
           FROM (
             SELECT "entry", "vLevel" "level"
@@ -473,16 +475,25 @@ export async function lookupVocabulary(
   reading: string[]
   english?: string[]
 }> {
+  if (!/\p{sc=Han}/u.test(entry)) {
+    return {
+      entry: '',
+      alt: [],
+      reading: [],
+      english: [],
+    }
+  }
+
   const [r] = await db.query(sql`
   SELECT
     "entry"[1] "entry",
     "entry"[2:]||'{}'::text[] "alt",
     "pinyin" "reading",
     "english"
-  FROM "vocabulary"
+  FROM entries
   WHERE (
     "userId" IS NULL OR "userId" = ${userId}
-  ) AND ${entry} = ANY("entry")
+  ) AND "type" = 'vocabulary' AND ${entry} = ANY("entry")
   `)
 
   if (!r) {

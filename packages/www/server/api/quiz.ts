@@ -4,7 +4,6 @@ import dayjs from 'dayjs'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
-import { refresh } from '../db/refresh'
 
 import { QSplit, makeLevel, makeTag, qParseDate, qParseNum } from '../db/token'
 import { db } from '../shared'
@@ -754,12 +753,6 @@ async function generateMissingEntries(
       ON CONFLICT DO NOTHING
       `)
     })
-
-    if (type === 'character') {
-      await refresh('character')
-    } else if (type === 'sentence') {
-      await refresh('sentence')
-    }
   }
 
   return lookups

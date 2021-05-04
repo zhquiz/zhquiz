@@ -44,7 +44,7 @@ const apiRouter: FastifyPluginAsync = async (f) => {
   })
 
   f.register(rateLimit, {
-    max: isDev ? 20 : 10,
+    max: 10,
     timeWindow: '1 second',
   })
 
@@ -128,48 +128,46 @@ const apiRouter: FastifyPluginAsync = async (f) => {
     let user = process.env.DEFAULT_USER || ''
 
     if (!user) {
-      if (!magic) {
-        return
-      }
+      if (magic) {
+        const [, apiKey] =
+          /^Bearer (.+)$/.exec(req.headers.authorization || '') || []
 
-      const [, apiKey] =
-        /^Bearer (.+)$/.exec(req.headers.authorization || '') || []
+        if (!apiKey) {
+          throw { statusCode: 401, message: 'no apiKey in header' }
+        }
 
-      if (!apiKey) {
-        return
-      }
+        try {
+          magic.token.validate(apiKey)
+        } catch (e) {
+          throw { statusCode: 401, message: e }
+        }
 
-      try {
-        magic.token.validate(apiKey)
-      } catch (e) {
-        throw { statusCode: 401, message: e }
-      }
+        if (apiKey !== req.session.apiKey) {
+          const u = await magic.users.getMetadataByToken(apiKey)
+          user = u.email || ''
 
-      if (apiKey !== req.session.apiKey) {
-        const u = await magic.users.getMetadataByToken(apiKey)
-        user = u.email || ''
-
-        req.session.apiKey = apiKey
+          req.session.apiKey = apiKey
+        }
       }
     }
 
-    if (user) {
-      let [r] = await db.query(sql`
-        SELECT "id" FROM "user" WHERE "identifier" = ${user}
-        `)
+    user = user || 'DEFAULT'
 
-      if (!r) {
-        const id = shortUUID.uuid()
+    let [r] = await db.query(sql`
+    SELECT "id" FROM "user" WHERE "identifier" = ${user}
+    `)
 
-        await db.query(sql`
+    if (!r) {
+      const id = shortUUID.uuid()
+
+      await db.query(sql`
           INSERT INTO "user" ("id", "identifier")
           VALUES (${id}, ${user})
           `)
 
-        req.session.userId = id
-      } else {
-        req.session.userId = r.id
-      }
+      req.session.userId = id
+    } else {
+      req.session.userId = r.id
     }
   })
 

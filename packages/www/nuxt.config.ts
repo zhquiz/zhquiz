@@ -1,6 +1,8 @@
 import { NuxtConfig } from '@nuxt/types'
 
 export default (): NuxtConfig => {
+  process.env.SERVER_PORT = process.env.SERVER_PORT || '27082'
+
   return {
     // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
     ssr: false,
@@ -109,7 +111,7 @@ export default (): NuxtConfig => {
               'faSave',
               'faTrash',
               'faTools',
-              'faTh'
+              'faTh',
             ],
           },
         },
