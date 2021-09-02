@@ -2,6 +2,7 @@ version: '3'
 services:
   db:
     restart: always
+    image: patarapolw/zhquiz-db
     build: ./packages/db
     environment:
       POSTGRES_USER: &pguser postgres
@@ -14,7 +15,7 @@ services:
       - 5433:5432 # pgAdmin connection port
 
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./pgdata:/var/lib/postgresql/data
 
       - ./packages/db/initdb.d:/docker-entrypoint-initdb.d
       - ./packages/db/library:/app/library
@@ -22,6 +23,7 @@ services:
       - ./packages/db/src:/app/src
   www:
     restart: always
+    image: patarapolw/zhquiz-server
     build: ./packages/www
     environment: 
       POSTGRES_USER: *pguser
@@ -38,5 +40,3 @@ services:
       MAGIC_SECRET:
     ports:
       - 35594:35594 # $EXTERNAL_PORT:$PORT - Go to http://localhost:$EXTERNAL_PORT
-volumes:
-  pgdata:
