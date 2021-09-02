@@ -10,17 +10,17 @@ if (!db) {
   db = createConnectionPool(
     process.env.DATABASE_URL
       ? {
-          connectionString: process.env.DATABASE_URL,
-          bigIntMode: 'number',
-        }
+        connectionString: process.env.DATABASE_URL,
+        bigIntMode: 'number',
+      }
       : {
-          user: process.env.POSTGRES_USER,
-          password: process.env.POSTGRES_PASSWORD,
-          database: process.env.POSTGRES_DB,
-          host: process.env.POSTGRES_HOST,
-          port: parseInt(process.env.POSTGRES_PORT!),
-          bigIntMode: 'number',
-        }
+        user: process.env.POSTGRES_USER,
+        password: process.env.POSTGRES_PASSWORD,
+        database: process.env.POSTGRES_DB,
+        host: process.env.POSTGRES_HOST,
+        port: parseInt(process.env.POSTGRES_PORT!),
+        bigIntMode: 'number',
+      }
   )
 }
 
