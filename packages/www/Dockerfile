@@ -1,4 +1,4 @@
-FROM node:12 AS builder
+FROM node:14 AS builder
 
 RUN apt-get update
 RUN apt-get install -y jq
@@ -13,7 +13,7 @@ RUN yarn --frozen-lockfile
 
 # ENTRYPOINT [ "yarn", "start" ]
 
-FROM node:12
+FROM node:14
 COPY --from=builder /app/node_modules /node_modules
 COPY --from=builder /app/public /public
 COPY --from=builder /app/server-dist /server-dist
