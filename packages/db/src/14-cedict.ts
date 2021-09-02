@@ -128,8 +128,7 @@ export async function populate(
         return sql`('vocabulary', 'cedict', ${i}, ${entry}, ${JSON.parse(
           p.reading
         )}, ${english}, (
-          SELECT COUNT("entry") * ${
-            entry[0].length
+          SELECT COUNT("entry") * ${entry[0].length
           } FROM dict.entries WHERE type = 'sentence' AND "entry" &@ ${entry[0]}
         ))`
       })
@@ -143,6 +142,10 @@ export async function populate(
       `)
     }
   })
+
+  await db.query(sql`
+    REFRESH MATERIALIZED VIEW level;
+  `)
 
   s3.close()
 }

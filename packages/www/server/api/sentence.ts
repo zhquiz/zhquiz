@@ -198,8 +198,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
             FROM entries
             WHERE (
               "userId" IS NULL OR "userId" = ${userId}
-            ) AND "type" = 'sentence' ${hCond ? sql` AND ${hCond}` : sql``} ${
-          tagCond
+            ) AND "type" = 'sentence' ${hCond ? sql` AND ${hCond}` : sql``} ${tagCond
             ? sql` AND "entry" IN (
                 SELECT unnest("tag")
                 FROM tag
@@ -208,13 +207,12 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
                 ) AND "type" = 'sentence' AND ${tagCond}
               )`
             : sql``
-        } ${
-          qCond
+          } ${qCond
             ? sql` AND "entry" IN (
               SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'sentence' AND ${qCond}
             )`
             : sql``
-        }
+          }
           ) t1
         )
 
@@ -276,7 +274,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
 
         let [r] = await db.query(sql`
         SELECT "entry" "result", (
-          SELECT "english"[1] FROM entries s WHERE t1."entry" = ANY(s."entry")
+          SELECT "english"[1] FROM entries s WHERE t1."entry" = ANY(s."entry") LIMIT 1
         ) "english", "vLevel" "level"
         FROM (
           SELECT "entry", "vLevel" FROM "level"
@@ -294,7 +292,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         if (!r) {
           ;[r] = await db.query(sql`
           SELECT "entry" "result", (
-            SELECT "english"[1] FROM entries s WHERE t1."entry" = ANY(s."entry")
+            SELECT "english"[1] FROM entries s WHERE t1."entry" = ANY(s."entry") LIMIT 1
           ) "english", "vLevel" "level"
           FROM (
             SELECT "entry", "vLevel" FROM "level"

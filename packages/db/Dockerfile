@@ -30,11 +30,11 @@ WORKDIR /app/pg_jieba
 RUN git submodule update --init --recursive
 RUN mkdir build && cd build && cmake -DPostgreSQL_TYPE_INCLUDE_DIR=/usr/include/postgresql/12/server .. && make && make install
 
-# nodejs12
-# Install nodejs 12
+# nodejs14
+# Install nodejs 14
 WORKDIR /app
 RUN apt-get install -y dirmngr apt-transport-https lsb-release ca-certificates jq
-RUN curl -sSL https://deb.nodesource.com/setup_12.x | bash -
+RUN curl -sSL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get install -y nodejs gcc g++ make
 
 RUN npm i -g yarn
