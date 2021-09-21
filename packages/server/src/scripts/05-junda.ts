@@ -31,7 +31,7 @@ export async function populate(
                 updateOne: {
                     filter: { _id },
                     update: {
-                        type: 'vocab',
+                        type: 'character',
                         userId: '_junda',
                         _id: `_h-${p.character}`,
                         entry: [p.character],
