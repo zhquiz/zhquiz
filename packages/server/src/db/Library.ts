@@ -11,8 +11,7 @@ export const sEntry = S.shape({
 export type IEntry = typeof sEntry.type
 
 @modelOptions({
-    schemaOptions: { timestamps: true },
-    options: { customName: 'Library' },
+    schemaOptions: { timestamps: true, collection: 'Library' },
 })
 class DbLibrary {
     @prop({ default: () => shortUUID.generate() }) _id!: string

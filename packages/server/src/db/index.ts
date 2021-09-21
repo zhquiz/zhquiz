@@ -62,8 +62,8 @@ function userDeleteCascade(...targets: Model<any>[]) {
     )
 )
 @modelOptions({
-    schemaOptions: { timestamps: true },
-    options: { customName: 'User', allowMixed: Severity.ALLOW },
+    schemaOptions: { timestamps: true, collection: 'User' },
+    options: { allowMixed: Severity.ALLOW },
 })
 class DbUser {
     @prop({ default: () => shortUUID.generate() }) _id!: string

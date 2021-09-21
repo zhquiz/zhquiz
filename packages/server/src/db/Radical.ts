@@ -1,6 +1,14 @@
-import { getModelForClass, index, prop } from '@typegoose/typegoose'
+import {
+    getModelForClass,
+    index,
+    modelOptions,
+    prop,
+} from '@typegoose/typegoose'
 
 @index({ translation: 'text', description: 'text' })
+@modelOptions({
+    schemaOptions: { timestamps: true, collection: 'Radical' },
+})
 class DbRadical {
     @prop({ required: true }) _id!: string
 
@@ -30,7 +38,4 @@ class DbRadical {
     }
 }
 
-export const DbRadicalModel = getModelForClass(DbRadical, {
-    schemaOptions: { timestamps: true },
-    options: { customName: 'Radical' },
-})
+export const DbRadicalModel = getModelForClass(DbRadical)

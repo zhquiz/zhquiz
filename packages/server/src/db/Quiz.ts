@@ -8,8 +8,7 @@ import shortUUID from 'short-uuid'
 
 @index<DbQuiz>({ userId: 1, entry: 1, type: 1, direction: 1 }, { unique: true })
 @modelOptions({
-    schemaOptions: { timestamps: true },
-    options: { customName: 'Quiz' },
+    schemaOptions: { timestamps: true, collection: 'Quiz' },
 })
 class DbQuiz {
     @prop({ default: () => shortUUID.generate() }) _id!: string

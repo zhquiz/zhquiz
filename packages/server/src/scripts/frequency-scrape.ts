@@ -44,6 +44,34 @@ class FrequencyScrape {
     }
 
     close() {
+        this.db.exec(/* sql */ `
+        DROP TABLE IF EXISTS "character";
+        CREATE TABLE "character" (
+            "entry"         TEXT NOT NULL PRIMARY KEY,
+            "frequency"     FLOAT NOT NULL
+        );
+
+        DROP TABLE IF EXISTS "vocabulary";
+        CREATE TABLE "vocabulary" (
+            "entry"         TEXT NOT NULL PRIMARY KEY,
+            "frequency"     FLOAT NOT NULL
+        );
+
+        WITH c_sum AS (
+            SELECT sum(value) FROM frequency, json_tree("character")
+        )
+        INSERT INTO "character"
+        SELECT key, 1000000.0 * value / (SELECT * FROM c_sum) FROM frequency, json_tree("character") WHERE key IS NOT NULL
+        ON CONFLICT DO UPDATE SET "frequency" = "frequency" + EXCLUDED."frequency";
+
+        WITH v_sum AS (
+            SELECT sum(value) FROM frequency, json_tree("vocabulary")
+        )
+        INSERT INTO "vocabulary"
+        SELECT key, 1000000.0 * value / (SELECT * FROM v_sum) FROM frequency, json_tree("vocabulary") WHERE key IS NOT NULL
+        ON CONFLICT DO UPDATE SET "frequency" = "frequency" + EXCLUDED."frequency";
+        `)
+
         this.db.close()
     }
 
@@ -137,7 +165,8 @@ if (require.main === module) {
      * ```
      */
     const f = new FrequencyScrape('./assets/freq.db')
-    f.scrape('https://www.hao123.com').then(() => {
-        f.close()
-    })
+    // f.scrape('https://www.hao123.com').then(() => {
+    //     f.close()
+    // })
+    f.close()
 }

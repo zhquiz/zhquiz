@@ -7,8 +7,8 @@ import {
 import shortUUID from 'short-uuid'
 
 @modelOptions({
-    schemaOptions: { timestamps: true },
-    options: { customName: 'QuizPreset', allowMixed: Severity.ALLOW },
+    schemaOptions: { timestamps: true, collection: 'QuizPreset' },
+    options: { allowMixed: Severity.ALLOW },
 })
 class DbQuizPreset {
     @prop({ default: () => shortUUID.generate() }) _id!: string

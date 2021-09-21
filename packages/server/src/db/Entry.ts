@@ -50,8 +50,7 @@ import shortUUID from 'short-uuid'
 @index({ userId: 1, type: 1, simplified: 1 }, { unique: true })
 @index({ translation: 'text', description: 'text' })
 @modelOptions({
-    schemaOptions: { timestamps: true },
-    options: { customName: 'Entry' },
+    schemaOptions: { timestamps: true, collection: 'Entry' },
 })
 class DbEntry {
     @prop({ default: () => shortUUID.generate() }) _id!: string
@@ -248,36 +247,20 @@ export class Frequency {
         readonly: true,
     })
 
-    cSum = this.db
-        .prepare(
-            /* sql */ `
-    SELECT sum(value) AS v FROM frequency, json_tree("character");
-    `
-        )
-        .get().v
-
     cStmt = this.db.prepare(/* sql */ `
-    SELECT sum(json_extract("character", '$.'||?)) AS f FROM frequency;
+    SELECT frequency AS f FROM "character" WHERE "entry" = ?;
     `)
 
-    vSum = this.db
-        .prepare(
-            /* sql */ `
-    SELECT sum(value) AS v FROM frequency, json_tree("vocabulary");
-    `
-        )
-        .get().v
-
     vStmt = this.db.prepare(/* sql */ `
-    SELECT sum(json_extract("vocabulary", '$.'||?)) AS f FROM frequency;
+    SELECT frequency AS f FROM "vocabulary" WHERE "entry" = ?;
     `)
 
     cFreq(c: string) {
-        return (((this.cStmt.get(c).f as number) || 0) / this.cSum) * 10 ** 6
+        return (this.cStmt.get(c)?.f as number) || 0
     }
 
     _vFreq(v: string) {
-        return (((this.vStmt.get(v).f as number) || 0) / this.vSum) * 10 ** 6
+        return (this.vStmt.get(v)?.f as number) || 0
     }
 
     vFreq(v: string) {
