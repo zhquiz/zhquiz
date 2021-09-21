@@ -134,9 +134,9 @@ export async function populate(
                 updateOne: {
                     filter: { _id },
                     update: {
-                        type: 'vocab',
+                        type: 'vocabulary',
                         userId: '_cedict',
-                        _id: `_cedict-${p.simplified}`,
+                        _id: `_v-${p.simplified}`,
                         entry,
                         reading: JSON.parse(p.reading),
                         translation: english,
