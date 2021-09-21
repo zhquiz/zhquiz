@@ -7,7 +7,7 @@ import path from 'path'
 import { mongoose } from '@typegoose/typegoose'
 import sqlite3 from 'better-sqlite3'
 
-import { DbEntryModel } from '../db'
+import { DbEntryModel, mongoConnect } from '../db'
 
 export async function populate(
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tatoeba'))
@@ -276,4 +276,11 @@ export async function populate(
 
     await session.endSession({})
     s3.close()
+}
+
+if (require.main === module) {
+    mongoConnect('mongodb://127.0.0.1:27018/zhquiz').then(async (c) => {
+        await populate()
+        await c.disconnect()
+    })
 }

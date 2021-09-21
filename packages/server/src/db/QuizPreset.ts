@@ -1,6 +1,15 @@
-import { Severity, getModelForClass, prop } from '@typegoose/typegoose'
+import {
+    Severity,
+    getModelForClass,
+    modelOptions,
+    prop,
+} from '@typegoose/typegoose'
 import shortUUID from 'short-uuid'
 
+@modelOptions({
+    schemaOptions: { timestamps: true },
+    options: { customName: 'QuizPreset', allowMixed: Severity.ALLOW },
+})
 class DbQuizPreset {
     @prop({ default: () => shortUUID.generate() }) _id!: string
     /** REFERENCES DbUser(_id) ONUPDATE restrict */
@@ -10,7 +19,4 @@ class DbQuizPreset {
     @prop({ required: true }) settings!: unknown
 }
 
-export const DbQuizPresetModel = getModelForClass(DbQuizPreset, {
-    schemaOptions: { timestamps: true },
-    options: { customName: 'QuizPreset', allowMixed: Severity.ALLOW },
-})
+export const DbQuizPresetModel = getModelForClass(DbQuizPreset)

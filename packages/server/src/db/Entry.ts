@@ -1,4 +1,13 @@
-import { getModelForClass, index, pre, prop } from '@typegoose/typegoose'
+import path from 'path'
+
+import {
+    getModelForClass,
+    index,
+    modelOptions,
+    pre,
+    prop,
+} from '@typegoose/typegoose'
+import sqlite3 from 'better-sqlite3'
 import makePinyin from 'chinese-to-pinyin'
 import S from 'jsonschema-definer'
 import jieba from 'nodejieba'
@@ -40,6 +49,10 @@ import shortUUID from 'short-uuid'
 })
 @index({ userId: 1, type: 1, simplified: 1 }, { unique: true })
 @index({ translation: 'text', description: 'text' })
+@modelOptions({
+    schemaOptions: { timestamps: true },
+    options: { customName: 'Entry' },
+})
 class DbEntry {
     @prop({ default: () => shortUUID.generate() }) _id!: string
     /** REFERENCES DbUser(_id) ONUPDATE restrict; or _<STRING> */
@@ -47,6 +60,7 @@ class DbEntry {
 
     @prop({ required: true, index: true }) type!: string
     @prop({ index: true }) level?: number
+    @prop({ index: true }) frequency?: number
 
     @prop({ index: true }) lookupDate?: Date
     @prop() lookupCount?: number
@@ -227,7 +241,58 @@ class DbEntry {
     }
 }
 
-export const DbEntryModel = getModelForClass(DbEntry, {
-    schemaOptions: { timestamps: true },
-    options: { customName: 'Entry' },
-})
+export const DbEntryModel = getModelForClass(DbEntry)
+
+export class Frequency {
+    db = sqlite3(path.join(__dirname, '../../assets/freq.db'), {
+        readonly: true,
+    })
+
+    cSum = this.db
+        .prepare(
+            /* sql */ `
+    SELECT sum(value) AS v FROM frequency, json_tree("character");
+    `
+        )
+        .get().v
+
+    cStmt = this.db.prepare(/* sql */ `
+    SELECT sum(json_extract("character", '$.'||?)) AS f FROM frequency;
+    `)
+
+    vSum = this.db
+        .prepare(
+            /* sql */ `
+    SELECT sum(value) AS v FROM frequency, json_tree("vocabulary");
+    `
+        )
+        .get().v
+
+    vStmt = this.db.prepare(/* sql */ `
+    SELECT sum(json_extract("vocabulary", '$.'||?)) AS f FROM frequency;
+    `)
+
+    cFreq(c: string) {
+        return (((this.cStmt.get(c).f as number) || 0) / this.cSum) * 10 ** 6
+    }
+
+    _vFreq(v: string) {
+        return (((this.vStmt.get(v).f as number) || 0) / this.vSum) * 10 ** 6
+    }
+
+    vFreq(v: string) {
+        const allLevels = [...new Set(jieba.cutForSearch(v))]
+            .filter((v) => /\p{sc=Han}/u.test(v))
+            .map((v) => this._vFreq(v) || 0)
+
+        if (allLevels.length) {
+            return allLevels.reduce((prev, c) => prev + c, 0) / allLevels.length
+        }
+
+        return 0
+    }
+
+    close() {
+        this.db.close()
+    }
+}

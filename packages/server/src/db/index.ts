@@ -1,6 +1,7 @@
 import {
     Severity,
     getModelForClass,
+    modelOptions,
     mongoose,
     pre,
     prop,
@@ -60,6 +61,10 @@ function userDeleteCascade(...targets: Model<any>[]) {
         DbLibraryModel
     )
 )
+@modelOptions({
+    schemaOptions: { timestamps: true },
+    options: { customName: 'User', allowMixed: Severity.ALLOW },
+})
 class DbUser {
     @prop({ default: () => shortUUID.generate() }) _id!: string
     @prop({ required: true, index: true }) identifier!: string
@@ -90,10 +95,7 @@ class DbUser {
     @prop() quizSettings?: Record<string, any>
 }
 
-export const DbUserModel = getModelForClass(DbUser, {
-    schemaOptions: { timestamps: true },
-    options: { customName: 'User', allowMixed: Severity.ALLOW },
-})
+export const DbUserModel = getModelForClass(DbUser)
 
 export {
     DbQuizModel,
@@ -105,6 +107,7 @@ export {
 
 export async function mongoConnect(uri = process.env['MONGO_URI']) {
     return mongoose.connect(S.string().ensure(uri!), {
+        useCreateIndex: true,
         useNewUrlParser: true,
         useUnifiedTopology: true,
     })

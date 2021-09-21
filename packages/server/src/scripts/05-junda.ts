@@ -1,18 +1,17 @@
+import path from 'path'
+
 import { mongoose } from '@typegoose/typegoose'
 import sqlite3 from 'better-sqlite3'
 
-import { DbEntryModel } from '../db'
+import { DbEntryModel, mongoConnect } from '../db'
+import { Frequency } from '../db/Entry'
 
-export async function populate(
-    /** @default './assets' */
-    dir: string
-) {
-    process.chdir(dir)
-
-    const s3 = sqlite3('./junda.db', {
+export async function populate() {
+    const s3 = sqlite3(path.join(__dirname, '../../assets/junda.db'), {
         readonly: true,
     })
 
+    const f = new Frequency()
     const session = await mongoose.startSession()
 
     const batchSize = 10000
@@ -33,14 +32,13 @@ export async function populate(
                     update: {
                         type: 'character',
                         userId: '_junda',
-                        _id: `_h-${p.character}`,
+                        _id: `_c-${p.character}`,
                         entry: [p.character],
                         reading: p.pinyin.split('/').filter((s: string) => s),
                         translation: p.english
                             .split('/')
                             .filter((s: string) => s),
-                        frequency: p.frequency,
-                        level: 0,
+                        frequency: f.cFreq(p.character),
                     },
                     upsert: true,
                 },
@@ -59,4 +57,11 @@ export async function populate(
 
     await session.endSession({})
     s3.close()
+}
+
+if (require.main === module) {
+    mongoConnect('mongodb://127.0.0.1:27018/zhquiz').then(async (c) => {
+        await populate()
+        await c.disconnect()
+    })
 }

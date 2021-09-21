@@ -1,4 +1,4 @@
-import { Severity, getModelForClass, prop } from '@typegoose/typegoose'
+import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
 import S from 'jsonschema-definer'
 import shortUUID from 'short-uuid'
 
@@ -10,6 +10,10 @@ export const sEntry = S.shape({
 
 export type IEntry = typeof sEntry.type
 
+@modelOptions({
+    schemaOptions: { timestamps: true },
+    options: { customName: 'Library' },
+})
 class DbLibrary {
     @prop({ default: () => shortUUID.generate() }) _id!: string
     /** REFERENCES DbUser(_id) ONUPDATE restrict; or _<STRING> */
@@ -21,6 +25,7 @@ class DbLibrary {
     @prop({
         required: true,
         validate: (v: IEntry[]) => S.list(sEntry).minItems(1).validate(v)[0],
+        type: [String],
         index: true,
     })
     entry!: IEntry[]
@@ -38,7 +43,4 @@ class DbLibrary {
     tag!: string[]
 }
 
-export const DbLibraryModel = getModelForClass(DbLibrary, {
-    schemaOptions: { timestamps: true },
-    options: { customName: 'Library', allowMixed: Severity.ALLOW },
-})
+export const DbLibraryModel = getModelForClass(DbLibrary)

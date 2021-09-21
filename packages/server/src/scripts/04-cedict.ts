@@ -7,7 +7,8 @@ import path from 'path'
 import { mongoose } from '@typegoose/typegoose'
 import sqlite3 from 'better-sqlite3'
 
-import { DbEntryModel } from '../db'
+import { DbEntryModel, mongoConnect } from '../db'
+import { Frequency } from '../db/Entry'
 
 export async function populate(
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedict'))
@@ -102,6 +103,7 @@ export async function populate(
         console.error(e)
     }
 
+    const f = new Frequency()
     const session = await mongoose.startSession()
 
     const batchSize = 1000
@@ -140,8 +142,7 @@ export async function populate(
                         entry,
                         reading: JSON.parse(p.reading),
                         translation: english,
-                        frequency: 0,
-                        level: 0,
+                        frequency: f.vFreq(p.simplified),
                     },
                     upsert: true,
                 },
@@ -159,5 +160,13 @@ export async function populate(
     }
 
     await session.endSession({})
+    f.close()
     s3.close()
+}
+
+if (require.main === module) {
+    mongoConnect('mongodb://127.0.0.1:27018/zhquiz').then(async (c) => {
+        await populate()
+        await c.disconnect()
+    })
 }

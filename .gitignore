@@ -194,3 +194,4 @@ $RECYCLE.BIN/
 /public/
 /submodules/
 /pgdata/
+/mongodata/

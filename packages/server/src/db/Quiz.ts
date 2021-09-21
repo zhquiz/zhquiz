@@ -1,7 +1,16 @@
-import { getModelForClass, index, prop } from '@typegoose/typegoose'
+import {
+    getModelForClass,
+    index,
+    modelOptions,
+    prop,
+} from '@typegoose/typegoose'
 import shortUUID from 'short-uuid'
 
 @index<DbQuiz>({ userId: 1, entry: 1, type: 1, direction: 1 }, { unique: true })
+@modelOptions({
+    schemaOptions: { timestamps: true },
+    options: { customName: 'Quiz' },
+})
 class DbQuiz {
     @prop({ default: () => shortUUID.generate() }) _id!: string
     /** REFERENCES DbUser(_id) ONUPDATE restrict */
@@ -24,7 +33,4 @@ class DbQuiz {
     @prop({ index: true }) wrongStreak?: number
 }
 
-export const DbQuizModel = getModelForClass(DbQuiz, {
-    schemaOptions: { timestamps: true },
-    options: { customName: 'Quiz' },
-})
+export const DbQuizModel = getModelForClass(DbQuiz)

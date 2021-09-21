@@ -1,15 +1,12 @@
+import path from 'path'
+
 import { mongoose } from '@typegoose/typegoose'
 import sqlite3 from 'better-sqlite3'
 
-import { DbRadicalModel } from '../db'
+import { DbRadicalModel, mongoConnect } from '../db'
 
-export async function populate(
-    /** @default './assets' */
-    dir: string
-) {
-    process.chdir(dir)
-
-    const s3 = sqlite3('./radical.db', {
+export async function populate() {
+    const s3 = sqlite3(path.join(__dirname, '../../assets/radical.db'), {
         readonly: true,
     })
     const reHan = /\p{sc=Han}/gu
@@ -58,4 +55,11 @@ export async function populate(
 
     await session.endSession({})
     s3.close()
+}
+
+if (require.main === module) {
+    mongoConnect('mongodb://127.0.0.1:27018/zhquiz').then(async (c) => {
+        await populate()
+        await c.disconnect()
+    })
 }
