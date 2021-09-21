@@ -1,6 +1,9 @@
 {
   "folders": [
     {
+      "path": "packages/server"
+    },
+    {
       "path": "packages/www"
     },
     {
@@ -14,6 +17,7 @@
     "files.associations": {
       "*.sql": "sql",
       "Dockerfile.*": "dockerfile"
-    }
+    },
+    "sort-imports.on-save": true
   }
 }

@@ -2,41 +2,9 @@ version: '3'
 services:
   db:
     restart: always
-    image: patarapolw/zhquiz-db
-    build: ./packages/db
-    environment:
-      POSTGRES_USER: &pguser postgres
-      POSTGRES_PASSWORD: &pgpass postgress
-      POSTGRES_DB: &pgdb postgres
-
-      TZ: &tz Asia/Bangkok
-      PGTZ: *tz
+    image: mongo
     ports:
-      - 5433:5432 # pgAdmin connection port
+      - 27018:27017
 
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
-
-      - ./packages/db/initdb.d:/docker-entrypoint-initdb.d
-      - ./packages/db/library:/app/library
-      - ./packages/db/assets:/app/assets
-      - ./packages/db/src:/app/src
-  www:
-    restart: always
-    image: patarapolw/zhquiz-server
-    build: ./packages/www
-    environment: 
-      POSTGRES_USER: *pguser
-      POSTGRES_PASSWORD: *pgpass
-      POSTGRES_DB: *pgdb
-      POSTGRES_HOST: db
-      PORT: 35594
-
-      # Try randomkeygen.com
-      SECRET: 7JMqUYvB4tn1RdMIBvWzUL6O4LNk7QH5
-
-      # See https://magic.link for signing in and authorization
-      MAGIC_PUBLIC:
-      MAGIC_SECRET:
-    ports:
-      - 35594:35594 # $EXTERNAL_PORT:$PORT - Go to http://localhost:$EXTERNAL_PORT
+      - ./mongodata:/data/data
