@@ -26,8 +26,19 @@ import shortUUID from 'short-uuid'
         ]
     }
 
+    if (!this.reading.includes('')) {
+        this.reading = [
+            ...this.reading,
+            '',
+            ...this.reading.map((r) => r.replace(/\d/g, '')),
+        ]
+    }
+
+    this.simplified = entry
+
     next()
 })
+@index({ userId: 1, type: 1, simplified: 1 }, { unique: true })
 @index({ translation: 'text', description: 'text' })
 class DbEntry {
     @prop({ default: () => shortUUID.generate() }) _id!: string
@@ -39,6 +50,7 @@ class DbEntry {
 
     @prop({ index: true }) lookupDate?: Date
     @prop() lookupCount?: number
+    @prop({ index: true }) simplified!: string
 
     @prop({
         required: true,
@@ -72,12 +84,19 @@ class DbEntry {
     })
     tag!: string[]
 
-    get simplified() {
-        return this.entry[0]!
+    get traditional() {
+        return this.entry.slice(1)
     }
 
-    get alt() {
-        return this.entry.slice(1)
+    get pinyin() {
+        const end = this.reading.indexOf('')
+        return end > 0
+            ? this.reading.slice(0, this.reading.indexOf(''))
+            : this.reading
+    }
+
+    get english() {
+        return this.translation
     }
 
     makeReading(): string {
