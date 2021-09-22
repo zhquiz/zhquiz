@@ -16,7 +16,7 @@ export type IEntry = typeof sEntry.type
 class DbLibrary {
     @prop({ default: () => shortUUID.generate() }) _id!: string
     /** REFERENCES DbUser(_id) ONUPDATE restrict; or _<STRING> */
-    @prop({ required: true, index: true }) userId!: string
+    @prop({ index: true }) userId?: string
 
     @prop({ required: true, index: true }) type!: string
     @prop({ required: true, index: true }) title!: string
