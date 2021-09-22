@@ -32,7 +32,6 @@ export async function populate() {
                     update: {
                         type: 'character',
                         userId: '_junda',
-                        _id: `_c-${p.character}`,
                         entry: [p.character],
                         reading: p.pinyin.split('/').filter((s: string) => s),
                         translation: p.english

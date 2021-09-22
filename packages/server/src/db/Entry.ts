@@ -8,7 +8,7 @@ import {
     prop,
 } from '@typegoose/typegoose'
 import sqlite3 from 'better-sqlite3'
-import makePinyin from 'chinese-to-pinyin'
+import toPinyin from 'chinese-to-pinyin'
 import S from 'jsonschema-definer'
 import jieba from 'nodejieba'
 import shortUUID from 'short-uuid'
@@ -16,23 +16,16 @@ import shortUUID from 'short-uuid'
 @pre<DbEntry>('validate', async function (next) {
     const entry = S.string().ensure(this.entry[0]!)
 
-    let segments: any[] = []
-
     if (!this.translation || !this.translation.length) {
-        segments = await this.makeTranslation()
+        this.translation = await DbEntryModel.makeTranslation(this.simplified)
     }
 
     if (!this.level && this.type === 'sentence') {
-        this.level = await this.makeLevel(segments)
+        this.level = new Level().makeLevel(this.simplified)
     }
 
     if (!this.reading || !this.reading.length) {
-        this.reading = [
-            makePinyin(entry, {
-                toneToNumber: true,
-                keepRest: true,
-            }),
-        ]
+        this.reading = [toPinyin(entry)]
     }
 
     if (!this.reading.includes('')) {
@@ -43,11 +36,9 @@ import shortUUID from 'short-uuid'
         ]
     }
 
-    this.simplified = entry
-
     next()
 })
-@index({ userId: 1, type: 1, simplified: 1 }, { unique: true })
+@index({ userId: 1, type: 1, 'entry.0': 1 }, { unique: true })
 @index({ translation: 'text', description: 'text' })
 @modelOptions({
     schemaOptions: { timestamps: true, collection: 'Entry' },
@@ -63,7 +54,6 @@ class DbEntry {
 
     @prop({ index: true }) lookupDate?: Date
     @prop() lookupCount?: number
-    @prop({ index: true }) simplified!: string
 
     @prop({
         required: true,
@@ -97,6 +87,10 @@ class DbEntry {
     })
     tag!: string[]
 
+    get simplified() {
+        return this.entry[0]!
+    }
+
     get traditional() {
         return this.entry.slice(1)
     }
@@ -112,27 +106,13 @@ class DbEntry {
         return this.translation
     }
 
-    makeReading(): string {
-        return makePinyin(this.simplified, {
-            toneToNumber: true,
-            keepRest: true,
-        })
-    }
-
-    async makeTranslation(): Promise<
-        {
-            entry: string[]
-            reading: string[]
-            translation: string[]
-            level?: number
-        }[]
-    > {
+    static async makeTranslation(simplified: string): Promise<string[]> {
         const segments = await DbEntryModel.find(
             {
                 entry: {
-                    $in: [
-                        ...new Set(jieba.cutForSearch(this.simplified)),
-                    ].filter((v) => /\p{sc=Han}/u.test(v)),
+                    $in: [...new Set(jieba.cutForSearch(simplified))].filter(
+                        (v) => /\p{sc=Han}/u.test(v)
+                    ),
                 },
                 type: 'vocabulary',
             },
@@ -184,59 +164,18 @@ class DbEntry {
             entriesMap.set(et0, it)
         })
 
-        this.translation = [
+        return [
             [...entriesMap]
                 .map(
                     ([k, v]) =>
                         `- ${v.entry.join(' ')} [${
                             v.reading.length
                                 ? v.reading.join(' / ')
-                                : makePinyin(k, {
-                                      toneToNumber: true,
-                                      keepRest: true,
-                                  })
+                                : toPinyin(k)
                         }] ${v.translation.join(' / ')}`
                 )
                 .join('\n'),
         ]
-
-        return segments
-    }
-
-    async makeLevel(
-        segments: {
-            entry: string[]
-            level?: number
-        }[] = []
-    ) {
-        const raw = [...new Set(jieba.cutForSearch(this.simplified))].filter(
-            (v) => /\p{sc=Han}/u.test(v)
-        )
-
-        if (!segments.length) {
-            segments = await DbEntryModel.find(
-                {
-                    entry: { $in: raw },
-                    type: 'vocabulary',
-                    level: { $exists: true },
-                },
-                { entry: 1, level: 1 }
-            )
-        }
-
-        const entriesMap = new Map<string, number>()
-        segments.map((et) => {
-            if (et.level) {
-                entriesMap.set(S.string().ensure(et.entry[0]!), et.level)
-            }
-        })
-
-        this.level =
-            ([...entriesMap.values()].reduce((prev, c) => prev + c, 0) *
-                raw.length) /
-            entriesMap.size
-
-        return this.level
     }
 }
 
@@ -278,4 +217,52 @@ export class Frequency {
     close() {
         this.db.close()
     }
+}
+
+export class Level {
+    db = sqlite3(path.join(__dirname, '../../assets/zhlevel.db'), {
+        readonly: true,
+    })
+
+    makeLevel(v: string) {
+        const raw = [...new Set(jieba.cutForSearch(v))].filter((v) =>
+            /\p{sc=Han}/u.test(v)
+        )
+        if (!raw.length) {
+            return 0
+        }
+
+        const segments = this.db
+            .prepare(
+                /* sql */ `
+        SELECT "entry", vLevel "level" FROM zhlevel WHERE vLevel IS NOT NULL AND
+        "entry" IN (${Array(raw.length).fill('?').join(',')})
+        `
+            )
+            .all(...raw)
+
+        if (!segments.length) {
+            return 100
+        }
+
+        const entriesMap = new Map<string, number>()
+        segments.map((et) => {
+            if (et.level) {
+                entriesMap.set(S.string().ensure(et.entry[0]!), et.level)
+            }
+        })
+
+        return (
+            ([...entriesMap.values()].reduce((prev, c) => prev + c, 0) *
+                raw.length) /
+            entriesMap.size
+        )
+    }
+}
+
+export function makePinyin(entry: string) {
+    return toPinyin(entry, {
+        toneToNumber: true,
+        keepRest: true,
+    })
 }

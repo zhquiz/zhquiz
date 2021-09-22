@@ -6,8 +6,10 @@ import path from 'path'
 
 import { mongoose } from '@typegoose/typegoose'
 import sqlite3 from 'better-sqlite3'
+import makePinyin from 'chinese-to-pinyin'
 
 import { DbEntryModel, mongoConnect } from '../db'
+import { Frequency, Level } from '../db/Entry'
 
 export async function populate(
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tatoeba'))
@@ -223,6 +225,8 @@ export async function populate(
         console.error(e)
     }
 
+    const f = new Frequency()
+    const lv = new Level()
     const session = await mongoose.startSession()
 
     const batchSize = 5000
@@ -254,10 +258,16 @@ export async function populate(
                     update: {
                         type: 'sentence',
                         userId: '_tatoeba',
-                        _id: `_tatoeba-${p.id}`,
                         entry: [tr.cmn],
+                        reading: [
+                            makePinyin(tr.cmn, {
+                                toneToNumber: true,
+                                keepRest: true,
+                            }),
+                        ],
                         translation: [p.eng],
-                        level: 0,
+                        level: lv.makeLevel(tr.cmn),
+                        frequency: f.vFreq(tr.cmn),
                     },
                     upsert: true,
                 },
@@ -275,6 +285,7 @@ export async function populate(
     }
 
     await session.endSession({})
+    f.close()
     s3.close()
 }
 

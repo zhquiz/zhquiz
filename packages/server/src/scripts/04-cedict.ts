@@ -138,7 +138,6 @@ export async function populate(
                     update: {
                         type: 'vocabulary',
                         userId: '_cedict',
-                        _id: `_v-${p.simplified}`,
                         entry,
                         reading: JSON.parse(p.reading),
                         translation: english,

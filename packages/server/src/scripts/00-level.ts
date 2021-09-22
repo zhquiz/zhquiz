@@ -2,6 +2,7 @@ import path from 'path'
 
 import { mongoose } from '@typegoose/typegoose'
 import sqlite3 from 'better-sqlite3'
+import makePinyin from 'chinese-to-pinyin'
 
 import { DbEntryModel, mongoConnect } from '../db'
 import { Frequency } from '../db/Entry'
@@ -30,38 +31,34 @@ export async function populate() {
         .flatMap((p) => {
             const ops: any[] = []
             const entry = p.entry.replace(/……/g, '...')
+            const reading = [
+                makePinyin(entry, {
+                    toneToNumber: true,
+                    keepRest: true,
+                }),
+            ]
 
             if (p.hLevel) {
                 const _id = `_c-${entry}`
                 ops.push({
-                    updateOne: {
-                        filter: { _id },
-                        update: {
-                            type: 'character',
-                            userId: '_zhlevel',
-                            _id,
-                            entry: [entry],
-                            frequency: f.cFreq(entry),
-                            level: p.hLevel,
-                        },
-                        upsert: true,
-                    },
+                    type: 'character',
+                    userId: '_zhlevel',
+                    _id,
+                    entry: [entry],
+                    reading,
+                    frequency: f.cFreq(entry),
+                    level: p.hLevel,
                 })
             } else if (p.vLevel) {
                 const _id = `_v-${entry}`
                 ops.push({
-                    updateOne: {
-                        filter: { _id },
-                        update: {
-                            type: 'vocabulary',
-                            userId: '_zhlevel',
-                            _id,
-                            entry: [entry],
-                            frequency: f.vFreq(entry),
-                            level: p.vLevel,
-                        },
-                        upsert: true,
-                    },
+                    type: 'vocabulary',
+                    userId: '_zhlevel',
+                    _id,
+                    entry: [entry],
+                    reading,
+                    frequency: f.vFreq(entry),
+                    level: p.vLevel,
                 })
             }
 
@@ -70,7 +67,7 @@ export async function populate() {
 
     for (let i = 0; i < lots.length; i += batchSize) {
         console.log(i)
-        await DbEntryModel.bulkWrite(lots.slice(i, i + batchSize), {
+        await DbEntryModel.insertMany(lots.slice(i, i + batchSize), {
             session,
             ordered: false,
         })
