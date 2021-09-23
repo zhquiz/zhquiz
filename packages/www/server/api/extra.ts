@@ -44,9 +44,9 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         }
 
         const [r] = await db.query(sql`
-        SELECT "entry", "pinyin", "english", "description", "tag", "type"
-        FROM "extra"
-        WHERE "userId" = ${userId} AND "id" = ${id} AND "english"[1] IS NOT NULL
+        SELECT "entry", "reading" "pinyin", "translation" "english", "description", "tag", "type"
+        FROM "entry"
+        WHERE "userId" = ${userId} AND "id" = ${id} AND "translation"[1] IS NOT NULL
         `)
 
         if (!r) {
@@ -108,14 +108,14 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         }
 
         if (!reading.length) {
-          reading.push(await makeReading(entry[0]))
+          reading.push(makeReading(entry[0]))
         }
 
         const id = await db.tx(async (db) => {
           const id = shortUUID.uuid()
 
           await db.query(sql`
-          INSERT INTO "extra" ("entry", "pinyin", "english", "description", "tag", "type", "userId", "id")
+          INSERT INTO "entry" ("entry", "reading", "translation", "description", "tag", "type", "userId", "id")
           VALUES (${entry}, ${reading}, ${english}, ${description}, ${tag}, ${type}, ${userId}, ${id})
           `)
 
@@ -180,16 +180,16 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         }
 
         if (!reading.length) {
-          reading.push(await makeReading(entry[0]))
+          reading.push(makeReading(entry[0]))
         }
 
         await db.tx(async (db) => {
           await db.query(sql`
-          UPDATE "extra"
+          UPDATE "entry"
           SET
             "entry" = ${entry},
-            "pinyin" = ${reading},
-            "english" = ${english},
+            "reading" = ${reading},
+            "translation" = ${english},
             "description" = ${description},
             "tag" = ${tag},
             "type" = ${type}
@@ -240,7 +240,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         SELECT DISTINCT unnest "tag"
         FROM (
           SELECT unnest("tag")
-          FROM tag
+          FROM "entry"
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
           ) AND "type" = ${type} AND ${entry} = ANY("entry")
@@ -288,13 +288,13 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const [r] = await db.query(sql`
         SELECT "id", "tag"
-        FROM "extra"
+        FROM "entry"
         WHERE "userId" = ${userId} AND "type" = ${type} AND "entry"[1] = ${entry} AND "entry"[2] IS NULL
         `)
 
         if (r) {
           await db.query(sql`
-          UPDATE "extra"
+          UPDATE "entry"
           SET "tag" = (
             SELECT array_agg(DISTINCT t)
             FROM (
@@ -311,7 +311,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         } else {
           const id = shortUUID.uuid()
           await db.query(sql`
-          INSERT INTO "extra" ("entry", "tag", "type", "userId", "id")
+          INSERT INTO "entry" ("entry", "tag", "type", "userId", "id")
           VALUES (${entry}, ${tag}, ${type}, ${userId}, ${id})
           `)
 
@@ -556,16 +556,14 @@ const extraRouter: FastifyPluginAsync = async (f) => {
               WHERE "userId" = ${userId}
                 AND ${makeExtra.parse(q) || sql`TRUE`}
             ) t1
-            ${
-              quizCond
-                ? sql`LEFT JOIN quiz ON quiz."entry" = t1."entry"`
-                : sql``
-            }
-            ${
-              tagCond
-                ? sql`LEFT JOIN entry_tag ON entry_tag."entry" = t1."entry"`
-                : sql``
-            }
+            ${quizCond
+            ? sql`LEFT JOIN quiz ON quiz."entry" = t1."entry"`
+            : sql``
+          }
+            ${tagCond
+            ? sql`LEFT JOIN entry_tag ON entry_tag."entry" = t1."entry"`
+            : sql``
+          }
             WHERE TRUE
               ${quizCond ? sql`AND ${quizCond}` : sql``}
               ${tagCond ? sql`AND ${tagCond}` : sql``}

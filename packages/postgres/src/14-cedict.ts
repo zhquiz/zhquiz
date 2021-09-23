@@ -143,10 +143,6 @@ export async function populate(
     }
   })
 
-  await db.query(sql`
-    REFRESH MATERIALIZED VIEW level;
-  `)
-
   s3.close()
   f.close()
 }

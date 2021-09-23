@@ -1,4 +1,4 @@
-CREATE TABLE "extra" (
+CREATE TABLE "entry" (
     "id"            UUID NOT NULL DEFAULT uuid_generate_v4(),
     "createdAt"     TIMESTAMPTZ DEFAULT now(),
     "updatedAt"     TIMESTAMPTZ DEFAULT now(),
@@ -18,30 +18,30 @@ CREATE TABLE "extra" (
         fk_userId FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE
 );
 
-CREATE TRIGGER "t_extra_updatedAt"
-    BEFORE UPDATE ON "extra"
+CREATE TRIGGER "t_entry_updatedAt"
+    BEFORE UPDATE ON "entry"
     FOR EACH ROW
     EXECUTE PROCEDURE "f_updatedAt"();
 
-CREATE UNIQUE INDEX idx_extra_u ON extra (("entry"[1]), "type", "userId");
+CREATE UNIQUE INDEX idx_entry_u ON "entry" (("entry"[1]), "type", "userId");
 
-CREATE INDEX "idx_extra_updatedAt" ON "extra" ("updatedAt");
-CREATE INDEX "idx_extra_userId" ON "extra" ("userId");
-CREATE INDEX "idx_extra_type" ON "extra" ("type");
-CREATE INDEX "idx_extra_level" ON "extra" ("level");
-CREATE INDEX "idx_extra_frequency" ON "extra" ("frequency");
-CREATE INDEX "idx_extra_lookupDate" ON "extra" ("lookupDate");
-CREATE INDEX "idx_extra_lookupCount" ON "extra" ("lookupCount");
+CREATE INDEX "idx_entry_updatedAt" ON "entry" ("updatedAt");
+CREATE INDEX "idx_entry_userId" ON "entry" ("userId");
+CREATE INDEX "idx_entry_type" ON "entry" ("type");
+CREATE INDEX "idx_entry_level" ON "entry" ("level");
+CREATE INDEX "idx_entry_frequency" ON "entry" ("frequency");
+CREATE INDEX "idx_entry_lookupDate" ON "entry" ("lookupDate");
+CREATE INDEX "idx_entry_lookupCount" ON "entry" ("lookupCount");
 
-CREATE INDEX "idx_extra_pinyin" ON "extra"
-    USING pgroonga (normalize_pinyin("pinyin"));
-CREATE INDEX "idx_extra_english_description" ON "extra"
+CREATE INDEX "idx_entry_pinyin" ON "entry"
+    USING pgroonga (normalize_pinyin("reading"));
+CREATE INDEX "idx_entry_translation_description" ON "entry"
     USING pgroonga(
-        "english",
+        "translation",
         "description"
     )
     WITH (plugins='token_filters/stem', token_filters='TokenFilterStem');
 
-CREATE INDEX "idx_extra_entry" ON "extra" USING pgroonga("entry");
-CREATE INDEX "idx_extra_entry_gin" ON "extra" USING GIN("entry");
-CREATE INDEX "idx_extra_tag" ON "extra" USING pgroonga ("tag");
+CREATE INDEX "idx_entry_entry" ON "entry" USING pgroonga("entry");
+CREATE INDEX "idx_entry_entry_gin" ON "entry" USING GIN("entry");
+CREATE INDEX "idx_entry_tag" ON "entry" USING pgroonga ("tag");

@@ -8,6 +8,7 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
   const s3 = sqlite3('./zhlevel.db', {
     readonly: true
   })
+  const f = new Frequency()
 
   await db.tx(async (db) => {
     const batchSize = 5000
@@ -34,14 +35,12 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
       await db.query(sql`
         INSERT INTO "entry" ("type", "entry", "reading", "level", "tag", "frequency")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
-        ON CONFLICT DO UPDATE SET
+        ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
           "level" = EXCLUDED."level",
-          "tag" = EXCLUDED."tag"||"tag"
+          "tag" = EXCLUDED."tag"||"entry"."tag"
       `)
     }
   })
-
-  const f = new Frequency()
 
   await db.tx(async (db) => {
     const batchSize = 5000
@@ -59,7 +58,7 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
       .all()
       .map((p) => {
         const entry = p.entry.replace(/……/g, '...')
-        return sql`('vocabulary', ${[entry]},  ${[makePinyin(entry)]},${
+        return sql`('vocabulary', ${[entry]}, ${[makePinyin(entry)]},${
           p.vLevel
         }, ${['zhlevel']}, ${f.vFreq(entry)})`
       })
@@ -69,9 +68,9 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
       await db.query(sql`
         INSERT INTO "entry" ("type", "entry", "reading", "level", "tag", "frequency")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
-        ON CONFLICT DO UPDATE SET
+        ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
           "level" = EXCLUDED."level",
-          "tag" = EXCLUDED."tag"||"tag"
+          "tag" = EXCLUDED."tag"||"entry"."tag"
       `)
     }
   })

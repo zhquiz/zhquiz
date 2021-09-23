@@ -10,9 +10,6 @@
       "path": "packages/www"
     },
     {
-      "path": "packages/db"
-    },
-    {
       "name": "_root",
       "path": "."
     }

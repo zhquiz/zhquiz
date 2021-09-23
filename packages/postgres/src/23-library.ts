@@ -66,9 +66,9 @@ export async function populate(db: ConnectionPool, dir = '/app/library') {
                     typeof el.english === 'string' ? [el.english] : el.english
                 })
               })
-            )}::jsonb, ${r.type || 'vocabulary'}, ${r.tag || []}, ${r.createdAt
-              }, ${r.updatedAt}, ${r.description || ''
-              }, ${r.isShared !== false})`
+            )}::jsonb, ${r.type || 'vocabulary'}, ${r.tag || []}, ${
+              r.createdAt
+            }, ${r.updatedAt}, ${r.description || ''}, ${r.isShared !== false})`
         ),
         ','
       )}
@@ -84,10 +84,6 @@ export async function populate(db: ConnectionPool, dir = '/app/library') {
       `)
     }
   })
-
-  await db.query(sql`
-    REFRESH MATERIALIZED VIEW entry_tag;
-  `)
 }
 
 export async function constraint(db: ConnectionPool) {
