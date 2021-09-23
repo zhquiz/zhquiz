@@ -4,12 +4,16 @@
       "path": "packages/postgres"
     },
     {
+      "path": "packages/zhlevel"
+    },
+    {
       "path": "packages/www"
     },
     {
       "path": "packages/db"
     },
     {
+      "name": "_root",
       "path": "."
     }
   ],

@@ -2,7 +2,7 @@ CREATE TABLE "extra" (
     "id"            UUID NOT NULL DEFAULT uuid_generate_v4(),
     "createdAt"     TIMESTAMPTZ DEFAULT now(),
     "updatedAt"     TIMESTAMPTZ DEFAULT now(),
-    "userId"        UUID NOT NULL,
+    "userId"        UUID,
     "type"          TEXT NOT NULL,
     "entry"         TEXT[] NOT NULL CHECK ("entry"[1] IS NOT NULL),
     "reading"       TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
