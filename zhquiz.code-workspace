@@ -1,6 +1,9 @@
 {
   "folders": [
     {
+      "path": "packages/postgres"
+    },
+    {
       "path": "packages/www"
     },
     {

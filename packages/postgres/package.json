@@ -1,0 +1,27 @@
+{
+  "name": "@zhquiz/postgres",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@databases/pg": "^5.1.1",
+    "@types/js-yaml": "^4.0.3",
+    "better-sqlite3": "^7.4.3",
+    "fast-glob": "^3.2.7",
+    "js-yaml": "^4.1.0",
+    "jsonschema-definer": "^1.3.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.4.0",
+    "@types/node": "^16.9.6",
+    "import-sort-parser-typescript": "^6.0.0",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3"
+  },
+  "importSort": {
+    ".js, .ts": {
+      "parser": "typescript",
+      "style": "module"
+    }
+  }
+}
