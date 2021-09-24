@@ -1,4 +1,4 @@
-import { ConnectionPool, sql } from '@databases/pg'
+import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import sqlite3 from 'better-sqlite3'
 import { Frequency, makePinyin } from '@patarapolw/zhlevel'
 
@@ -11,9 +11,9 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
   const f = new Frequency()
 
   await db.tx(async (db) => {
-    const batchSize = 5000
+    console.log('Hanzi')
 
-    const lots = s3
+    const items = s3
       .prepare(
         /* sql */ `
     SELECT
@@ -24,28 +24,48 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
     `
       )
       .all()
-      .map((p) => {
-        return sql`('character', ${[p.entry]}, ${[makePinyin(p.entry)]}, ${
-          p.hLevel
-        }, ${['zhlevel']}, ${f.cFreq(p.entry)})`
-      })
 
-    for (let i = 0; i < lots.length; i += batchSize) {
-      console.log(i)
+    const lvMap = new Map<number, string[]>()
+    items.map((c) => {
+      lvMap.set(c.hLevel, [...(lvMap.get(c.hLevel) || []), c.entry])
+    })
+
+    for (const [lv, vs] of lvMap) {
+      const rs = new Set(
+        (
+          await db.query(sql`
+            SELECT "entry" FROM "entry" WHERE "type" = 'character' AND "entry" && ${vs}
+          `)
+        ).flatMap((r) => r.entry)
+      )
+
+      const newItems = vs.filter((v) => !rs.has(v))
+      if (newItems.length) {
+        await db.query(sql`
+          INSERT INTO "entry" ("type", "entry", "reading", "frequency")
+          VALUES ${sql.join(
+            newItems.map(
+              (v) =>
+                sql`('character', ${[v]}, ${[makePinyin(v)]}, ${f.cFreq(v)})`
+            ),
+            ','
+          )}
+          ON CONFLICT DO NOTHING
+        `)
+      }
+
       await db.query(sql`
-        INSERT INTO "entry" ("type", "entry", "reading", "level", "tag", "frequency")
-        VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
-        ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
-          "level" = EXCLUDED."level",
-          "tag" = EXCLUDED."tag"||"entry"."tag"
+        UPDATE "entry"
+        SET "level" = ${lv}, "tag" = array_distinct("tag"||${['zhlevel']})
+        WHERE "type" = 'character' AND "entry" && ${vs}
       `)
     }
   })
 
   await db.tx(async (db) => {
-    const batchSize = 5000
+    console.log('Vocabulary')
 
-    const lots = s3
+    const items = s3
       .prepare(
         /* sql */ `
     SELECT
@@ -56,25 +76,51 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
     `
       )
       .all()
-      .map((p) => {
-        const entry = p.entry.replace(/……/g, '...')
-        return sql`('vocabulary', ${[entry]}, ${[makePinyin(entry)]},${
-          p.vLevel
-        }, ${['zhlevel']}, ${f.vFreq(entry)})`
-      })
 
-    for (let i = 0; i < lots.length; i += batchSize) {
-      console.log(i)
+    const lvMap = new Map<number, string[]>()
+    items.map((c) => {
+      lvMap.set(c.vLevel, [...(lvMap.get(c.vLevel) || []), c.entry])
+    })
+
+    for (const [lv, vs] of lvMap) {
+      const rs = new Set(
+        (
+          await db.query(sql`
+            SELECT "entry" FROM "entry" WHERE "type" = 'vocabulary' AND "entry" && ${vs}
+          `)
+        ).flatMap((r) => r.entry)
+      )
+
+      const newItems = vs.filter((v) => !rs.has(v))
+      if (newItems.length) {
+        await db.query(sql`
+          INSERT INTO "entry" ("type", "entry", "reading", "frequency")
+          VALUES ${sql.join(
+            newItems.map(
+              (v) =>
+                sql`('vocabulary', ${[v]}, ${[makePinyin(v)]}, ${f.vFreq(v)})`
+            ),
+            ','
+          )}
+          ON CONFLICT DO NOTHING
+        `)
+      }
+
       await db.query(sql`
-        INSERT INTO "entry" ("type", "entry", "reading", "level", "tag", "frequency")
-        VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
-        ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
-          "level" = EXCLUDED."level",
-          "tag" = EXCLUDED."tag"||"entry"."tag"
+        UPDATE "entry"
+        SET "level" = ${lv}, "tag" = array_distinct("tag"||${['zhlevel']})
+        WHERE "type" = 'vocabulary' AND "entry" && ${vs}
       `)
     }
   })
 
   s3.close()
   f.close()
+}
+
+if (require.main === module) {
+  ;(async function () {
+    const db = createConnectionPool({ bigIntMode: 'number' })
+    await populate(db, './assets')
+  })()
 }

@@ -1,8 +1,8 @@
 CREATE TABLE "entry" (
-    "id"            UUID NOT NULL DEFAULT uuid_generate_v4(),
+    "id"            UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4(),
     "createdAt"     TIMESTAMPTZ DEFAULT now(),
     "updatedAt"     TIMESTAMPTZ DEFAULT now(),
-    "userId"        UUID,
+    "userId"        UUID NOT NULL DEFAULT uuid_nil() REFERENCES "user"("id") ON DELETE CASCADE,
     "type"          TEXT NOT NULL,
     "entry"         TEXT[] NOT NULL CHECK ("entry"[1] IS NOT NULL),
     "reading"       TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
@@ -12,10 +12,7 @@ CREATE TABLE "entry" (
     "level"         FLOAT,
     "frequency"     FLOAT,
     "lookupDate"    TIMESTAMPTZ,
-    "lookupCount"   INT,
-    PRIMARY KEY ("id"),
-    CONSTRAINT
-        fk_userId FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE
+    "lookupCount"   INT
 );
 
 CREATE TRIGGER "t_entry_updatedAt"

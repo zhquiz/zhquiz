@@ -1,4 +1,4 @@
-import { ConnectionPool, sql } from '@databases/pg'
+import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import sqlite3 from 'better-sqlite3'
 
 export async function populate(db: ConnectionPool, dir = '/app/assets') {
@@ -45,4 +45,11 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
       `)
     }
   })
+}
+
+if (require.main === module) {
+  ;(async function () {
+    const db = createConnectionPool({ bigIntMode: 'number' })
+    await populate(db, './assets')
+  })()
 }

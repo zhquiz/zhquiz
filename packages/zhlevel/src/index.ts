@@ -78,7 +78,7 @@ export class Level {
 
     return (
       ([...entriesMap.values()].reduce((prev, c) => prev + c, 0) * raw.length) /
-      entriesMap.size
+      (entriesMap.size * entriesMap.size)
     )
   }
 }

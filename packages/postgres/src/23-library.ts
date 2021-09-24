@@ -1,6 +1,6 @@
 import fs from 'fs'
 
-import { ConnectionPool, sql } from '@databases/pg'
+import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import fg from 'fast-glob'
 import yaml from 'js-yaml'
 import S from 'jsonschema-definer'
@@ -92,4 +92,12 @@ export async function constraint(db: ConnectionPool) {
     JSON.stringify(S.list(sEntry).minItems(1).valueOf())
   )}', "entries"))
   `)
+}
+
+if (require.main === module) {
+  ;(async function () {
+    const db = createConnectionPool({ bigIntMode: 'number' })
+    await constraint(db)
+    await populate(db, './library')
+  })()
 }

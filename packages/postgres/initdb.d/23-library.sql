@@ -14,20 +14,17 @@ END;
 $func$ LANGUAGE plpgsql IMMUTABLE;
 
 CREATE TABLE "library" (
-    "id"              UUID NOT NULL DEFAULT uuid_generate_v4(),
+    "id"              UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4(),
     "createdAt"       TIMESTAMPTZ DEFAULT now(),
     "updatedAt"       TIMESTAMPTZ DEFAULT now(),
-    "userId"          UUID,
+    "userId"          UUID NOT NULL DEFAULT uuid_nil() REFERENCES "user"("id") ON DELETE CASCADE,
     "isShared"        BOOLEAN,
     "type"            TEXT NOT NULL,
     "entries"         JSONB NOT NULL CHECK ("entries" -> 0 -> 'entry' IS NOT NULL),
     "entry"           TEXT[] GENERATED ALWAYS AS (unwrap_entries("entries")) STORED,
     "title"           TEXT NOT NULL,
     "description"     TEXT NOT NULL DEFAULT '',
-    "tag"             TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
-    PRIMARY KEY ("id"),
-    CONSTRAINT
-        fk_userId FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE
+    "tag"             TEXT[] NOT NULL DEFAULT '{}'::TEXT[]
 );
 
 CREATE TRIGGER "t_library_updatedAt"

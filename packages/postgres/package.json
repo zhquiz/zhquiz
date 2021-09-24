@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "ts": "ts-node -O '{\"noImplicitAny\":false}'"
+  },
   "dependencies": {
     "@databases/pg": "^5.1.1",
-    "@patarapolw/zhlevel": "^0.1.0",
+    "@patarapolw/zhlevel": "^0.1.1",
     "better-sqlite3": "^7.4.3",
     "fast-glob": "^3.2.7",
     "js-yaml": "^4.1.0",

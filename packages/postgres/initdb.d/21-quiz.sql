@@ -1,8 +1,8 @@
 CREATE TABLE "quiz" (
-    "id"              UUID NOT NULL DEFAULT uuid_generate_v4(),
+    "id"              UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4(),
     "createdAt"       TIMESTAMPTZ DEFAULT now(),
     "updatedAt"       TIMESTAMPTZ DEFAULT now(),
-    "userId"          UUID NOT NULL,
+    "userId"          UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
     "entry"           TEXT NOT NULL,
     "type"            TEXT NOT NULL,
     "direction"       TEXT NOT NULL,
@@ -15,10 +15,7 @@ CREATE TABLE "quiz" (
     "maxRight"        INT,
     "maxWrong"        INT,
     "rightStreak"     INT,
-    "wrongStreak"     INT,
-    PRIMARY KEY ("id"),
-    CONSTRAINT
-        fk_userId FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE
+    "wrongStreak"     INT
 );
 
 CREATE TRIGGER "t_quiz_updatedAt"

@@ -1,4 +1,4 @@
-import { ConnectionPool, sql } from '@databases/pg'
+import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import sqlite3 from 'better-sqlite3'
 import { Frequency } from '@patarapolw/zhlevel'
 
@@ -35,10 +35,20 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
       await db.query(sql`
         INSERT INTO "entry" ("type", "tag", "entry", "reading", "translation", "frequency")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
+        ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
+          "frequency" = EXCLUDED."frequency",
+          "level" = EXCLUDED."level"
       `)
     }
   })
 
   s3.close()
   f.close()
+}
+
+if (require.main === module) {
+  ;(async function () {
+    const db = createConnectionPool({ bigIntMode: 'number' })
+    await populate(db, './assets')
+  })()
 }

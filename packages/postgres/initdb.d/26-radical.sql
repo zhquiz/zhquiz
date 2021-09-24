@@ -1,9 +1,8 @@
 CREATE TABLE radical (
-    "entry"         TEXT NOT NULL,
+    "entry"         TEXT NOT NULL PRIMARY KEY,
     "sub"           TEXT[] NOT NULL,
     "sup"           TEXT[] NOT NULL,
-    "var"           TEXT[] NOT NULL,
-    PRIMARY KEY ("entry")
+    "var"           TEXT[] NOT NULL
 );
 
 CREATE INDEX idx_radical_search ON radical

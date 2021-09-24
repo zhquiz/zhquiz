@@ -8,5 +8,5 @@ cd /app
 if [[ -d "./lib" ]]; then
     node ./lib/init.js
 else
-    yarn ts-node -O '{"noImplicitAny":false}' ./src/init.ts
+    yarn ts ./src/init.ts
 fi

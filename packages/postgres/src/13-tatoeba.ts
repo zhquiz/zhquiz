@@ -4,9 +4,9 @@ import https from 'https'
 import os from 'os'
 import path from 'path'
 
-import { ConnectionPool, sql } from '@databases/pg'
+import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import sqlite3 from 'better-sqlite3'
-import { Frequency, makePinyin } from '@patarapolw/zhlevel'
+import { Frequency, makePinyin, Level } from '@patarapolw/zhlevel'
 
 export async function populate(
   db: ConnectionPool,
@@ -224,6 +224,7 @@ export async function populate(
   }
 
   const f = new Frequency()
+  const lv = new Level()
 
   await db.tx(async (db) => {
     const batchSize = 5000
@@ -233,36 +234,44 @@ export async function populate(
         /* sql */ `
     SELECT
       s1.id       id,
-      s1.text     eng,
-      json_group_object(
-        s2.lang,
-        s2.text
-      ) translation
+      s1.text     cmn,
+      json_group_array(s2.text) eng
     FROM sentence s1
     JOIN link t       ON t.id1 = s1.id
     JOIN sentence s2  ON t.id2 = s2.id
-    WHERE s1.lang = 'eng' AND s2.lang = 'cmn'
-    GROUP BY s1.id
+    WHERE s1.lang = 'cmn' AND s2.lang = 'eng'
+    GROUP BY s1.id, s1.text
     `
       )
       .all()
       .map((p) => {
-        const tr = JSON.parse(p.translation)
-        return sql`('sentence', ${[tr.cmn]}, ${[makePinyin(tr.cmn)]}, ${[
-          p.eng
-        ]}, ${['tatoeba']}, ${f.vFreq(tr.cmn)})`
+        return sql`('sentence', ${[p.cmn]}, ${[
+          makePinyin(p.cmn)
+        ]}, ${JSON.parse(p.eng)}, ${['tatoeba']}, ${f.vFreq(
+          p.cmn
+        )}, ${lv.makeLevel(p.cmn)})`
       })
 
     for (let i = 0; i < lots.length; i += batchSize) {
       console.log(i)
       await db.query(sql`
-        INSERT INTO "entry" ("type", "entry", "reading", "translation", "tag", "frequency")
+        INSERT INTO "entry" ("type", "entry", "reading", "translation", "tag", "frequency", "level")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
-        ON CONFLICT DO NOTHING
+        ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
+          "translation" = array_distinct("entry"."translation"||EXCLUDED."translation"),
+          "frequency" = EXCLUDED."frequency",
+          "level" = EXCLUDED."level"
       `)
     }
   })
 
   s3.close()
   f.close()
+}
+
+if (require.main === module) {
+  ;(async function () {
+    const db = createConnectionPool({ bigIntMode: 'number' })
+    await populate(db)
+  })()
 }

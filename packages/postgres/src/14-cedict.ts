@@ -4,9 +4,9 @@ import https from 'https'
 import os from 'os'
 import path from 'path'
 
-import { ConnectionPool, sql } from '@databases/pg'
+import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import sqlite3 from 'better-sqlite3'
-import { Frequency } from '@patarapolw/zhlevel'
+import { Frequency, Level } from '@patarapolw/zhlevel'
 
 export async function populate(
   db: ConnectionPool,
@@ -101,6 +101,7 @@ export async function populate(
   }
 
   const f = new Frequency()
+  const lv = new Level()
 
   await db.tx(async (db) => {
     const batchSize = 1000
@@ -130,15 +131,21 @@ export async function populate(
 
         return sql`('vocabulary', ${['cedict']}, ${entry}, ${JSON.parse(
           p.reading
-        )}, ${english}, ${f.vFreq(p.simplified)})`
+        )}, ${english}, ${f.vFreq(p.simplified)}, ${lv.makeLevel(
+          p.simplified
+        )})`
       })
 
     for (let i = 0; i < lots.length; i += batchSize) {
       console.log(i)
       await db.query(sql`
-        INSERT INTO "entry" ("type", "tag", "entry", "reading", "translation", "frequency")
+        INSERT INTO "entry" ("type", "tag", "entry", "reading", "translation", "frequency", "level")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
-        ON CONFLICT DO NOTHING
+        ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
+          "reading" = array_distinct("entry"."reading"||EXCLUDED."reading"),
+          "translation" = array_distinct("entry"."translation"||EXCLUDED."translation"),
+          "frequency" = EXCLUDED."frequency",
+          "level" = EXCLUDED."level"
       `)
     }
   })
@@ -148,5 +155,8 @@ export async function populate(
 }
 
 if (require.main === module) {
-  import('./init').then(({ db }) => populate(db, './assets'))
+  ;(async function () {
+    const db = createConnectionPool({ bigIntMode: 'number' })
+    await populate(db, './assets')
+  })()
 }
