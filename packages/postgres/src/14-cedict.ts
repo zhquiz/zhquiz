@@ -144,6 +144,7 @@ export async function populate(
         ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
           "reading" = array_distinct("entry"."reading"||EXCLUDED."reading"),
           "translation" = array_distinct("entry"."translation"||EXCLUDED."translation"),
+          "tag" = array_distinct("entry"."tag"||EXCLUDED."tag"),
           "frequency" = EXCLUDED."frequency",
           "level" = EXCLUDED."level"
       `)

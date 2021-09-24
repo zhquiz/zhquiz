@@ -286,39 +286,15 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 403 }
         }
 
-        const [r] = await db.query(sql`
-        SELECT "id", "tag"
-        FROM "entry"
-        WHERE "userId" = ${userId} AND "type" = ${type} AND "entry"[1] = ${entry} AND "entry"[2] IS NULL
+        await db.query(sql`
+        UPDATE "entry"
+        SET "tag" = array_distinct("tag"||${tag})
+        WHERE "userId" = ${userId} AND "type" = ${type} AND ${entry} = ANY("entry")
         `)
 
-        if (r) {
-          await db.query(sql`
-          UPDATE "entry"
-          SET "tag" = (
-            SELECT array_agg(DISTINCT t)
-            FROM (
-              SELECT unnest("tag"||${tag}) t
-            ) t1
-          )
-          WHERE "id" = ${r.id}
-          `)
-
-          reply.status(201)
-          return {
-            result: 'updated',
-          }
-        } else {
-          const id = shortUUID.uuid()
-          await db.query(sql`
-          INSERT INTO "entry" ("entry", "tag", "type", "userId", "id")
-          VALUES (${entry}, ${tag}, ${type}, ${userId}, ${id})
-          `)
-
-          reply.status(201)
-          return {
-            result: `created: ${id}`,
-          }
+        reply.status(201)
+        return {
+          result: 'updated',
         }
       }
     )
@@ -357,34 +333,21 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 403 }
         }
 
-        const [r] = await db.query(sql`
-        SELECT "id", "tag"
-        FROM "extra"
-        WHERE "userId" = ${userId} AND "type" = ${type} AND "entry"[1] = ${entry} AND "entry"[2] IS NULL
+        await db.query(sql`
+        UPDATE "entry"
+        SET "tag" = (
+          SELECT array_agg(DISTINCT t)
+          FROM (
+            SELECT unnest("tag") t
+          ) t1
+          WHERE t != ANY(${tag})
+        )
+        WHERE "userId" = ${userId} AND "type" = ${type} AND ${entry} = ANY("entry")
         `)
 
-        if (r) {
-          await db.query(sql`
-          UPDATE "extra"
-          SET "tag" = (
-            SELECT array_agg(DISTINCT t)
-            FROM (
-              SELECT unnest("tag") t
-            ) t1
-            WHERE t != ANY(${tag})
-          )
-          WHERE "id" =${r.id}
-          `)
-
-          reply.status(201)
-          return {
-            result: 'updated',
-          }
-        } else {
-          reply.status(200)
-          return {
-            result: `not updated`,
-          }
+        reply.status(201)
+        return {
+          result: 'updated',
         }
       }
     )
@@ -420,21 +383,10 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 403 }
         }
 
-        const [x] = await db.query(sql`
-        SELECT "type", "tag" FROM "extra"
+        await db.query(sql`
+        DELETE FROM "entry"
         WHERE "userId" = ${userId} AND "id" = ${id}
         `)
-
-        if (!x) {
-          throw { statusCode: 404 }
-        }
-
-        await db.tx(async (db) => {
-          await db.query(sql`
-          DELETE FROM "extra"
-          WHERE "userId" = ${userId} AND "id" = ${id}
-          `)
-        })
 
         reply.status(201)
         return {
@@ -486,12 +438,13 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         )
       },
       fields: {
-        entry: { ':': (v) => sql`extra."entry" &@ ${v}` },
-        pinyin: { ':': (v) => sql`normalize_pinyin(extra."pinyin") &@ ${v}` },
-        reading: { ':': (v) => sql`normalize_pinyin(extra."pinyin") &@ ${v}` },
-        english: { ':': (v) => sql`extra."english" &@ ${v}` },
-        type: { ':': (v) => sql`extra."type" = ${v}` },
-        description: { ':': (v) => sql`extra."description" &@ ${v}` },
+        entry: { ':': (v) => sql`"entry" &@ ${v}` },
+        pinyin: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
+        reading: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
+        english: { ':': (v) => sql`"translation" &@ ${v}` },
+        translation: { ':': (v) => sql`"translation" &@ ${v}` },
+        type: { ':': (v) => sql`"type" = ${v}` },
+        description: { ':': (v) => sql`"description" &@ ${v}` },
       },
     })
 
@@ -524,51 +477,25 @@ const extraRouter: FastifyPluginAsync = async (f) => {
 
         const [r] = await db.query(sql`
         WITH match_cte AS (
-          SELECT DISTINCT ON (t2."updatedAt", t2."createdAt", t2."id")
+          SELECT
             "id",
-            "entry",
+            "entry"
             "reading",
-            "english",
+            "translation" "english",
             "type",
             "tag"
-          FROM (
-            SELECT
-              t1."id" "id",
-              t1."list" "entry",
-              t1."pinyin" "reading",
-              t1."english" "english",
-              t1."type" "type",
-              t1."tag" "tag",
-              t1."updatedAt" "updatedAt",
-              t1."createdAt" "createdAt"
-            FROM (
-              SELECT
-                "id",
-                "entry" "list",
-                unnest("entry") "entry",
-                "pinyin",
-                "english",
-                "type",
-                "tag",
-                "updatedAt",
-                "createdAt"
-              FROM "extra"
-              WHERE "userId" = ${userId}
-                AND ${makeExtra.parse(q) || sql`TRUE`}
-            ) t1
-            ${quizCond
-            ? sql`LEFT JOIN quiz ON quiz."entry" = t1."entry"`
-            : sql``
-          }
-            ${tagCond
-            ? sql`LEFT JOIN entry_tag ON entry_tag."entry" = t1."entry"`
-            : sql``
-          }
-            WHERE TRUE
-              ${quizCond ? sql`AND ${quizCond}` : sql``}
-              ${tagCond ? sql`AND ${tagCond}` : sql``}
-          ) t2
-          ORDER BY t2."updatedAt" DESC, t2."createdAt" DESC, t2."id"
+          FROM "entry" e1
+          WHERE "userId" = ${userId}
+            AND ${makeExtra.parse(q) || sql`TRUE`}
+            AND ${tagCond || sql`TRUE`}
+            AND ${
+              quizCond
+                ? sql`"entry" IN (
+              SELECT "entry" FROM "quiz" WHERE ${quizCond} AND "type" = e1."type"
+            )`
+                : sql`TRUE`
+            }
+          ORDER BY "updatedAt" DESC, "createdAt" DESC
         )
 
         SELECT

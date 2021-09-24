@@ -259,6 +259,7 @@ export async function populate(
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
         ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
           "translation" = array_distinct("entry"."translation"||EXCLUDED."translation"),
+          "tag" = array_distinct("entry"."tag"||EXCLUDED."tag"),
           "frequency" = EXCLUDED."frequency",
           "level" = EXCLUDED."level"
       `)

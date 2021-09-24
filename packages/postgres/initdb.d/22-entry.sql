@@ -10,9 +10,7 @@ CREATE TABLE "entry" (
     "description"   TEXT NOT NULL DEFAULT '',
     "tag"           TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
     "level"         FLOAT,
-    "frequency"     FLOAT,
-    "lookupDate"    TIMESTAMPTZ,
-    "lookupCount"   INT
+    "frequency"     FLOAT
 );
 
 CREATE TRIGGER "t_entry_updatedAt"
@@ -27,8 +25,6 @@ CREATE INDEX "idx_entry_userId" ON "entry" ("userId");
 CREATE INDEX "idx_entry_type" ON "entry" ("type");
 CREATE INDEX "idx_entry_level" ON "entry" ("level");
 CREATE INDEX "idx_entry_frequency" ON "entry" ("frequency");
-CREATE INDEX "idx_entry_lookupDate" ON "entry" ("lookupDate");
-CREATE INDEX "idx_entry_lookupCount" ON "entry" ("lookupCount");
 
 CREATE INDEX "idx_entry_pinyin" ON "entry"
     USING pgroonga (normalize_pinyin("reading"));

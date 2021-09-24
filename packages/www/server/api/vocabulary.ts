@@ -46,28 +46,28 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 
         let result = await db.query(sql`
         WITH match_cte AS (
-          SELECT s.entry[1] "entry", s."english"[1] english, ("hLevel" > 50) "isTrad"
-          FROM entries s
-          JOIN "level" si ON si.entry = s.entry[1]
+          SELECT "entry"[1] "entry", "translation"[1] "english", "level"
+          FROM "entry"
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND s."type" = 'sentence' AND s."entry" &@ ${entry.replace(
-            /[^\p{sc=Han}]+/gu,
-            ' '
-          )}
+          ) AND "type" = 'sentence' AND ${
+            entry.includes('...')
+              ? sql`"entry" LIKE ${'%' + entry.replace(/\.\.\./g, '%') + '%'}`
+              : sql`"entry" &@ ${entry}`
+          }}
         )
 
         SELECT DISTINCT ON ("entry") *
         FROM (
           SELECT * FROM (
             SELECT "entry", "english"
-            FROM match_cte WHERE NOT "isTrad" AND length("entry") <= 20
+            FROM match_cte WHERE "level" <= 60 AND length("entry") <= 20
             ORDER BY RANDOM()
           ) t1
           UNION
           SELECT * FROM (
             SELECT "entry", "english"
-            FROM match_cte WHERE "isTrad" AND length("entry") <= 20
+            FROM match_cte WHERE "level" > 60 AND length("entry") <= 20
             ORDER BY RANDOM()
           ) t1
           UNION
@@ -134,49 +134,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 403 }
         }
 
-        const r = (await lookupVocabulary(entry, userId)) || {
-          entry,
-          reading: [makeReading(entry)],
-        }
-
-        const out: typeof sResult.type = {
-          ...r,
-          english: r.english || [],
-          tag: [],
-        }
-
-        await Promise.all([
-          (async () => {
-            if (!out.english.length) {
-              out.english = await makeEnglish(r.entry, userId)
-            }
-          })(),
-          (async () => {
-            const [{ tag, level }] = await db.query(sql`
-            SELECT
-              (
-                SELECT array_agg(DISTINCT unnest) "tag"
-                FROM (
-                  SELECT unnest("tag")
-                  FROM tag
-                  WHERE (
-                    "userId" IS NULL OR "userId" = ${userId}
-                  ) AND "type" = 'vocabulary' AND ${r.entry} = ANY("entry")
-                ) t1
-              )||'{}'::text[] "tag",
-              (
-                SELECT "vLevel"
-                FROM dict.zhlevel
-                WHERE "entry" = ${r.entry}
-              ) "level"
-            `)
-
-            out.tag = tag || []
-            out.level = level || undefined
-          })(),
-        ])
-
-        return out
+        return await lookupVocabulary(entry, userId)
       }
     )
   }
@@ -224,7 +182,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           "entry"[2:]||'{}'::text[] "alt",
           "pinyin" "reading",
           "english"
-        FROM entries
+        FROM "entry"
         WHERE (
           "userId" IS NULL OR "userId" = ${userId}
         ) AND "type" = 'vocabulary' AND "entry" &@ ${entry} AND ${entry} != ANY("entry")
@@ -254,18 +212,17 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
       },
       fields: {
         entry: { ':': (v) => sql`"entry" &@ ${v}` },
-        pinyin: { ':': (v) => sql`normalize_pinyin("pinyin") &@ ${v}` },
-        reading: { ':': (v) => sql`normalize_pinyin("pinyin") &@ ${v}` },
-        english: { ':': (v) => sql`"english" &@ ${v}` },
+        pinyin: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
+        reading: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
+        english: { ':': (v) => sql`"translation" &@ ${v}` },
+        translation: { ':': (v) => sql`"translation" &@ ${v}` },
       },
     })
 
     const makeLevel = new QSplit({
       default: () => null,
       fields: {
-        level: qParseNum(sql`"vLevel"`),
-        vLevel: qParseNum(sql`"vLevel"`),
-        hLevel: qParseNum(sql`"hLevel"`),
+        level: qParseNum(sql`"level"`),
       },
     })
 
@@ -313,60 +270,25 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         }
 
         let result = await db.query(sql`
-        WITH match_cte AS (
-          SELECT
-            "simplified", "traditional", "frequency"
-          FROM (
-            SELECT unnest("entry") "entry", "entry"[1] "simplified", unnest("entry"[2:]) "traditional", "frequency"
-            FROM entries
-            WHERE (
-              "userId" IS NULL OR "userId" = ${userId}
-            ) AND "type" = 'vocabulary' AND ${hCond || sql`TRUE`}
-          ) t2
-          WHERE
-          ${sql.join(
-            [
-              qCond
-                ? sql`"entry" IN (
-            SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'vocabulary' AND ${qCond}
-          )`
-                : null,
-              tagCond
-                ? sql`"entry" IN (
-                    SELECT unnest("tag")
-                    FROM tag
-                    WHERE (
-                      "userId" IS NULL OR "userId" = ${userId}
-                    ) AND "type" = 'vocabulary' AND ${tagCond}
-                  )`
-                : null,
-              lvCond
-                ? sql`"entry" IN (SELECT "entry" FROM "level" WHERE ${lvCond})`
-                : null,
-              sql`TRUE`,
-            ]
-              .filter((s) => s)
-              .map((s) => s!),
-            ' AND '
-          )}
-        )
-
-        SELECT "entry", min("isTrad") "isTrad" FROM (
-          SELECT "simplified" "entry", "frequency", 0 "isTrad"
-          FROM match_cte
-          UNION ALL
-          SELECT "traditional" "entry", "frequency", 1 "isTrad"
-          FROM match_cte
-        ) t1
-        WHERE "entry" IS NOT NULL
-        GROUP BY "entry"
-        ORDER BY min("isTrad"), max("frequency") DESC NULLS FIRST
-        LIMIT 20
+        SELECT
+          "entry"[1] "entry"
+        FROM "entry"
+        WHERE (
+            "userId" IS NULL OR "userId" = ${userId}
+          ) AND "type" = 'vocabulary'
+          AND ${hCond || sql`TRUE`}
+          AND ${tagCond || sql`TRUE`}
+          AND ${lvCond || sql`TRUE`}
+          AND ${
+            qCond
+              ? sql`"entry" IN (
+              SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'vocabulary' AND ${qCond}
+            )`
+              : sql`TRUE`
+          }
+        ORDER BY "frequency" DESC NULLS FIRST
+        LIMIT 10
         `)
-
-        if (result.length && !result[0].isTrad) {
-          result = result.filter((r) => !r.isTrad)
-        }
 
         return {
           result: result.map((r) => r.entry),
@@ -408,47 +330,17 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         u['level.max'] = u['level.max'] || 10
 
         let [r] = await db.query(sql`
-        SELECT "entry" "result", "level", (
-          SELECT "english"
-          FROM entries v
-          WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
-          ) AND v.type = 'vocabulary' AND t1."entry" = ANY(v."entry")
-        ) "english"
-        FROM (
-          SELECT "entry", "vLevel" "level"
-          FROM dict.zhlevel
-          WHERE
-            "vLevel" >= ${u['level.min']}
-            AND "vLevel" <= ${u['level.max']}
-            AND "entry" NOT IN (
-              SELECT "entry" FROM "quiz" WHERE "type" = 'vocabulary'
-            )
-          ORDER BY RANDOM()
-          LIMIT 1
-        ) t1
+        SELECT "entry"[1] "result", "level", "translation"[1] "english"
+        FROM "entry"
+        WHERE
+          "level" >= ${u['level.min']}
+          AND "level" < ${u['level.max']} + 1
+          AND "entry" NOT IN (
+            SELECT "entry" FROM "quiz" WHERE "type" = 'vocabulary'
+          )
+        ORDER BY RANDOM()
+        LIMIT 1
         `)
-
-        if (!r) {
-          ;[r] = await db.query(sql`
-          SELECT "entry" "result", "level", (
-            SELECT "english"
-            FROM entries v
-            WHERE (
-              "userId" IS NULL OR "userId" = ${userId}
-            ) AND v.type = 'vocabulary' AND t1."entry" = ANY(v."entry")
-          ) "english"
-          FROM (
-            SELECT "entry", "vLevel" "level"
-            FROM dict.zhlevel
-            WHERE
-              "vLevel" >= ${u['level.min']}
-              AND "vLevel" <= ${u['level.max']}
-            ORDER BY RANDOM()
-            LIMIT 1
-          ) t1
-          `)
-        }
 
         if (!r) {
           throw { statusCode: 404 }
@@ -468,12 +360,15 @@ export default vocabularyRouter
 
 export async function lookupVocabulary(
   entry: string,
-  userId: string
+  userId: string,
+  dontMakeEnglish?: boolean
 ): Promise<{
   entry: string
   alt: string[]
   reading: string[]
-  english?: string[]
+  english: string[]
+  tag: string[]
+  level?: number
 }> {
   if (!/\p{sc=Han}/u.test(entry)) {
     return {
@@ -481,35 +376,38 @@ export async function lookupVocabulary(
       alt: [],
       reading: [],
       english: [],
+      tag: [],
     }
   }
 
-  const [r] = await db.query(sql`
+  let [r] = await db.query(sql`
   SELECT
     "entry"[1] "entry",
     "entry"[2:]||'{}'::text[] "alt",
-    "pinyin" "reading",
-    "english"
-  FROM entries
+    "reading",
+    "translation" "english",
+    "tag",
+    "level"
+  FROM "entry"
   WHERE (
     "userId" IS NULL OR "userId" = ${userId}
   ) AND "type" = 'vocabulary' AND ${entry} = ANY("entry")
   `)
 
   if (!r) {
-    db.query(sql`
-    INSERT INTO log_vocabulary ("entry", "count")
-    VALUES (${entry}, ${0})
-    ON CONFLICT ("entry") DO UPDATE
-    SET "count" = EXCLUDED.count
-    `)
-
-    return {
+    r = {
       entry,
       alt: [],
-      reading: [await makeReading(entry)],
+      reading: [makeReading(entry)],
+      tag: [],
+    }
+
+    if (!dontMakeEnglish) {
+      r.english = await makeEnglish(entry, userId)
     }
   }
+
+  r.level = r.level || undefined
 
   return r
 }

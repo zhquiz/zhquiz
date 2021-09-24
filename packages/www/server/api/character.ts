@@ -190,12 +190,11 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         let result = await db.query(sql`
         WITH match_cte AS (
-          SELECT s.entry[1] "entry", s."translation"[1] english, s."level" "level"
-          FROM "entry" s
-          JOIN "level" si ON si.entry = s.entry[1]
+          SELECT "entry"[1] "entry", "translation"[1] "english", "level"
+          FROM "entry"
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
-          ) AND s.type = 'sentence' AND s."entry" &@ ${entry}
+          ) AND "type" = 'sentence' AND "entry" &@ ${entry}
         )
 
         SELECT *
@@ -214,7 +213,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           UNION
           SELECT * FROM (
             SELECT "entry", "english"
-            FROM match_cte WHERE "level" > 60 AND length("entry") > 20
+            FROM match_cte WHERE length("entry") > 20
             ORDER BY RANDOM()
           ) t1
         ) t2
@@ -280,37 +279,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 403 }
         }
 
-        const r = (await lookupCharacter(entry, userId)) || {
-          entry,
-          reading: [makeReading(entry)],
-        }
-
-        const out: typeof sResult.type = {
-          ...r,
-          english: r.english || [],
-          tag: [],
-        }
-
-        await Promise.all([
-          (async () => {
-            if (!out.english.length) {
-              out.english = await makeEnglish(r.entry, userId)
-            }
-          })(),
-          (async () => {
-            const [{ tag, level }] = await db.query(sql`
-              SELECT "tag", "level" FROM "entry"
-              WHERE (
-                "userId" IS NULL OR "userId" = ${userId}
-              ) AND "type" = 'character' AND ${r.entry} = ANY("entry")
-            `)
-
-            out.tag = tag || []
-            out.level = level || undefined
-          })(),
-        ])
-
-        return out
+        return await lookupCharacter(entry, userId)
       }
     )
   }
@@ -375,6 +344,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         pinyin: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
         reading: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
         english: { ':': (v) => sql`"translation" &@ ${v}` },
+        translation: { ':': (v) => sql`"translation" &@ ${v}` },
       },
     })
 
@@ -435,24 +405,24 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           SELECT unnest("entry") "entry"
           FROM "entry"
           WHERE ${sql.join(
-          [
-            sql`("userId" IS NULL OR "userId" = ${userId})`,
-            hCond,
-            radCond
-              ? sql`"entry" IN (SELECT "entry" FROM radical WHERE ${radCond})`
-              : null,
-            qCond
-              ? sql`"entry" IN (
+            [
+              sql`("userId" IS NULL OR "userId" = ${userId})`,
+              hCond,
+              radCond
+                ? sql`"entry" IN (SELECT "entry" FROM radical WHERE ${radCond})`
+                : null,
+              qCond
+                ? sql`"entry" IN (
               SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'character' AND ${qCond}
             )`
-              : null,
-            tagCond,
-            lvCond,
-          ]
-            .filter((s) => s)
-            .map((s) => s!),
-          ' AND '
-        )}
+                : null,
+              tagCond,
+              lvCond,
+            ]
+              .filter((s) => s)
+              .map((s) => s!),
+            ' AND '
+          )}
         ) t1
         LIMIT 20
         `)
@@ -497,7 +467,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         u['level.max'] = u['level.max'] || 10
 
         const [r] = await db.query(sql`
-        SELECT "entry"[0] "result", "level", "translation"[0] "english"
+        SELECT "entry"[1] "result", floor("level") "level", "translation"[1] "english"
         FROM "entry"
         WHERE (
           "userId" IS NULL OR "userId" = ${userId}
@@ -533,19 +503,30 @@ export async function lookupCharacter(
 ): Promise<{
   entry: string
   reading: string[]
-  english?: string[]
+  english: string[]
+  tag: string[]
+  level?: number
 }> {
   if (!/^\p{sc=Han}$/u.test(entry)) {
     throw { statusCode: 400, message: 'not Character' }
   }
 
   const [r] = await db.query(sql`
-  SELECT "entry"[1] "entry", "reading", "translation" "english"
+  SELECT "entry"[1] "entry", "reading", "translation" "english", "tag", floor("level") "level"
   FROM "entry"
   WHERE (
     "userId" IS NULL OR "userId" = ${userId}
   ) AND "type" = 'character' AND ${entry} = ANY("entry")
   `)
+
+  if (!r) {
+    return {
+      entry,
+      reading: [makeReading(entry)],
+      english: await makeEnglish(r.entry, userId),
+      tag: [],
+    }
+  }
 
   return r
 }

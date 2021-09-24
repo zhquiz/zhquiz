@@ -11,7 +11,7 @@ export class QSplit {
         }
       }
     }
-  ) {}
+  ) { }
 
   parse(q: string) {
     const $and: SQLQuery[] = []
@@ -282,16 +282,14 @@ export const makeQuiz = new QSplit({
 export const makeTag = new QSplit({
   default: () => null,
   fields: {
-    tag: { ':': (v) => sql`entry_tag."tag" &@ ${v}` },
-    type: { ':': (v) => sql`entry_tag."type" = ${v}` },
+    tag: { ':': (v) => sql`${v} = ANY("entry"."tag")` },
+    type: { ':': (v) => sql`"entry"."type" = ${v}` },
   },
 })
 
 export const makeLevel = new QSplit({
   default: () => null,
   fields: {
-    level: qParseNum(sql`"level"."vLevel"`),
-    hLevel: qParseNum(sql`"level"."hLevel"`),
-    vLevel: qParseNum(sql`"level"."vLevel"`),
+    level: qParseNum(sql`"entry"."level"`),
   },
 })

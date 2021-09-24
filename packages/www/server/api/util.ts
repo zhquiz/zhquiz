@@ -146,7 +146,7 @@ export function makeReading(el: string) {
 
 export async function makeEnglish(el: string, userId: string) {
   const segs = (
-    await Promise.all(jieba.cut(el).map((s) => lookupVocabulary(s, userId)))
+    await Promise.all(jieba.cut(el).map((s) => lookupVocabulary(s, userId, true)))
   )
     .filter((v) => v.english && /\p{sc=Han}/u.test(v.entry))
     .map((v) => v!.english!.join(' / ').replace(new RegExp(v.entry, 'g'), ''))

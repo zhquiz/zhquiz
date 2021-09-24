@@ -17,6 +17,7 @@
   "dependencies": {
     "@databases/pg": "~5.0.0",
     "@magic-sdk/admin": "^1.3.0",
+    "@patarapolw/zhlevel": "^0.1.1",
     "array-shuffle": "2",
     "axios": "^0.21.1",
     "cheerio": "^1.0.0-rc.5",

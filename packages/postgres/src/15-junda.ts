@@ -36,6 +36,7 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
         INSERT INTO "entry" ("type", "tag", "entry", "reading", "translation", "frequency")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
         ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
+          "tag" = array_distinct("entry"."tag"||EXCLUDED."tag"),
           "frequency" = EXCLUDED."frequency",
           "level" = EXCLUDED."level"
       `)
