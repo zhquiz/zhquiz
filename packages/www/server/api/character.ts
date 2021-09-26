@@ -112,7 +112,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
             "frequency"
           FROM "entry"
           WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
+            "userId" = uuid_nil() OR "userId" = ${userId}
           ) AND "type" = 'vocabulary' AND "entry" &@ ${entry}
           ORDER BY RANDOM()
         )
@@ -190,7 +190,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
 
         let result = await db.query(sql`
         WITH match_cte AS (
-          SELECT "entry"[1] "entry", "translation"[1] "english", "level"
+          SELECT "entry"[1] "entry", "translation"[1] "english", "hLevel"
           FROM "entry"
           WHERE (
             "userId" IS NULL OR "userId" = ${userId}
@@ -201,13 +201,13 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         FROM (
           SELECT * FROM (
             SELECT "entry", "english"
-            FROM match_cte WHERE "level" <= 60 AND length("entry") <= 20
+            FROM match_cte WHERE "hLevel" <= 50 AND length("entry") <= 20
             ORDER BY RANDOM()
           ) t1
           UNION
           SELECT * FROM (
             SELECT "entry", "english"
-            FROM match_cte WHERE "level" <= 60 AND length("entry") <= 20
+            FROM match_cte WHERE "hLevel" <= 50 AND length("entry") <= 20
             ORDER BY RANDOM()
           ) t1
           UNION
@@ -467,15 +467,15 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         u['level.max'] = u['level.max'] || 10
 
         const [r] = await db.query(sql`
-        SELECT "entry"[1] "result", floor("level") "level", "translation"[1] "english"
+        SELECT "entry"[1] "result", floor("level") "level", "translation" "english"
         FROM "entry"
         WHERE (
-          "userId" IS NULL OR "userId" = ${userId}
+          "userId" = uuid_nil() OR "userId" = ${userId}
         ) AND "type" = 'character'
         AND "level" >= ${u['level.min']}
         AND "level" <= ${u['level.max']}
-        AND "entry" NOT IN (
-          SELECT "entry" FROM "quiz" WHERE "type" = 'character'
+        AND NOT "entry" && (
+          SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "userId" = ${userId} AND "type" = 'character'
         )
         ORDER BY RANDOM()
         LIMIT 1
@@ -515,7 +515,7 @@ export async function lookupCharacter(
   SELECT "entry"[1] "entry", "reading", "translation" "english", "tag", floor("level") "level"
   FROM "entry"
   WHERE (
-    "userId" IS NULL OR "userId" = ${userId}
+    "userId" = uuid_nil() OR "userId" = ${userId}
   ) AND "type" = 'character' AND ${entry} = ANY("entry")
   `)
 
@@ -523,7 +523,7 @@ export async function lookupCharacter(
     return {
       entry,
       reading: [makeReading(entry)],
-      english: await makeEnglish(r.entry, userId),
+      english: await makeEnglish(entry, userId),
       tag: [],
     }
   }

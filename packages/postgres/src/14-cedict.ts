@@ -131,22 +131,20 @@ export async function populate(
 
         return sql`('vocabulary', ${['cedict']}, ${entry}, ${JSON.parse(
           p.reading
-        )}, ${english}, ${f.vFreq(p.simplified)}, ${lv.makeLevel(
+        )}, ${english}, ${f.vFreq(p.simplified)}, ${lv.vLevel(
           p.simplified
-        )})`
+        )}, ${lv.hLevel(p.simplified)})`
       })
 
     for (let i = 0; i < lots.length; i += batchSize) {
       console.log(i)
       await db.query(sql`
-        INSERT INTO "entry" ("type", "tag", "entry", "reading", "translation", "frequency", "level")
+        INSERT INTO "entry" ("type", "tag", "entry", "reading", "translation", "frequency", "level", "hLevel")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
         ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
-          "reading" = array_distinct("entry"."reading"||EXCLUDED."reading"),
+          "reading"     = array_distinct("entry"."reading"||EXCLUDED."reading"),
           "translation" = array_distinct("entry"."translation"||EXCLUDED."translation"),
-          "tag" = array_distinct("entry"."tag"||EXCLUDED."tag"),
-          "frequency" = EXCLUDED."frequency",
-          "level" = EXCLUDED."level"
+          "tag"         = array_distinct("entry"."tag"||EXCLUDED."tag")
       `)
     }
   })
@@ -158,6 +156,6 @@ export async function populate(
 if (require.main === module) {
   ;(async function () {
     const db = createConnectionPool({ bigIntMode: 'number' })
-    await populate(db, './assets')
+    await populate(db)
   })()
 }

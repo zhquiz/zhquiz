@@ -1,6 +1,6 @@
 import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import sqlite3 from 'better-sqlite3'
-import { Frequency, makePinyin } from '@patarapolw/zhlevel'
+import { Frequency, Level, makePinyin } from '@patarapolw/zhlevel'
 
 export async function populate(db: ConnectionPool, dir = '/app/assets') {
   process.chdir(dir)
@@ -9,6 +9,7 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
     readonly: true
   })
   const f = new Frequency()
+  const lvGen = new Level()
 
   await db.tx(async (db) => {
     console.log('Hanzi')
@@ -42,11 +43,13 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
       const newItems = vs.filter((v) => !rs.has(v))
       if (newItems.length) {
         await db.query(sql`
-          INSERT INTO "entry" ("type", "entry", "reading", "frequency")
+          INSERT INTO "entry" ("type", "entry", "reading", "frequency", "level", "hLevel")
           VALUES ${sql.join(
             newItems.map(
               (v) =>
-                sql`('character', ${[v]}, ${[makePinyin(v)]}, ${f.cFreq(v)})`
+                sql`('character', ${[v]}, ${[makePinyin(v)]}, ${f.cFreq(
+                  v
+                )}, ${lv}, ${lv})`
             ),
             ','
           )}
@@ -94,11 +97,13 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
       const newItems = vs.filter((v) => !rs.has(v))
       if (newItems.length) {
         await db.query(sql`
-          INSERT INTO "entry" ("type", "entry", "reading", "frequency")
+          INSERT INTO "entry" ("type", "entry", "reading", "frequency", "level", "hLevel")
           VALUES ${sql.join(
             newItems.map(
               (v) =>
-                sql`('vocabulary', ${[v]}, ${[makePinyin(v)]}, ${f.vFreq(v)})`
+                sql`('vocabulary', ${[v]}, ${[makePinyin(v)]}, ${f.vFreq(
+                  v
+                )}, ${lv}, ${lvGen.hLevel(v)})`
             ),
             ','
           )}

@@ -48,7 +48,41 @@ export class Level {
     readonly: true
   })
 
-  makeLevel(v: string) {
+  hLevel(v: string) {
+    const raw = [...v.matchAll(/\p{sc=Han}/gu)].map((m) => m[0])
+    if (!raw.length) {
+      return 0
+    }
+
+    const segments = this.db
+      .prepare(
+        /* sql */ `
+        SELECT "entry", hLevel "level" FROM zhlevel WHERE hLevel IS NOT NULL AND
+        "entry" IN (${Array(raw.length).fill('?').join(',')})
+        `
+      )
+      .all(...raw)
+
+    if (!segments.length) {
+      return 100
+    }
+
+    return Math.max(...segments.map((et) => et.level))
+  }
+
+  vLevel(v: string) {
+    const r = this.db
+      .prepare(
+        /* sql */ `
+      SELECT vLevel "level" FROM zhlevel WHERE vLevel IS NOT NULL AND "entry" = ?
+        `
+      )
+      .get(v)
+
+    if (r) {
+      return r.level
+    }
+
     const raw = [...new Set(jieba.cutForSearch(v))].filter((v) =>
       /\p{sc=Han}/u.test(v)
     )
@@ -71,9 +105,7 @@ export class Level {
 
     const entriesMap = new Map<string, number>()
     segments.map((et) => {
-      if (et.level) {
-        entriesMap.set(et.entry[0]!, et.level)
-      }
+      entriesMap.set(et.entry[0]!, et.level)
     })
 
     return (

@@ -235,14 +235,32 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         SELECT "entry"[1] "result", "translation"[1] "english", floor("level") "level"
         FROM "entry"
         WHERE
-          "level" >= ${u['level.min']}
+          "type" = 'sentence'
+          AND "level" >= ${u['level.min']}
           AND "level" <= ${u['level.max']}
           AND NOT "entry" && (
-            SELECT "entry" FROM "quiz" WHERE "userId" = ${userId} AND "type" = 'sentence'
+            SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "userId" = ${userId} AND "type" = 'sentence'
           )
+          AND "hLevel" <= 50
         ORDER BY RANDOM()
         LIMIT 1
         `)
+
+        if (!r) {
+          ;[r] = await db.query(sql`
+          SELECT "entry"[1] "result", "translation"[1] "english", floor("level") "level"
+          FROM "entry"
+          WHERE
+          "type" = 'sentence'
+            AND "level" >= ${u['level.min']}
+            AND "level" <= ${u['level.max']}
+            AND NOT "entry" && (
+              SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "userId" = ${userId} AND "type" = 'sentence'
+            )
+          ORDER BY RANDOM()
+          LIMIT 1
+          `)
+        }
 
         if (!r) {
           throw { statusCode: 404 }
@@ -368,21 +386,19 @@ export async function lookupJukuu(q: string): Promise<
 
     if (out.length) {
       await db.query(sql`
-      INSERT INTO "entry" ("type", "entry", "reading", "translation", "tag", "frequency", "level")
+      INSERT INTO "entry" ("type", "entry", "reading", "translation", "tag", "frequency", "level", "hLevel")
         VALUES ${sql.join(
           out.map(
             (r) =>
               sql`('sentence', ${[r.c]}, ${[makeReading(r.c)]}, ${[r.e]}, ${[
                 'jukuu',
-              ]}, ${f.vFreq(r.c)}, ${lv.makeLevel(r.c)})`
+              ]}, ${f.vFreq(r.c)}, ${lv.vLevel(r.c)}, ${lv.hLevel(r.c)})`
           ),
           ','
         )}
         ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
           "translation" = array_distinct("entry"."translation"||EXCLUDED."translation"),
-          "tag" = array_distinct("entry"."tag"||EXCLUDED."tag"),
-          "frequency" = EXCLUDED."frequency",
-          "level" = EXCLUDED."level"
+          "tag" = array_distinct("entry"."tag"||EXCLUDED."tag")
       `)
     }
   })

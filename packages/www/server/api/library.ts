@@ -450,11 +450,11 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
 
         if (whatToShow === 'all-quiz') {
           cond = sql`(NOT "entry" && (
-            SELECT "entry" FROM "quiz" WHERE "type" = ${type} AND "srsLevel" IS NOT NULL
+            SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "type" = ${type} AND "srsLevel" IS NOT NULL
           ))`
         } else if (whatToShow === 'learning') {
           cond = sql`(NOT "entry" && (
-            SELECT "entry" FROM "quiz" WHERE "type" = ${type} AND "srsLevel" <= 2
+            SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "type" = ${type} AND "srsLevel" <= 2
           ))`
         }
 
@@ -462,9 +462,9 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           entry: string
           level: number
         }[] = await db.query(sql`
-        SELECT "entry"[1] "entry", "level"
+        SELECT "entry"[1] "entry", floor("level") "level"
         FROM "entry"
-        WHERE 'type' = ${type} AND ${cond}
+        WHERE "type" = ${type} AND 'zhlevel' = ANY("tag") AND ${cond}
         `)
 
         return {

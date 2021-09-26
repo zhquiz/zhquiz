@@ -249,19 +249,17 @@ export async function populate(
           makePinyin(p.cmn)
         ]}, ${JSON.parse(p.eng)}, ${['tatoeba']}, ${f.vFreq(
           p.cmn
-        )}, ${lv.makeLevel(p.cmn)})`
+        )}, ${lv.vLevel(p.cmn)}, ${lv.hLevel(p.cmn)})`
       })
 
     for (let i = 0; i < lots.length; i += batchSize) {
       console.log(i)
       await db.query(sql`
-        INSERT INTO "entry" ("type", "entry", "reading", "translation", "tag", "frequency", "level")
+        INSERT INTO "entry" ("type", "entry", "reading", "translation", "tag", "frequency", "level", "hLevel")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
         ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
           "translation" = array_distinct("entry"."translation"||EXCLUDED."translation"),
-          "tag" = array_distinct("entry"."tag"||EXCLUDED."tag"),
-          "frequency" = EXCLUDED."frequency",
-          "level" = EXCLUDED."level"
+          "tag"         = array_distinct("entry"."tag"||EXCLUDED."tag")
       `)
     }
   })

@@ -1,6 +1,6 @@
 {
   "name": "@patarapolw/zhlevel",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "main": "lib/index.js",
   "license": "MIT",
   "files": [
@@ -8,7 +8,8 @@
     "lib"
   ],
   "scripts": {
-    "build": "rm -r lib && tsc --rootDir src --outDir lib --declaration --declarationMap"
+    "build": "rm -r lib && tsc --rootDir src --outDir lib --declaration --declarationMap",
+    "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "better-sqlite3": "^7.4.3",

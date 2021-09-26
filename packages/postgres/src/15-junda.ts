@@ -1,6 +1,6 @@
 import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import sqlite3 from 'better-sqlite3'
-import { Frequency } from '@patarapolw/zhlevel'
+import { Frequency, Level } from '@patarapolw/zhlevel'
 
 export async function populate(db: ConnectionPool, dir = '/app/assets') {
   process.chdir(dir)
@@ -10,9 +10,10 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
   })
 
   const f = new Frequency()
+  const lv = new Level()
 
   await db.tx(async (db) => {
-    const batchSize = 10000
+    const batchSize = 5000
 
     const lots = s3
       .prepare(
@@ -23,22 +24,24 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
       )
       .all()
       .map((p) => {
+        const level = lv.hLevel(p.character)
+
         return sql`('character', ${['junda']}, ${[p.character]}, ${p.pinyin
           .split('/')
           .filter((s: string) => s)}, ${p.english
           .split('/')
-          .filter((s: string) => s)}, ${f.cFreq(p.character)})`
+          .filter((s: string) => s)}, ${f.cFreq(
+          p.character
+        )}, ${level}, ${level})`
       })
 
     for (let i = 0; i < lots.length; i += batchSize) {
       console.log(i)
       await db.query(sql`
-        INSERT INTO "entry" ("type", "tag", "entry", "reading", "translation", "frequency")
+        INSERT INTO "entry" ("type", "tag", "entry", "reading", "translation", "frequency", "level", "hLevel")
         VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
         ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
-          "tag" = array_distinct("entry"."tag"||EXCLUDED."tag"),
-          "frequency" = EXCLUDED."frequency",
-          "level" = EXCLUDED."level"
+          "tag" = array_distinct("entry"."tag"||EXCLUDED."tag")
       `)
     }
   })

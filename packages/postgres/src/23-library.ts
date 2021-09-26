@@ -40,6 +40,8 @@ export async function populate(db: ConnectionPool, dir = '/app/library') {
 
   await db.tx(async (db) => {
     for (const filename of await fg(['**/*.yaml'])) {
+      console.log(filename)
+
       const rs = S.list(sLibrary).ensure(
         yaml.load(fs.readFileSync(filename, 'utf-8')) as any
       )
