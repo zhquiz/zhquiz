@@ -162,7 +162,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
             "entry"[1] "entry", floor("level") "level"
           FROM "entry" e1
           WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
+            "userId" = uuid_nil() OR "userId" = ${userId}
           ) AND "type" = 'sentence'
           ${hCond ? sql` AND ${hCond}` : sql``}
           ${tagCond ? sql` AND ${tagCond}` : sql``}
@@ -303,7 +303,7 @@ export async function lookupSentence(
     "entry"[1] "entry", "reading", "translation" "english", "tag"
   FROM "entry"
   WHERE (
-    "userId" IS NULL OR "userId" = ${userId}
+    "userId" = uuid_nil() OR "userId" = ${userId}
   ) AND "type" = 'sentence' AND ${entry} = ANY("entry")
   `)
 

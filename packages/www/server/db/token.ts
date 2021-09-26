@@ -11,7 +11,7 @@ export class QSplit {
         }
       }
     }
-  ) { }
+  ) {}
 
   parse(q: string) {
     const $and: SQLQuery[] = []
@@ -239,7 +239,8 @@ export const qParseDate: (
         b = toBetween('-0.5d')
     }
 
-    const reBetween = /^([[\(])([+-]?\d+(?:\.\d+)?[A-Z]+),([+-]?\d+(?:\.\d+)?[A-Z]+)([\])])$/i
+    const reBetween =
+      /^([[\(])([+-]?\d+(?:\.\d+)?[A-Z]+),([+-]?\d+(?:\.\d+)?[A-Z]+)([\])])$/i
     const m = reBetween.exec(v)
     if (m) {
       let gt = sql`>`
@@ -291,5 +292,6 @@ export const makeLevel = new QSplit({
   default: () => null,
   fields: {
     level: qParseNum(sql`"entry"."level"`),
+    hLevel: qParseNum(sql`"entry"."hLevel"`),
   },
 })

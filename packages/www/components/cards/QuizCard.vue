@@ -179,7 +179,11 @@
               v-if="current.sentences.length"
               :key="dictionaryData.sentence.length"
             >
-              <li v-for="(it, i) in current.sentences" :key="i">
+              <li
+                v-for="(it, i) in current.sentences"
+                :key="i"
+                class="sentence"
+              >
                 <span
                   class="has-context"
                   :title="dictionaryData.sentence[it].reading[0]"
@@ -844,8 +848,14 @@ export default class QuizCard extends Vue {
   padding: 1rem;
 }
 
-li.english:not(:hover) {
-  color: white;
+.sentence {
+  li.english {
+    visibility: hidden;
+  }
+
+  &:hover li.english {
+    visibility: visible;
+  }
 }
 
 @keyframes ripple {

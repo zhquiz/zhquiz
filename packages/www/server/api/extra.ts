@@ -242,7 +242,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           SELECT unnest("tag")
           FROM "entry"
           WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
+            "userId" = uuid_nil() OR "userId" = ${userId}
           ) AND "type" = ${type} AND ${entry} = ANY("entry")
         ) t1
         `)

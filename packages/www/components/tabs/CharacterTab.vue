@@ -54,9 +54,9 @@
             </b-taglist>
           </div>
 
-          <div v-if="level" class="mb-4">
+          <div v-if="level && level <= 60" class="mb-4">
             <b-taglist attached>
-              <b-tag type="is-dark">hLevel</b-tag>
+              <b-tag type="is-dark">Level</b-tag>
               <b-tag type="is-primary">
                 {{ level }}
               </b-tag>
@@ -330,7 +330,6 @@ export default class CharacterTab extends Vue {
             } = await this.$axios.characterRandom()
 
             this.q0 = result
-            this.q = result
           },
         },
       ]

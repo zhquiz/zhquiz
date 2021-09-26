@@ -46,6 +46,13 @@ const apiRouter: FastifyPluginAsync = async (f) => {
   f.register(rateLimit, {
     max: 10,
     timeWindow: '1 second',
+    allowList: (req) => {
+      if (req.routerPath === '/api/quiz/getSrsLevel') {
+        return true
+      }
+
+      return false
+    },
   })
 
   f.register(fastifySwagger, {

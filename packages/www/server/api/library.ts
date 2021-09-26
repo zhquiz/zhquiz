@@ -449,13 +449,13 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         let cond = sql`TRUE`
 
         if (whatToShow === 'all-quiz') {
-          cond = sql`(NOT "entry" && (
-            SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "type" = ${type} AND "srsLevel" IS NOT NULL
-          ))`
+          cond = sql`"entry" && (
+            SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "type" = ${type}
+          )`
         } else if (whatToShow === 'learning') {
-          cond = sql`(NOT "entry" && (
-            SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "type" = ${type} AND "srsLevel" <= 2
-          ))`
+          cond = sql`"entry" && (
+            SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "type" = ${type} AND ("srsLevel" IS NULL OR "srsLevel" <= 2)
+          )`
         }
 
         const result: {

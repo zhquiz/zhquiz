@@ -100,8 +100,6 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 400, message: 'not Character' }
         }
 
-        const fThreshold = 100
-
         let result = await db.query(sql`
         WITH match_cte AS (
           SELECT
@@ -109,7 +107,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
             "entry"[2:]||'{}'::text[] "alt",
             "reading",
             "translation" "english",
-            "frequency"
+            "hLevel"
           FROM "entry"
           WHERE (
             "userId" = uuid_nil() OR "userId" = ${userId}
@@ -121,17 +119,12 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         FROM (
           SELECT * FROM (
             SELECT * FROM match_cte
-            WHERE "frequency" > ${fThreshold}
+            WHERE "hLevel" <= 50
           ) t2
           UNION ALL
           SELECT * FROM (
             SELECT * FROM match_cte
-            WHERE "frequency" < ${fThreshold}
-          ) t2
-          UNION ALL
-          SELECT * FROM (
-            SELECT * FROM match_cte
-            WHERE "frequency" IS NULL
+            WHERE "hLevel" > 50
           ) t2
         ) t1
         LIMIT ${limit}
@@ -193,7 +186,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           SELECT "entry"[1] "entry", "translation"[1] "english", "hLevel"
           FROM "entry"
           WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
+            "userId" = uuid_nil() OR "userId" = ${userId}
           ) AND "type" = 'sentence' AND "entry" &@ ${entry}
         )
 
@@ -406,7 +399,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
           FROM "entry"
           WHERE ${sql.join(
             [
-              sql`("userId" IS NULL OR "userId" = ${userId})`,
+              sql`("userId" = uuid_nil() OR "userId" = ${userId})`,
               hCond,
               radCond
                 ? sql`"entry" IN (SELECT "entry" FROM radical WHERE ${radCond})`

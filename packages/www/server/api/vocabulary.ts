@@ -276,7 +276,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
           "entry"[1] "entry"
         FROM "entry"
         WHERE (
-            "userId" IS NULL OR "userId" = ${userId}
+            "userId" = uuid_nil() OR "userId" = ${userId}
           ) AND "type" = 'vocabulary'
           AND ${hCond || sql`TRUE`}
           AND ${tagCond || sql`TRUE`}
