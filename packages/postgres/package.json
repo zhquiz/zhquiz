@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@databases/pg": "^5.1.1",
-    "@patarapolw/zhlevel": "^0.1.3",
+    "@patarapolw/zhlevel": "^0.1.4",
     "better-sqlite3": "^7.4.3",
     "fast-glob": "^3.2.7",
     "js-yaml": "^4.1.0",

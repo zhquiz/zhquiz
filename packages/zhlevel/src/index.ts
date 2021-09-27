@@ -63,7 +63,7 @@ export class Level {
       )
       .all(...raw)
 
-    if (!segments.length) {
+    if (segments.length < raw.length) {
       return 100
     }
 
