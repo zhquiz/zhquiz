@@ -48,6 +48,8 @@ export class Level {
     readonly: true
   })
 
+  V_LEVEL_POW = 3
+
   hLevel(v: string) {
     const raw = [...v.matchAll(/\p{sc=Han}/gu)].map((m) => m[0])
     if (!raw.length) {
@@ -109,7 +111,12 @@ export class Level {
     })
 
     return (
-      ([...entriesMap.values()].reduce((prev, c) => prev + c, 0) * raw.length) /
+      ([...entriesMap.values()].reduce(
+        (prev, c) => prev + c ** this.V_LEVEL_POW,
+        0
+      ) **
+        (1 / this.V_LEVEL_POW) *
+        raw.length) /
       (entriesMap.size * entriesMap.size)
     )
   }

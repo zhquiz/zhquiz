@@ -182,34 +182,22 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         }
 
         let result = await db.query(sql`
-        WITH match_cte AS (
-          SELECT "entry"[1] "entry", "translation"[1] "english", "hLevel"
+        SELECT "entry", "english" FROM
+        (
+          SELECT
+            "entry"[1] "entry",
+            "translation"[1] "english",
+            (CASE
+              WHEN "hLevel" <= 50 AND length("entry"[1]) <= 20 THEN 1
+              WHEN "hLevel" <= 50 AND length("entry"[1]) > 20 THEN 2
+              ELSE 3
+            END) "tier"
           FROM "entry"
           WHERE (
             "userId" = uuid_nil() OR "userId" = ${userId}
           ) AND "type" = 'sentence' AND "entry" &@ ${entry}
-        )
-
-        SELECT *
-        FROM (
-          SELECT * FROM (
-            SELECT "entry", "english"
-            FROM match_cte WHERE "hLevel" <= 50 AND length("entry") <= 20
-            ORDER BY RANDOM()
-          ) t1
-          UNION
-          SELECT * FROM (
-            SELECT "entry", "english"
-            FROM match_cte WHERE "hLevel" <= 50 AND length("entry") <= 20
-            ORDER BY RANDOM()
-          ) t1
-          UNION
-          SELECT * FROM (
-            SELECT "entry", "english"
-            FROM match_cte WHERE length("entry") > 20
-            ORDER BY RANDOM()
-          ) t1
-        ) t2
+        ) t1
+        ORDER BY "tier", RANDOM()
         LIMIT ${limit}
         `)
 

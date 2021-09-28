@@ -176,10 +176,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@patarapolw/zhlevel@^0.1.4":
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/@patarapolw/zhlevel/-/zhlevel-0.1.4.tgz#08254dbf1985b0d5d124696dfdf9bb6c03a90e72"
-  integrity sha512-pj2eFqMtbUhsFfeY/jmlJ6sNE8mIzHH5rkOmypQPryD4GDUugkWYUSfs563Y+fAGU6ngsDxfSl1tkNjiit5Tpw==
+"@patarapolw/zhlevel@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@patarapolw/zhlevel/-/zhlevel-0.1.5.tgz#10cc4ddfced0649ddfe3a27f9072dbf1ebb55885"
+  integrity sha512-tVMBqDMqWMe75x3PD4M4wktpCwFqQlb8SKb6OF5laBx6gDbDHey3L6EQgDmUsRDpJqQ72JWBIs3M1O6mOCiqEQ==
   dependencies:
     better-sqlite3 "^7.4.3"
     chinese-to-pinyin "^1.3.1"
