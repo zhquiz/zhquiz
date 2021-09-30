@@ -18,4 +18,5 @@ COPY --from=builder /app/node_modules /node_modules
 COPY --from=builder /app/public /public
 COPY --from=builder /app/server-dist /server-dist
 COPY --from=builder /app/tsconfig.* /app/trad.dict.txt /
+COPY .postgresql /root/.postgresql
 ENTRYPOINT ["node", "-r", "tsconfig-paths/register", "server-dist/index.js"]

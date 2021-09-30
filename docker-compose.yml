@@ -21,6 +21,8 @@ services:
       - ./packages/postgres/library:/app/library
       - ./packages/postgres/assets:/app/assets
       - ./packages/postgres/src:/app/src
+
+      - ~/.postgresql:/root/.postgresql
   www:
     restart: always
     image: patarapolw/zhquiz-server
