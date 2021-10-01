@@ -276,7 +276,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
             )`
               : sql`TRUE`
           }
-        ORDER BY "frequency" DESC NULLS FIRST
+        ORDER BY "frequency" DESC
         LIMIT 10
         `)
 

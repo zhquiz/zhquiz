@@ -18,3 +18,4 @@
 !/tsconfig.*
 !/yarn.lock
 !/trad.dict.txt
+!/.postgresql/

@@ -23,7 +23,9 @@ if (!db) {
           port: parseInt(process.env.POSTGRES_PORT!),
         }),
     bigIntMode: 'number',
-    ssl: fs.existsSync(path.join(__dirname, '../.postgresql/postgresql.key')),
+    ssl: fs.existsSync(
+      path.join(process.env.HOME!, '.postgresql/postgresql.key')
+    ),
   })
 }
 
