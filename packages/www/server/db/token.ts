@@ -239,7 +239,8 @@ export const qParseDate: (
         b = toBetween('-0.5d')
     }
 
-    const reBetween = /^([[\(])([+-]?\d+(?:\.\d+)?[A-Z]+),([+-]?\d+(?:\.\d+)?[A-Z]+)([\])])$/i
+    const reBetween =
+      /^([[\(])([+-]?\d+(?:\.\d+)?[A-Z]+),([+-]?\d+(?:\.\d+)?[A-Z]+)([\])])$/i
     const m = reBetween.exec(v)
     if (m) {
       let gt = sql`>`
@@ -282,16 +283,15 @@ export const makeQuiz = new QSplit({
 export const makeTag = new QSplit({
   default: () => null,
   fields: {
-    tag: { ':': (v) => sql`entry_tag."tag" &@ ${v}` },
-    type: { ':': (v) => sql`entry_tag."type" = ${v}` },
+    tag: { ':': (v) => sql`${v} = ANY("entry"."tag")` },
+    type: { ':': (v) => sql`"entry"."type" = ${v}` },
   },
 })
 
 export const makeLevel = new QSplit({
   default: () => null,
   fields: {
-    level: qParseNum(sql`"level"."vLevel"`),
-    hLevel: qParseNum(sql`"level"."hLevel"`),
-    vLevel: qParseNum(sql`"level"."vLevel"`),
+    level: qParseNum(sql`"entry"."level"`),
+    hLevel: qParseNum(sql`"entry"."hLevel"`),
   },
 })

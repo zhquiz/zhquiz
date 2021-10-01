@@ -13,17 +13,17 @@
           </b-radio-button>
           <b-radio-button
             v-model="whatToShow"
-            native-value="all-quiz"
-            type="is-info"
-          >
-            All quiz
-          </b-radio-button>
-          <b-radio-button
-            v-model="whatToShow"
             native-value="learning"
             type="is-warning"
           >
             Learning
+          </b-radio-button>
+          <b-radio-button
+            v-model="whatToShow"
+            native-value="all-quiz"
+            type="is-info"
+          >
+            All quiz
           </b-radio-button>
         </b-field>
       </div>
@@ -130,6 +130,7 @@ export default class LevelCard extends Vue {
   }
 
   async onWhatToShowChanged() {
+    this.page = 1
     this.setCurrentData()
     await this.$axios.userUpdateSettings(null, {
       levelBrowser: [this.whatToShow],

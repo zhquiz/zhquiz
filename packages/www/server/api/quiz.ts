@@ -7,9 +7,7 @@ import shortUUID from 'short-uuid'
 
 import { QSplit, makeLevel, makeTag, qParseDate, qParseNum } from '../db/token'
 import { db } from '../shared'
-import { lookupCharacter } from './character'
 import { sPreset } from './preset'
-import { lookupSentence } from './sentence'
 import { lookupVocabulary } from './vocabulary'
 
 const quizRouter: FastifyPluginAsync = async (f) => {
@@ -195,45 +193,19 @@ const quizRouter: FastifyPluginAsync = async (f) => {
 
         const entryCond = (() => {
           if (!q) {
-            return sql`TRUE`
+            return null
           }
 
-          const cond: SQLQuery[] = []
-          const exCond = makeTag.parse(q)
-          const lvCond = makeLevel.parse(q)
+          const cond: SQLQuery[] = [
+            makeTag.parse(q)!,
+            makeLevel.parse(q)!,
+          ].filter((s) => s)
 
-          if (exCond) {
-            cond.push(sql`"entry" IN (
-              SELECT entry_tag."entry"
-              FROM "entry_tag" WHERE (
-                "userId" IS NULL OR "userId" = ${userId}
-              ) AND entry_tag."type" = "type" AND ${exCond}
-            )`)
-          }
-
-          if (lvCond) {
-            cond.push(sql`"entry" IN (
-              SELECT "entry" FROM "level" WHERE ${lvCond}
-            )`)
-          }
-
-          return cond.length ? sql.join(cond, ' AND ') : sql`TRUE`
+          return cond.length ? sql.join(cond, ' AND ') : null
         })()
 
         const result = await db.query(
           sql`
-        SELECT
-          "nextReview",
-          "srsLevel",
-          "wrongStreak",
-          "id",
-          (CASE
-            WHEN (CASE
-              WHEN "type" = 'character' THEN (SELECT 1 FROM "character" WHERE "entry" = t1."entry" LIMIT 1)
-              WHEN "type" = 'sentence' THEN (SELECT 1 FROM "sentence" WHERE "entry" = t1."entry" LIMIT 1)
-            END) IS NULL THEN ARRAY["entry", "type"]
-          END) it
-        FROM (
           SELECT
             "nextReview",
             "srsLevel",
@@ -247,24 +219,14 @@ const quizRouter: FastifyPluginAsync = async (f) => {
             AND "direction" = ANY(${direction})
             AND ${cond}
             AND ${makeQuiz.parse(q) || sql`TRUE`}
-        ) t1
-        WHERE ${entryCond}
-        `
-        )
-
-        const typeMap = new Map<string, string[]>()
-        result.map(({ it }) => {
-          if (it) {
-            const v = typeMap.get(it[1]) || []
-            v.push(it[0])
-            typeMap.set(it[1], v)
-          }
-        })
-
-        await Promise.all(
-          Array.from(typeMap).map(([type, entries]) =>
-            generateMissingEntries(entries, type, userId)
-          )
+            AND ${
+              entryCond
+                ? sql`"entry" = ANY(
+              SELECT unnest("entry") FROM "entry" WHERE "type" = "quiz"."type" AND ${entryCond}
+            )`
+                : sql`TRUE`
+            }
+          `
         )
 
         const [rLeech] = await db.query(sql`
@@ -533,14 +495,19 @@ const quizRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 403 }
         }
 
-        const lookups = await generateMissingEntries(entries, type, userId)
-
         const hasTeMap = new Map<string, string[]>()
-        lookups.map((it) => {
-          if (it.type === 'vocabulary' && it.alt?.length) {
-            hasTeMap.set(it.entry, it.alt || [])
-          }
-        })
+
+        if (type === 'vocabulary') {
+          const lookups = await Promise.all(
+            entries.map((v) => lookupVocabulary(v, userId, true))
+          )
+
+          lookups.map((it) => {
+            if (it.alt.length) {
+              hasTeMap.set(it.entry, it.alt || [])
+            }
+          })
+        }
 
         const ids = new Map<string, string[]>()
 
@@ -697,63 +664,3 @@ const quizRouter: FastifyPluginAsync = async (f) => {
 }
 
 export default quizRouter
-
-async function generateMissingEntries(
-  entries: string[],
-  type: string,
-  userId: string
-) {
-  const lookups: {
-    entry: string
-    alt?: string[]
-    reading: string[]
-    english?: string[]
-    type: string
-  }[] = await Promise.all(
-    entries
-      .filter((a, i, r) => r.indexOf(a) === i)
-      .map(async (el) => {
-        switch (type) {
-          case 'character':
-            return lookupCharacter(el, userId).then((r) => ({
-              ...r,
-              type,
-            }))
-          case 'sentence':
-            return lookupSentence(el, userId).then((r) => ({
-              ...r,
-              reading: [],
-              type,
-            }))
-        }
-
-        return lookupVocabulary(el, userId).then((r) => ({
-          ...r,
-          type,
-        }))
-      })
-  )
-  const missingEntries = lookups.filter((r) => !r.english)
-
-  if (missingEntries.length) {
-    await db.tx(async (db) => {
-      await db.query(sql`
-      INSERT INTO "extra" ("entry", "pinyin", "english", "userId", "id", "type")
-      VALUES ${sql.join(
-        await Promise.all(
-          missingEntries.map(
-            async (it) =>
-              sql`(${[it.entry]}, ${
-                it.reading
-              }, ${[]}, ${userId}, ${shortUUID.uuid()}, ${it.type})`
-          )
-        ),
-        ','
-      )}
-      ON CONFLICT DO NOTHING
-      `)
-    })
-  }
-
-  return lookups
-}

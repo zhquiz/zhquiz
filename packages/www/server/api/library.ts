@@ -404,21 +404,10 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
           throw { statusCode: 403 }
         }
 
-        const [x] = await db.query(sql`
-        SELECT "tag" FROM "library"
-        WHERE "userId" = ${userId} AND "id" = ${id}
+        await db.query(sql`
+        DELETE FROM "library"
+        WHERE ${userId} = "userId" AND "id" = ${id}
         `)
-
-        if (!x) {
-          throw { statusCode: 404 }
-        }
-
-        await db.tx(async (db) => {
-          await db.query(sql`
-          DELETE FROM "library"
-          WHERE ${userId} = "userId" AND "id" = ${id}
-          `)
-        })
 
         reply.status(201)
         return {
@@ -456,29 +445,26 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
       },
       async (req): Promise<typeof sResult.type> => {
         const { type, whatToShow } = req.query
-        const col = type === 'character' ? sql`"hLevel"` : sql`"vLevel"`
 
-        let cond = sql`WHERE ${col} IS NOT NULL`
+        let cond = sql`TRUE`
 
         if (whatToShow === 'all-quiz') {
-          cond = sql`
-          LEFT JOIN quiz ON quiz."entry" = zh."entry"
-          WHERE "srsLevel" IS NOT NULL AND ${col} IS NOT NULL
-          `
+          cond = sql`"entry" && (
+            SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "type" = ${type}
+          )`
         } else if (whatToShow === 'learning') {
-          cond = sql`
-          LEFT JOIN quiz ON quiz."entry" = zh."entry"
-          WHERE "srsLevel" <= 2 AND ${col} IS NOT NULL`
+          cond = sql`"entry" && (
+            SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "type" = ${type} AND ("srsLevel" IS NULL OR "srsLevel" <= 2)
+          )`
         }
 
         const result: {
           entry: string
           level: number
         }[] = await db.query(sql`
-        SELECT DISTINCT ON (zh."entry")
-          zh."entry" "entry", ${col} "level"
-        FROM dict.zhlevel zh
-        ${cond}
+        SELECT "entry"[1] "entry", floor("level") "level"
+        FROM "entry"
+        WHERE "type" = ${type} AND 'zhlevel' = ANY("tag") AND ${cond}
         `)
 
         return {

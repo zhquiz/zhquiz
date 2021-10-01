@@ -159,9 +159,6 @@ import ContextMenu from '../ContextMenu.vue'
     open() {
       this.isOpen = this.open
     },
-    entry() {
-      this.isOpen = false
-    },
     isList() {
       this.makeList()
     },
@@ -173,7 +170,6 @@ import ContextMenu from '../ContextMenu.vue'
       this.list = []
 
       this.$nextTick(() => {
-        this.isList = this.open
         this.reload(this.currentData)
       })
     },

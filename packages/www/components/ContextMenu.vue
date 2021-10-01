@@ -43,14 +43,22 @@
       <li v-if="entries.length === 1" class="separator">
         <a></a>
       </li>
-      <li v-if="entries.length === 1">
-        <a role="button" @click="openInNewTab('Character', { q: entries[0] })">
-          Search as Hanzi
+      <li v-if="entries.length === 1 && type === 'vocabulary'">
+        <a
+          role="button"
+          @click="openInNewTab('Vocabulary', { entry: entries[0] })"
+        >
+          Show details
         </a>
       </li>
-      <li v-if="entries.length === 1 && type !== 'hanzi'">
+      <li v-if="entries.length === 1">
+        <a role="button" @click="openInNewTab('Character', { q: entries[0] })">
+          {{ type === 'character' ? 'Show details' : 'Search for Hanzi' }}
+        </a>
+      </li>
+      <li v-if="entries.length === 1 && type !== 'character'">
         <a role="button" @click="openInNewTab('Vocabulary', { q: entries[0] })">
-          Search as Vocab
+          Search for vocabs
         </a>
       </li>
       <li v-if="entries.length === 1 && type !== 'sentence'">

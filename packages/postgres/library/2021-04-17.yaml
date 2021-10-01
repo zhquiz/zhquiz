@@ -1,0 +1,245 @@
+- id: e9965745-dedd-4e7d-b608-3b0a5be94ff7
+  createdAt: 2021-04-17
+  title: Weapons
+  source: https://pasajeen.com/คำศัพท์หมวดอาวุธ-武器/
+  tag: [weapon]
+  entries:
+    - entry: 武器
+      reading: wǔqì
+      translation: อาวุธ
+    - entry: 暗器
+      reading: ànqì
+      translation: อาวุธลับ
+    - entry: 甲
+      reading: jiǎ
+      translation: เกราะ
+    - entry: 剑
+      reading: jiàn
+      translation:
+        - ดาบ
+        - กระบี่
+    - entry: 盾
+      reading: dùn
+      translation: โล่
+    - entry: 刀
+      reading: dāo
+      translation: มีด
+    - entry: 枪
+      reading: qiāng
+      translation: ปืน
+    - entry: 矛
+      reading: máo
+      translation: หอก
+    - entry: 戟
+      reading: jǐ
+      translation: ง้าว
+    - entry: 斧
+      reading: fǔ
+      translation: ขวาน
+    - entry: 弹弓
+      reading: dàngōng
+      translation: หน้าไม้
+    - entry: 匕首
+      reading: bǐshǒu
+      translation: กริช
+    - entry: 攮子
+      reading: nǎngzi
+      translation: กริช
+    - entry: 鞭
+      reading: biān
+      translation: แส้
+    - entry: 钢鞭
+      reading: gānbiān
+      translation: แส้เหล็ก
+    - entry: 齿轮
+      reading: chǐlún
+      translation: กงจักร
+    - entry: 锤
+      reading: chuí
+      translation:
+        - ลูกตุ้ม (อาวุธสมัยโบราณ)
+        - ค้อน
+    - entry: 棒
+      reading: bàng
+      translation: กระบอง
+    - entry: 棍
+      reading: gùn
+      translation: กระบอง
+    - entry: 钺
+      reading: yuè
+      translation: ขวานวงพระจันทร์
+    - entry: 钩
+      reading: gōu
+      translation: ตะขอ
+    - entry: 叉
+      reading: chā
+      translation: สามง่าม
+    - entry: 弓
+      reading: gōng
+      translation:
+        - ธนู
+        - เกาทัณฑ์
+    - entry: 箭
+      reading: jiàn
+      translation: ลูกธนู
+    - entry: 戈
+      reading: gē
+      translation: ชื่ออาวุธชนิดหนึ่งในสมัยโบราณ
+    - entry: 抓
+      translation: กงเล็บ
+    - entry: 拐棍
+      reading: guǎigùn
+      translation: ไม้เท้า
+    - entry: 胄
+      reading: zhòu
+      translation: หมวกเกราะ
+    - entry: 手榴弹
+      reading: shǒuliúdàn
+      translation: ระเบิดมือ
+    - entry: 机关枪
+      translation: ปืนกล
+      source: cedict
+    - entry: 坦克
+      translation: รถถัง
+      source: cedict
+    - entry: 导弹
+      translation: missile
+      source: cedict
+- id: 4390d137-9650-4530-ae52-37fb702fad68
+  createdAt: 2021-04-17
+  title: Vegetables (ผัก)
+  tag: [vegetable, veggie]
+  source: https://th.wikibooks.org/wiki/ภาษาจีน/คำศัพท์/ผัก
+  entries:
+    - entry: 豆角
+      reading: dòujiǎo
+      translation: ถั่วฝักยาว
+    - entry: 豆芽菜
+      reading: dòuyácài
+      translation: ถั่วงอก
+    - entry: 小黄瓜
+      reading: xiǎohuángguā
+      translation: แตงกวา
+    - entry: 茼蒿
+      reading: tónghāo
+      translation: ตังโอ๋
+    - entry: 香芋
+      reading: xiāngyù
+      translation: ตะไคร้
+    - entry: 葱
+      reading: cōng
+      translation: ต้นหอม
+    - entry: 红萝卜
+      reading: hóngluóbo
+      translation: แครอท
+    - entry: 芥蓝菜
+      reading: gàiláncaì
+      translation: คะน้า
+    - entry: 芹菜
+      reading: qíncài
+      translation: ขึ้นช่าย
+    - entry: 姜
+      reading: jiāng
+      translation: ขิง
+    - entry: 小玉米
+      reading: xiǎoyùmǐ
+      translation: ข้าวโพดอ่อน
+    - entry: 韭菜
+      reading: jiǔcài
+      translation: กุยช่าย
+    - entry: 包心菜
+      reading: bāoxīncài
+      translation: กะหล่ำปลี
+    - entry: 菜花
+      reading: càihuā
+      translation: กะหล่ำดอก
+    - entry: 蒜头
+      reading: suàntóu
+      translation: กระเทียม
+    - entry: 秋葵
+      reading: qiūkuí
+      translation: กระเจี๊ยบขาว
+    - entry: 红葱头
+      reading: hóngcōngtóu
+      translation: หอมแดง
+    - entry: 竹笋
+      reading: zhúsǔn
+      translation: หน่อไม้
+    - entry: 苦瓜
+      reading: kǔguā
+      translation: มะระ
+    - entry: 茄子
+      reading: qiézi
+      translation: มะเขือยาว
+    - entry: 小茄子
+      reading: xiǎoqiézi
+      translation: มะเขือเปราะ
+    - entry: 西红柿
+      reading: xīhóngshì
+      translation: มะเขือเทศ
+    - entry: 苦橙
+      reading: kǔchéng
+      translation: มะกรูด
+    - entry: 南瓜
+      reading: nánguā
+      translation: ฟักทอง
+    - entry: 冬瓜
+      reading: dōngguā
+      translation: ฟัก
+    - entry: 甜椒
+      reading: tiánjiāo
+      translation: พริกหวาน
+    - entry: 柿子椒
+      reading: shìzijiāo
+      translation: พริกหยวก
+    - entry: 胡椒
+      reading: hújiāo
+      translation: พริกไทย
+    - entry: 辣椒
+      reading: làjiāo
+      translation: พริก
+    - entry: 空心菜
+      reading: kōngxīncài
+      translation: ผักบุ้ง
+    - entry: 芫荽
+      reading: yánsuī
+      translation: ผักชี
+    - entry: 白菜
+      reading: báicài
+      translation: ผักกาดขาว
+    - entry: 青菜
+      reading: qīngcài
+      translation: ผักกวางตุ้ง
+    - entry: 菠菜
+      reading: bōcài
+      translation: ปวยเล้ง
+    - entry: 丝瓜
+      reading: sīguā
+      translation: บวบ
+    - entry: 青菜花
+      reading: qīngcàihuā
+      translation: บรอกโคลี
+    - entry: 豌豆
+      reading: wāndòu
+      translation: ถั่วลันเตา
+    - entry: 紫苏
+      reading: zǐsū
+      translation: โหระพา
+    - entry: 木耳
+      reading: mù ěr
+      translation: เห็ดหูหนู
+    - entry: 香菇
+      reading: xiānggū
+      translation: เห็ดหอม
+    - entry: 草菇
+      reading: cǎogū
+      translation: เห็ดฟาง
+    - entry: 金针菇
+      reading: jīnzhēnggū
+      translation: เห็ดเข็มทอง
+    - entry: 萝卜
+      reading: luóbo
+      translation: หัวไชเท้า
+    - entry: 洋葱
+      reading: yángcōng
+      translation: หอมใหญ่ 

@@ -64,9 +64,9 @@
             </b-taglist>
           </div>
 
-          <div v-if="current.level" class="mb-4">
+          <div v-if="current.level && current.level <= 60" class="mb-4">
             <b-taglist attached>
-              <b-tag type="is-dark">vLevel</b-tag>
+              <b-tag type="is-dark">Level</b-tag>
               <b-tag type="is-primary">
                 {{ current.level }}
               </b-tag>

@@ -18,7 +18,7 @@
 }
 
 .font-han {
-  font-family: 'Noto Serif TC', 'Noto Serif SC', 'HanaMin', sans-serif;
+  font-family: 'Noto Serif TC', 'Noto Serif SC', 'HanaMin', serif;
 }
 
 .font-zh-simp {
@@ -106,6 +106,7 @@ span.gray-box {
   height: 1.5em;
   color: lightgray;
   background-color: lightgray;
+  visibility: hidden;
   margin-bottom: -0.3em;
 }
 

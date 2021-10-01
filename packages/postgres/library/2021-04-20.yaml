@@ -1,0 +1,122 @@
+- id: 9cc7cda6-6360-4340-ae74-725bbeb16917
+  createdAt: 2021-04-20
+  title: Chinese idiom (成语) Set 2
+  tag: [idiom]
+  source: https://pasajeen.com/category/นิทานสำนวนสุภาษิตจีน-成/
+  entries:
+    - entry: 开诚布公
+      reading: kāichéng bùgōng
+      translation:
+        - จริงใจเปิดเผย
+        - ตรงไปตรงมา
+    - entry: 开门见山
+      reading: kāimén jiànshān
+      translation: พูดตรงประเด็น
+    - entry: 口蜜腹剑
+      reading: kǒumì fùjiàn
+      translation:
+        - ปากปราศรัยน้ำใจเชือดคอ
+        - ปากหวานก้นเปรี้ยว
+    - entry: 口是心非
+      reading: kǒushìxīnfēi
+      translation: ปากไม่ตรงกับใจ
+    - entry: 苦尽甘来
+      reading: kǔjìn gānlái
+      translation: ต้นร้ายปลายดี
+    - entry: 旷日持久
+      reading: kuàng rìchíjiǔ
+      translation: ยืดเวลาออกไป
+    - entry: 拉弓惊鸟
+      reading: lāgōng jīngniǎo
+      translation: เขียนเสือให้วัวกลัว
+    - entry: 来者不拒
+      reading: láizhě bújù
+      translation: อ้อยเข้าปากช้าง
+    - entry: 老牛吃嫩草
+      reading: lǎoniú chīnèncǎo
+      translation: วัวแก่กินหญ้าอ่อน
+    - entry: 老老实实
+      reading: lǎolǎo shishi
+      translation: ตรงไปตรงมาอย่างเปิดเผย
+    - entry: 老马识途
+      reading: lǎomǎshítú
+      translation: ม้าแก่รู้จักทางเป็นอย่างดี (คนที่มีประสบการณ์)
+    - entry: 乐不思蜀
+      reading: lèbù sīshǔ
+      translation: สุขสบายกับที่ใหม่จนไม่อยากกลับไปที่เก่า
+    - entry: 乐极生悲
+      reading: lèjí shēngbēi
+      translation: รักสนุก ทุกข์ถนัด
+    - entry: 冷酷无情
+      reading: lěngkù wúqíng
+      translation: เย็นชาไร้น้ำใจ
+    - entry: 冷言冷语
+      reading: lěngyán lěngyǔ
+      translation: คำพูดที่เย็นชา
+    - entry: 赖蛤蟆想吃天鹅肉
+      reading: làiháma xiǎngchītiān’éròu
+      translation: กระต่ายหมายจันทร์
+      description: 蛤蟆 [háma] คางคก
+    - entry: 力所不及
+      reading: lìsuǒ bùjí
+      translation: เหลือบ่ากว่าแรง
+    - entry: 良药苦口
+      reading: liángyàokǔkǒu
+      translation: หวานเป็นลม ขมเป็นยา
+    - entry: 两面派
+      reading: liǎngmiànpài
+      translation: นกสองหัว
+    - entry: 两头落空
+      reading: liǎngtóuluòkōng
+      translation: จับปลาสองมือ
+    - entry: 两虎相斗
+      reading: liǎnghǔ xiāngdòu
+      translation: เสือพบสิงห์
+    - entry: 量力而为
+      reading: liànglìérwéi
+      translation: นกน้อยทำรังแต่พอตัว
+    - entry: 量力而行
+      reading: liànglì’érxíng
+      translation: นกน้อยทำรังแต่พอตัว
+    - entry: 留得青山在，不怕没柴烧
+      reading: liúdéqīngshānzài,búpàméicháishāo
+      translation:
+        - ตราบใดมีชีวิต ย่อมต้องมีความหวัง
+        - ตราบใดที่ขุนเขาเขียวขจียังอยู่ อย่าได้กลัวไม่มีฟืนเผา
+    - entry: 流连忘返
+      reading: liúliánwàngfǎn
+      translation: เดินดูเพลินจนลืมกลับบ้าน
+    - entry: 路遥知马力，日久见人心
+      reading: lùyáozhīmǎlì,rìjiǔjiànrénxīn
+      translation: ระยะทางพิสูจน์ม้า กาลเวลาพิสูจน์คน
+    - entry: 落井下石
+      reading: luòjǐng xiàshí
+      translation:
+        - ผีซ้ำด้ำพลอย
+        - ซวยซ้ำซวยซ้อน
+        - to hit a person when he’s down
+    - entry: 买椟还珠
+      reading: mǎidú huánzhū
+      translation: พิมเสนแลกเกลือ
+      description: 比喻没有眼光， 取舍不当
+    - entry: 盲目仿效
+      reading: mángmù fǎngxiào
+      translation: เห็นช้างขี้ก็ขี้ตามช้าง
+    - entry: 盲人摸象
+      reading: mángrén mōxiàng
+      translation: ตาบอดคลำช้าง
+    - entry: 没谱儿
+      reading: méipǔr
+      translation: ไม่แน่ใจ
+    - entry: 门庭若市
+      reading: méntíng ruòshì
+      translation: หัวกระไดไม่แห้ง
+    - entry: 闷闷不乐
+      reading: mènmènbúlè
+      translation: ดูไม่มีความสุข
+    - entry: 秘而不宣
+      reading: mì’ér bùxuān
+      translation: เก็บไว้เป็นความลับ
+    - entry: 面恶心善
+      reading: miàněxīnshàn
+      translation: เงาะถอดรูป
