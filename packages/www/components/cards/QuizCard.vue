@@ -5,6 +5,7 @@
         <div
           v-show="!isQuizShownAnswer"
           class="content hover-parent"
+          style="cursor: pointer"
           @click="addHint"
         >
           <div v-if="current.type === 'character'">
@@ -20,7 +21,7 @@
             <div v-else>
               <h4>Hanzi Chinese-English</h4>
               <div
-                class="font-chinese text-w-normal hanzi-display has-context"
+                class="font-han text-w-normal hanzi-display"
                 style="text-align: center"
               >
                 {{ current.entry }}
@@ -32,7 +33,7 @@
             <div v-if="current.direction === 'ec'">
               <h4>Vocab English-Chinese</h4>
 
-              <ul v-if="Array.isArray(current.english)" class="has-context">
+              <ul v-if="Array.isArray(current.english)">
                 <li
                   v-for="(it, i) in current.english"
                   :key="i"
@@ -65,10 +66,7 @@
               </h4>
               <h4 v-else>Vocab Simplified-English</h4>
 
-              <div
-                class="font-zh-simp text-w-normal has-context"
-                style="font-size: 2rem"
-              >
+              <div class="font-zh-simp text-w-normal" style="font-size: 2rem">
                 {{ current.entry }}
               </div>
             </div>
@@ -87,13 +85,13 @@
             <div v-else>
               <h4>Sentence Chinese-English</h4>
 
-              <h2 class="font-zh-simp text-w-normal has-context">
+              <h2 class="font-zh-simp text-w-normal">
                 {{ current.entry }}
               </h2>
             </div>
           </div>
 
-          <div class="has-context mt-4 mb-4 hover-child">
+          <div class="mt-4 mb-4 hover-child">
             <small>
               {{ current.hint || 'Click to add hint' }}
             </small>
@@ -127,9 +125,9 @@
                 <span
                   class="has-context"
                   :title="it.reading[0]"
-                  @click="(ev) => openContext(ev, it.chinese, 'sentence')"
+                  @click="(ev) => openContext(ev, it.entry, 'sentence')"
                   @contextmenu.prevent="
-                    (ev) => openContext(ev, it.chinese, 'sentence')
+                    (ev) => openContext(ev, it.entry, 'sentence')
                   "
                 >
                   {{ it.entry }}
@@ -229,9 +227,9 @@
               <li v-for="(it, i) in current.vocabulary" :key="i">
                 <span
                   class="has-context"
-                  @click="(ev) => openContext(ev, it, 'vocabulary')"
+                  @click="(ev) => openContext(ev, it.entry, 'vocabulary')"
                   @contextmenu.prevent="
-                    (ev) => openContext(ev, it, 'vocabulary')
+                    (ev) => openContext(ev, it.entry, 'vocabulary')
                   "
                 >
                   {{ it.entry }}
