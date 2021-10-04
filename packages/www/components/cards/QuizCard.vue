@@ -101,7 +101,7 @@
         <div v-show="isQuizShownAnswer" class="content">
           <div v-if="current.type === 'character'">
             <div
-              class="hanzi-display has-context"
+              class="hanzi-display has-context font-han"
               @click="openContext"
               @contextmenu.prevent="openContext"
               style="text-align: center"
