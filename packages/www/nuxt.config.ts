@@ -117,6 +117,7 @@ export default (): NuxtConfig => {
               'faTrash',
               'faTools',
               'faTh',
+              'faRedoAlt',
             ],
           },
         },

@@ -1,34 +1,46 @@
 <template>
   <section>
     <div class="LibraryPage">
-      <form class="field is-grouped" @submit.prevent="q = q0">
-        <b-field class="is-expanded" label="Search" label-position="on-border">
-          <input
-            v-model="q0"
-            class="input"
-            type="search"
-            name="q"
-            placeholder="Type here to search"
-            aria-label="search"
-          />
-        </b-field>
+      <form @submit.prevent="q = q0">
+        <label for="q" class="label">
+          Search
+          <b-tooltip label="How to?" position="is-right">
+            <a
+              href="https://github.com/zhquiz/zhquiz/wiki/How-to-search-or-filter"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <b-icon icon="info-circle"></b-icon>
+            </a>
+          </b-tooltip>
+        </label>
+        <div class="field has-addons">
+          <p class="control is-expanded">
+            <input
+              v-model="q0"
+              class="input"
+              type="search"
+              name="q"
+              placeholder="Type here to search"
+              aria-label="search"
+            />
+          </p>
+          <p class="control">
+            <button
+              class="button is-success"
+              type="button"
+              @click="openEditModal()"
+            >
+              Add new item
+            </button>
+          </p>
+        </div>
       </form>
 
-      <div class="columns">
+      <div class="columns mt-4">
         <div class="column">
           <section class="card">
             <div class="card-content">
-              <h2 class="title is-4">
-                Library
-                <button
-                  class="button is-success"
-                  style="float: right"
-                  @click="openEditModal()"
-                >
-                  Create a list
-                </button>
-              </h2>
-
               <LibraryCard
                 v-for="(it, i) in local.result"
                 :id="it.id"

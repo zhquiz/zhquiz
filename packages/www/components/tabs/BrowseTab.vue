@@ -1,25 +1,36 @@
 <template>
   <section>
     <div class="ExtraPage container">
-      <form class="field is-grouped" @submit.prevent="q = q0">
-        <b-field class="is-expanded" label="Search" label-position="on-border">
-          <input
-            v-model="q0"
-            class="input"
-            type="search"
-            name="q"
-            placeholder="Type here to search"
-            aria-label="search"
-          />
-        </b-field>
-
-        <button
-          class="control button is-success"
-          type="button"
-          @click="onNewItem"
-        >
-          Add new item
-        </button>
+      <form @submit.prevent="q = q0">
+        <label for="q" class="label">
+          Search
+          <b-tooltip label="How to?" position="is-right">
+            <a
+              href="https://github.com/zhquiz/zhquiz/wiki/How-to-search-or-filter"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <b-icon icon="info-circle"></b-icon>
+            </a>
+          </b-tooltip>
+        </label>
+        <div class="field has-addons">
+          <p class="control is-expanded">
+            <input
+              v-model="q0"
+              class="input"
+              type="search"
+              name="q"
+              placeholder="Type here to search"
+              aria-label="search"
+            />
+          </p>
+          <p class="control">
+            <button class="button is-success" type="button" @click="onNewItem">
+              Add new item
+            </button>
+          </p>
+        </div>
       </form>
 
       <b-table

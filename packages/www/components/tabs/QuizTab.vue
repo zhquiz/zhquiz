@@ -112,7 +112,19 @@
         </div>
         <div class="column" style="min-width: min(100vw, 600px)">
           <form @submit.prevent="reload">
-            <b-field label="Filter" grouped>
+            <label class="label">
+              Filter
+              <b-tooltip label="How to?" position="is-right">
+                <a
+                  href="https://github.com/zhquiz/zhquiz/wiki/How-to-search-or-filter"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <b-icon icon="info-circle"></b-icon>
+                </a>
+              </b-tooltip>
+            </label>
+            <div class="field has-addons">
               <b-input
                 v-model="q"
                 placeholder="Try hLevel>10, vLevel<=20 or tag:HSK4"
@@ -124,7 +136,7 @@
                   <b-icon icon="save"></b-icon>
                 </b-button>
               </p>
-            </b-field>
+            </div>
           </form>
         </div>
       </div>
@@ -171,13 +183,30 @@
             </div>
             <div class="column is-3 flex flex-row">
               <div class="flex-grow" />
-              <b-button
-                type="is-success"
-                :disabled="quizArray.length === 0"
-                @click="startQuiz"
-              >
-                Start Quiz
-              </b-button>
+              <div class="field has-addons">
+                <p class="control">
+                  <button
+                    class="button is-success"
+                    type="button"
+                    :disabled="quizArray.length === 0 || isLoading"
+                    @click="startQuiz"
+                  >
+                    <span>Start</span>
+                  </button>
+                </p>
+                <p class="control">
+                  <b-tooltip label="Refresh" position="is-left">
+                    <button
+                      class="button is-success"
+                      type="button"
+                      :disabled="isLoading"
+                      @click="reload"
+                    >
+                      <b-icon icon="redo-alt"></b-icon>
+                    </button>
+                  </b-tooltip>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -192,7 +221,7 @@
         <div class="card-content">
           <form class="mb-4" @submit.prevent="presets.q = presets.q0">
             <b-field label="Filter" grouped>
-              <b-input v-model="presets.q" type="search" expanded />
+              <b-input v-model="presets.q0" type="search" expanded />
             </b-field>
           </form>
 
@@ -227,8 +256,6 @@
           />
         </div>
       </div>
-
-      <b-loading :active="isLoading" />
     </div>
   </section>
 </template>
@@ -371,9 +398,7 @@ export default class QuizTab extends Vue {
     }
 
     this.q = q || ''
-
     this.isInit = true
-    this.isLoading = false
 
     await this.reload()
   }
@@ -384,6 +409,8 @@ export default class QuizTab extends Vue {
   @Watch('includeUndue')
   @Watch('includeLeech')
   async reload() {
+    this.isLoading = true
+
     const { quiz, upcoming, stats } = await this.$axios
       .quizInit(null, {
         type: this.type,
@@ -409,6 +436,8 @@ export default class QuizTab extends Vue {
         ? new Date(upcoming[0].nextReview)
         : null
     this.leechCount = stats.leech
+
+    this.isLoading = false
   }
 
   async startQuiz() {
@@ -439,6 +468,8 @@ export default class QuizTab extends Vue {
     })
   }
 
+  @Watch('presets.q')
+  @Watch('presets.page')
   async loadPresets() {
     const {
       data: { result, count },
