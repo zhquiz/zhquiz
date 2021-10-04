@@ -163,6 +163,13 @@ export default class RandomTab extends Vue {
 </script>
 
 <style scoped>
+::v-deep .tooltip-content {
+  white-space: initial;
+  text-align: center;
+  max-width: calc(100vw - 40px);
+  width: max-content;
+}
+
 .RandomPage {
   margin-top: 1rem;
   display: flex;

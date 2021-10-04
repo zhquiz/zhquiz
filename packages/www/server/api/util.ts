@@ -3,7 +3,6 @@ import path from 'path'
 import toPinyin from 'chinese-to-pinyin'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
-import Text2Speech from 'node-gtts'
 import jieba from 'nodejieba'
 
 import { lookupVocabulary } from './vocabulary'
@@ -67,7 +66,7 @@ const utilRouter: FastifyPluginAsync = async (f) => {
       },
       async (req): Promise<typeof sResponse.type> => {
         return {
-          result: await makeReading(req.query.q),
+          result: makeReading(req.query.q),
         }
       }
     )
@@ -107,28 +106,6 @@ const utilRouter: FastifyPluginAsync = async (f) => {
       }
     )
   }
-
-  {
-    const sQuerystring = S.shape({
-      q: S.string(),
-    })
-
-    f.get<{
-      Querystring: typeof sQuerystring.type
-    }>(
-      '/speak',
-      {
-        schema: {
-          operationId: 'speak',
-          querystring: sQuerystring.valueOf(),
-        },
-      },
-      (req, reply) => {
-        const gtts = Text2Speech('zh')
-        reply.send(gtts.stream(req.query.q))
-      }
-    )
-  }
 }
 
 export default utilRouter
@@ -146,7 +123,9 @@ export function makeReading(el: string) {
 
 export async function makeEnglish(el: string, userId: string) {
   const segs = (
-    await Promise.all(jieba.cut(el).map((s) => lookupVocabulary(s, userId, true)))
+    await Promise.all(
+      jieba.cut(el).map((s) => lookupVocabulary(s, userId, true))
+    )
   )
     .filter((v) => v.english && /\p{sc=Han}/u.test(v.entry))
     .map((v) => v!.english!.join(' / ').replace(new RegExp(v.entry, 'g'), ''))

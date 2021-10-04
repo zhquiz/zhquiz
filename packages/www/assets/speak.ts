@@ -14,7 +14,9 @@ speechSynthesis.onvoiceschanged = () => {
 
 export async function speak(s: string, forceOffline?: boolean) {
   if (!forceOffline) {
-    const audio = new Audio(`/api/util/speak?q=${encodeURIComponent(s)}`)
+    const audio = new Audio(
+      `https://cdn.zhquiz.cc/api/tts?q=${encodeURIComponent(s)}&lang=zh-CN`
+    )
     await audio.play().catch(() => speak(s, true))
     return
   }
