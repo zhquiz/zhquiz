@@ -116,7 +116,9 @@ const quizRouter: FastifyPluginAsync = async (f) => {
     const makeQuiz = new QSplit({
       default: () => null,
       fields: {
-        type: { ':': (v) => sql`"quiz"."type" = ${v}` },
+        type: {
+          ':': (v) => sql`"quiz"."type" = ${v.replace(/hanzi/gi, 'character')}`,
+        },
         direction: { ':': (v) => sql`"direction" = ${v}` },
         hint: { ':': (v) => sql`"hint" &@ ${v}` },
         mnemonic: { ':': (v) => sql`"mnemonic" &@ ${v}` },
