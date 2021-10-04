@@ -417,8 +417,11 @@ export default class QuizTab extends Vue {
 
   doSave() {
     this.$buefy.dialog.prompt({
-      message: "Settings' name",
+      message: 'Preset name',
       trapFocus: true,
+      inputAttrs: {
+        value: this.q || 'Initial',
+      },
       onConfirm: async (name) => {
         await this.$axios.presetCreate(null, {
           name,

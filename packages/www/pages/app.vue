@@ -31,7 +31,7 @@
                 rel="noopener noreferrer"
               >
                 <b-icon pack="fab" icon="github"></b-icon>
-                Support
+                {{ 'Support & Contribute' }}
               </a>
             </li>
           </ul>
@@ -253,6 +253,10 @@ export default class AppPage extends Vue {
 </script>
 
 <style lang="scss" scoped>
+::v-deep .sidebar-content {
+  z-index: 60;
+}
+
 .AppPage {
   height: 100%;
   display: grid;
@@ -260,15 +264,20 @@ export default class AppPage extends Vue {
 }
 
 nav.tabs {
-  z-index: 5;
+  z-index: 50;
   height: 45px;
   padding-top: 0.5em;
   padding-left: 0.5em;
   margin-bottom: 0 !important;
-  background-color: rgba(230, 230, 230, 0.9);
+  background-color: rgba(230, 230, 230, 0.1);
+
+  li {
+    opacity: 0.7;
+  }
 
   li:not(.is-active) a {
-    background-color: lightgray;
+    background-color: rgba(211, 211, 211, 0.5);
+    border: none;
   }
 
   li + li {

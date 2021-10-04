@@ -2,7 +2,11 @@
   <b-modal class="quiz-modal" :active.sync="isQuizModal" @close="endQuiz">
     <div class="card">
       <div v-if="current.id" class="card-content">
-        <div v-show="!isQuizShownAnswer" class="content" @click="addHint">
+        <div
+          v-show="!isQuizShownAnswer"
+          class="content hover-parent"
+          @click="addHint"
+        >
           <div v-if="current.type === 'character'">
             <div v-if="current.direction === 'ec'">
               <h4>Hanzi English-Chinese</h4>
@@ -89,9 +93,9 @@
             </div>
           </div>
 
-          <div class="has-context mt-4 mb-4" v-if="current.hint">
+          <div class="has-context mt-4 mb-4 hover-child">
             <small>
-              {{ current.hint }}
+              {{ current.hint || 'Click to add hint' }}
             </small>
           </div>
         </div>
@@ -766,6 +770,14 @@ export default class QuizCard extends Vue {
   &:hover {
     color: blue;
   }
+}
+
+.hover-child {
+  display: none;
+}
+
+.hover-parent:hover .hover-child {
+  display: block;
 }
 
 .traditional {
