@@ -130,9 +130,33 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         LIMIT ${limit}
         `)
 
-        if (result[0] && result[0].frequency) {
-          result = result.filter((r) => r.frequency)
-        }
+        // let result = await db.query(sql`
+        // SELECT
+        //   "entry",
+        //   "alt",
+        //   "reading",
+        //   "english"
+        // FROM (
+        //   SELECT
+        //     "entry"[1] "entry",
+        //     "entry"[2:]||'{}'::text[] "alt",
+        //     "reading",
+        //     "translation" "english",
+        //     ("hLevel" > 50)::int "hLevel",
+        //     (CASE
+        //       WHEN "frequency" >= 1000  THEN 1
+        //       WHEN "frequency" >= 100   THEN 2
+        //       WHEN "frequency" >= 10    THEN 3
+        //       ELSE 4
+        //     END) "frequency"
+        //   FROM "entry"
+        //   WHERE (
+        //     "userId" = uuid_nil() OR "userId" = ${userId}
+        //   ) AND "type" = 'vocabulary' AND "entry" &@ ${entry}
+        // ) t1
+        // ORDER BY "hLevel", "frequency", RANDOM()
+        // LIMIT ${limit}
+        // `)
 
         return {
           result,
