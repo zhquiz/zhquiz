@@ -263,9 +263,11 @@ export default class AppPage extends Vue {
   grid-template-rows: 1fr auto;
 }
 
+$nav-height: 45px;
+
 nav.tabs {
   z-index: 50;
-  height: 45px;
+  height: $nav-height;
   padding-top: 0.5em;
   padding-left: 0.5em;
   margin-bottom: 0 !important;
@@ -311,18 +313,21 @@ main {
   max-width: 100vw;
   overflow-y: scroll;
   position: absolute;
-  padding-top: 65px;
+  margin-top: $nav-height;
+  padding-top: 20px;
   padding-bottom: 100px;
   height: 100%;
+  background-color: rgba(211, 211, 211, 0.2);
+  box-sizing: border-box;
 }
 
 .delete {
   border: none !important;
   transform: translateX(50%);
-  background-color: rgba(143, 183, 221, 0.61) !important;
+  background-color: rgba(143, 183, 221);
 
   &:hover {
-    background-color: lightgray !important;
+    background-color: lightgray;
   }
 }
 
