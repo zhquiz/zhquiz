@@ -4,9 +4,10 @@ import https from 'https'
 import os from 'os'
 import path from 'path'
 
+import axios, { AxiosResponse } from 'axios'
 import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import sqlite3 from 'better-sqlite3'
-import { Frequency, makePinyin, Level } from '@patarapolw/zhlevel'
+import { makePinyin, Level } from '@patarapolw/zhlevel'
 
 export async function populate(
   db: ConnectionPool,
@@ -223,7 +224,6 @@ export async function populate(
     console.error(e)
   }
 
-  const f = new Frequency()
   const lv = new Level()
 
   await db.tx(async (db) => {
@@ -244,20 +244,36 @@ export async function populate(
     `
       )
       .all()
-      .map((p) => {
-        return sql`('sentence', ${[p.cmn]}, ${[
-          makePinyin(p.cmn)
-        ]}, ${JSON.parse(p.eng)}, ${['tatoeba']}, ${f.vFreq(
-          p.cmn
-        )}, ${lv.vLevel(p.cmn)}, ${lv.hLevel(p.cmn)})`
-      })
 
     for (let i = 0; i < lots.length; i += batchSize) {
       console.log(i)
+      const sublot: Record<string, typeof lots[0]> = {}
+      lots.slice(i, i + batchSize).map((p) => (sublot[p.cmn] = p))
+
+      const { data: fMap } = await axios.post<
+        any,
+        AxiosResponse<Record<string, number>>
+      >('https://cdn.zhquiz.cc/api/wordfreq?lang=zh', {
+        q: Object.keys(sublot)
+      })
+      for (const [k, f] of Object.entries(fMap)) {
+        sublot[k].frequency = f
+      }
+
       await db.query(sql`
         INSERT INTO "entry" ("type", "entry", "reading", "translation", "tag", "frequency", "level", "hLevel")
-        VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
+        VALUES ${sql.join(
+          Object.values(sublot).map((p) => {
+            return sql`('sentence', ${[p.cmn]}, ${[
+              makePinyin(p.cmn)
+            ]}, ${JSON.parse(p.eng)}, ${['tatoeba']}, ${
+              p.frequency
+            }, ${lv.vLevel(p.cmn)}, ${lv.hLevel(p.cmn)})`
+          }),
+          ','
+        )}
         ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
+          "frequency"   = EXCLUDED."frequency",
           "translation" = array_distinct("entry"."translation"||EXCLUDED."translation"),
           "tag"         = array_distinct("entry"."tag"||EXCLUDED."tag")
       `)
@@ -265,7 +281,6 @@ export async function populate(
   })
 
   s3.close()
-  f.close()
 }
 
 if (require.main === module) {

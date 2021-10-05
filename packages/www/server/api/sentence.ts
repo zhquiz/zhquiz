@@ -1,9 +1,9 @@
 import sql from '@databases/sql'
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import cheerio from 'cheerio'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
-import { Frequency, Level } from '@patarapolw/zhlevel'
+import { Level } from '@patarapolw/zhlevel'
 
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
@@ -232,35 +232,22 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         u['level.max'] = u['level.max'] || 10
 
         let [r] = await db.query(sql`
-        SELECT "entry"[1] "result", "translation"[1] "english", floor("level") "level"
-        FROM "entry"
-        WHERE
-          "type" = 'sentence'
-          AND "level" >= ${u['level.min']}
-          AND "level" <= ${u['level.max']}
-          AND NOT "entry" && (
-            SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "userId" = ${userId} AND "type" = 'sentence'
-          )
-          AND "hLevel" <= 50
-        ORDER BY RANDOM()
-        LIMIT 1
-        `)
-
-        if (!r) {
-          ;[r] = await db.query(sql`
-          SELECT "entry"[1] "result", "translation"[1] "english", floor("level") "level"
+        SELECT "result", "english", "level"
+        FROM (
+          SELECT "entry"[1] "result", "translation"[1] "english", floor("level") "level",
+            ("hLevel" > 50)::int "hLevel"
           FROM "entry"
           WHERE
-          "type" = 'sentence'
+            "type" = 'sentence'
             AND "level" >= ${u['level.min']}
             AND "level" <= ${u['level.max']}
             AND NOT "entry" && (
               SELECT array_agg("entry")||'{}'::text[] FROM "quiz" WHERE "userId" = ${userId} AND "type" = 'sentence'
             )
-          ORDER BY RANDOM()
-          LIMIT 1
-          `)
-        }
+        ) t1
+        ORDER BY "hLevel", RANDOM()
+        LIMIT 1
+        `)
 
         if (!r) {
           throw { statusCode: 404 }
@@ -349,7 +336,11 @@ export async function lookupJukuu(q: string): Promise<
   })
 
   const $ = cheerio.load(html)
-  let out = Array.from({ length: 10 }).map(() => ({ c: '', e: '' }))
+  let out = Array.from({ length: 10 }).map(() => ({
+    c: '',
+    e: '',
+    frequency: undefined as number | undefined,
+  }))
 
   $('table tr.c td:last-child').each((i, el) => {
     out[i].c = $(el).text()
@@ -372,7 +363,6 @@ export async function lookupJukuu(q: string): Promise<
       return allChinese.indexOf(r.c) === i
     })
 
-  const f = new Frequency()
   const lv = new Level()
 
   await db.tx(async (db) => {
@@ -385,6 +375,19 @@ export async function lookupJukuu(q: string): Promise<
     `)
 
     if (out.length) {
+      const sublot: Record<string, typeof out[0]> = {}
+      out.map((p) => (sublot[p.c] = p))
+
+      const { data: fMap } = await axios.post<
+        any,
+        AxiosResponse<Record<string, number>>
+      >('https://cdn.zhquiz.cc/api/wordfreq?lang=zh', {
+        q: Object.keys(sublot),
+      })
+      for (const [k, f] of Object.entries(fMap)) {
+        sublot[k].frequency = f
+      }
+
       await db.query(sql`
       INSERT INTO "entry" ("type", "entry", "reading", "translation", "tag", "frequency", "level", "hLevel")
         VALUES ${sql.join(
@@ -392,7 +395,7 @@ export async function lookupJukuu(q: string): Promise<
             (r) =>
               sql`('sentence', ${[r.c]}, ${[makeReading(r.c)]}, ${[r.e]}, ${[
                 'jukuu',
-              ]}, ${f.vFreq(r.c)}, ${lv.vLevel(r.c)}, ${lv.hLevel(r.c)})`
+              ]}, ${r.frequency}, ${lv.vLevel(r.c)}, ${lv.hLevel(r.c)})`
           ),
           ','
         )}

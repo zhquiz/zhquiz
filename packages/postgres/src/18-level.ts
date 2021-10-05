@@ -1,6 +1,7 @@
+import axios, { AxiosResponse } from 'axios'
 import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import sqlite3 from 'better-sqlite3'
-import { Frequency, Level, makePinyin } from '@patarapolw/zhlevel'
+import { Level, makePinyin } from '@patarapolw/zhlevel'
 
 export async function populate(db: ConnectionPool, dir = '/app/assets') {
   process.chdir(dir)
@@ -8,7 +9,7 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
   const s3 = sqlite3('./zhlevel.db', {
     readonly: true
   })
-  const f = new Frequency()
+
   const lvGen = new Level()
 
   await db.tx(async (db) => {
@@ -43,13 +44,11 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
       const newItems = vs.filter((v) => !rs.has(v))
       if (newItems.length) {
         await db.query(sql`
-          INSERT INTO "entry" ("type", "entry", "reading", "frequency", "level", "hLevel")
+          INSERT INTO "entry" ("type", "entry", "reading", "level", "hLevel")
           VALUES ${sql.join(
             newItems.map(
               (v) =>
-                sql`('character', ${[v]}, ${[makePinyin(v)]}, ${f.cFreq(
-                  v
-                )}, ${lv}, ${lv})`
+                sql`('character', ${[v]}, ${[makePinyin(v)]}, ${lv}, ${lv})`
             ),
             ','
           )}
@@ -96,18 +95,35 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
 
       const newItems = vs.filter((v) => !rs.has(v))
       if (newItems.length) {
+        const itemMap: Record<
+          string,
+          { v: typeof newItems[0]; frequency?: number }
+        > = {}
+        newItems.map((p) => (itemMap[p] = { v: p }))
+
+        const { data: fMap } = await axios.post<
+          any,
+          AxiosResponse<Record<string, number>>
+        >('https://cdn.zhquiz.cc/api/wordfreq?lang=zh', {
+          q: Object.keys(itemMap)
+        })
+        for (const [k, f] of Object.entries(fMap)) {
+          itemMap[k].frequency = f
+        }
+
         await db.query(sql`
           INSERT INTO "entry" ("type", "entry", "reading", "frequency", "level", "hLevel")
           VALUES ${sql.join(
-            newItems.map(
-              (v) =>
-                sql`('vocabulary', ${[v]}, ${[makePinyin(v)]}, ${f.vFreq(
-                  v
-                )}, ${lv}, ${lvGen.hLevel(v)})`
+            Object.values(itemMap).map(
+              ({ v, frequency }) =>
+                sql`('vocabulary', ${[v]}, ${[
+                  makePinyin(v)
+                ]}, ${frequency}, ${lv}, ${lvGen.hLevel(v)})`
             ),
             ','
           )}
-          ON CONFLICT DO NOTHING
+          ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
+            "frequency" = EXCLUDED."frequency"
         `)
       }
 
@@ -120,7 +136,6 @@ export async function populate(db: ConnectionPool, dir = '/app/assets') {
   })
 
   s3.close()
-  f.close()
 }
 
 if (require.main === module) {
