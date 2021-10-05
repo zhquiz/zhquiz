@@ -11,7 +11,7 @@ CREATE TABLE "entry" (
     "tag"           TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
     "level"         FLOAT NOT NULL,
     "hLevel"        INT NOT NULL,
-    "frequency"     FLOAT NOT NULL
+    "frequency"     FLOAT
 );
 
 CREATE TRIGGER "t_entry_updatedAt"

@@ -133,10 +133,7 @@ const libraryRouter: FastifyPluginAsync = async (f) => {
         entry: { ':': (v) => sql`"entry" &@ ${v}` },
         title: { ':': (v) => sql`"title" &@ ${v}` },
         type: {
-          ':': (v) => {
-            if (v === 'hanzi' || v === 'kanji') v = 'character'
-            return sql`"type" = ${v}`
-          },
+          ':': (v) => sql`"type" = ${v.replace(/hanzi/gi, 'character')}`,
         },
         description: { ':': (v) => sql`"description" &@ ${v}` },
         tag: { ':': (v) => sql`"tag " &@ ${v}` },

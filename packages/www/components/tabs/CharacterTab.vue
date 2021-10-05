@@ -2,6 +2,18 @@
   <section>
     <div class="HanziPage">
       <form class="field" @submit.prevent="q = q0">
+        <label for="q" class="label">
+          Search
+          <b-tooltip label="How to?" position="is-right">
+            <a
+              href="https://github.com/zhquiz/zhquiz/wiki/How-to-search-or-filter"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <b-icon icon="info-circle"></b-icon>
+            </a>
+          </b-tooltip>
+        </label>
         <div class="control">
           <input
             v-model="q0"

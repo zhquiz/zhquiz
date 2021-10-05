@@ -39,7 +39,12 @@ const plugin: Plugin = async ({ redirect }, inject) => {
     magic = new Magic(m)
   }
 
+  const loaders: any[] = []
+
   api.interceptors.request.use((config) => {
+    loaders.push(config)
+    window.$nuxt.$loading.start()
+
     if (!loading) {
       if (requestTimeout) {
         clearTimeout(requestTimeout)
@@ -66,6 +71,11 @@ const plugin: Plugin = async ({ redirect }, inject) => {
 
   api.interceptors.response.use(
     (r) => {
+      loaders.pop()
+      if (!loaders.length) {
+        window.$nuxt.$loading.finish()
+      }
+
       if (loading) {
         loading.requestEnded = true
         loading.close()
@@ -84,6 +94,9 @@ const plugin: Plugin = async ({ redirect }, inject) => {
       return r
     },
     (err) => {
+      loaders.pop()
+      window.$nuxt.$loading.fail?.()
+
       if (loading) {
         loading.close()
         loading = null

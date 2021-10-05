@@ -31,7 +31,7 @@
                 rel="noopener noreferrer"
               >
                 <b-icon pack="fab" icon="github"></b-icon>
-                Support
+                {{ 'Support & Contribute' }}
               </a>
             </li>
           </ul>
@@ -253,22 +253,33 @@ export default class AppPage extends Vue {
 </script>
 
 <style lang="scss" scoped>
+::v-deep .sidebar-content {
+  z-index: 60;
+}
+
 .AppPage {
   height: 100%;
   display: grid;
   grid-template-rows: 1fr auto;
 }
 
+$nav-height: 45px;
+
 nav.tabs {
-  z-index: 5;
-  height: 45px;
+  z-index: 50;
+  height: $nav-height;
   padding-top: 0.5em;
   padding-left: 0.5em;
   margin-bottom: 0 !important;
-  background-color: rgba(230, 230, 230, 0.9);
+  background-color: rgba(230, 230, 230, 0.1);
+
+  li {
+    opacity: 0.7;
+  }
 
   li:not(.is-active) a {
-    background-color: lightgray;
+    background-color: rgba(211, 211, 211, 0.5);
+    border: none;
   }
 
   li + li {
@@ -302,18 +313,21 @@ main {
   max-width: 100vw;
   overflow-y: scroll;
   position: absolute;
-  padding-top: 65px;
+  margin-top: $nav-height;
+  padding-top: 20px;
   padding-bottom: 100px;
   height: 100%;
+  background-color: rgba(211, 211, 211, 0.2);
+  box-sizing: border-box;
 }
 
 .delete {
   border: none !important;
   transform: translateX(50%);
-  background-color: rgba(143, 183, 221, 0.61) !important;
+  background-color: rgba(143, 183, 221);
 
   &:hover {
-    background-color: lightgray !important;
+    background-color: lightgray;
   }
 }
 

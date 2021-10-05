@@ -168,14 +168,24 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 
         const result = await db.query(sql`
         SELECT
-          "entry"[1] "entry",
-          "entry"[2:]||'{}'::text[] "alt",
-          "reading",
-          "translation" "english"
-        FROM "entry"
-        WHERE (
-          "userId" = uuid_nil() OR "userId" = ${userId}
-        ) AND "type" = 'vocabulary' AND "entry" &@ ${entry} AND ${entry} != ANY("entry")
+          "entry", "alt", "reading", "english"
+        FROM (
+          SELECT
+            "entry"[1] "entry",
+            "entry"[2:]||'{}'::text[] "alt",
+            "reading",
+            "translation" "english",
+            ("hLevel" > 50)::int "hLevel",
+            (CASE
+              WHEN "frequency" >= 3 THEN 3
+              ELSE 0
+            END) "frequency"
+          FROM "entry"
+          WHERE (
+            "userId" = uuid_nil() OR "userId" = ${userId}
+          ) AND "type" = 'vocabulary' AND "entry" &@ ${entry} AND ${entry} != ANY("entry")
+        ) t1
+        ORDER BY "hLevel", "frequency" DESC, RANDOM()
         LIMIT 5
         `)
 
@@ -260,23 +270,31 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         }
 
         let result = await db.query(sql`
-        SELECT
-          "entry"[1] "entry"
-        FROM "entry"
-        WHERE (
-            "userId" = uuid_nil() OR "userId" = ${userId}
-          ) AND "type" = 'vocabulary'
-          AND ${hCond || sql`TRUE`}
-          AND ${tagCond || sql`TRUE`}
-          AND ${lvCond || sql`TRUE`}
-          AND ${
-            qCond
-              ? sql`"entry" IN (
-              SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'vocabulary' AND ${qCond}
-            )`
-              : sql`TRUE`
-          }
-        ORDER BY "frequency" DESC
+        SELECT "entry"
+        FROM (
+          SELECT
+            "entry"[1] "entry",
+            ("hLevel" > 50)::int "hLevel",
+            (CASE
+              WHEN "frequency" >= 3 THEN 3
+              ELSE 0
+            END) "frequency"
+          FROM "entry"
+          WHERE (
+              "userId" = uuid_nil() OR "userId" = ${userId}
+            ) AND "type" = 'vocabulary'
+            AND ${hCond || sql`TRUE`}
+            AND ${tagCond || sql`TRUE`}
+            AND ${lvCond || sql`TRUE`}
+            AND ${
+              qCond
+                ? sql`"entry" IN (
+                SELECT "entry" FROM quiz WHERE "userId" = ${userId} AND "type" = 'vocabulary' AND ${qCond}
+              )`
+                : sql`TRUE`
+            }
+        ) t1
+        ORDER BY "hLevel", "frequency" DESC, RANDOM()
         LIMIT 10
         `)
 

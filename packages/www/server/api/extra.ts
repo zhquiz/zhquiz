@@ -443,7 +443,9 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         reading: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
         english: { ':': (v) => sql`"translation" &@ ${v}` },
         translation: { ':': (v) => sql`"translation" &@ ${v}` },
-        type: { ':': (v) => sql`"type" = ${v}` },
+        type: {
+          ':': (v) => sql`"type" = ${v.replace(/hanzi/gi, 'character')}`,
+        },
         description: { ':': (v) => sql`"description" &@ ${v}` },
       },
     })

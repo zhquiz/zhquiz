@@ -116,7 +116,9 @@ const quizRouter: FastifyPluginAsync = async (f) => {
     const makeQuiz = new QSplit({
       default: () => null,
       fields: {
-        type: { ':': (v) => sql`"type" = ${v}` },
+        type: {
+          ':': (v) => sql`"quiz"."type" = ${v.replace(/hanzi/gi, 'character')}`,
+        },
         direction: { ':': (v) => sql`"direction" = ${v}` },
         hint: { ':': (v) => sql`"hint" &@ ${v}` },
         mnemonic: { ':': (v) => sql`"mnemonic" &@ ${v}` },
@@ -206,26 +208,25 @@ const quizRouter: FastifyPluginAsync = async (f) => {
 
         const result = await db.query(
           sql`
-          SELECT
+          SELECT DISTINCT ON ("quiz"."id")
             "nextReview",
             "srsLevel",
             "wrongStreak",
-            "id",
-            "entry",
-            "type"
+            "quiz"."id"     "id",
+            "quiz"."entry"  "entry",
+            "quiz"."type"   "type"
           FROM "quiz"
-          WHERE "userId" = ${userId}
-            AND "type" = ANY(${type})
+          ${
+            entryCond
+              ? sql`JOIN "entry" ON "entry"."type" = "quiz"."type" AND "quiz"."entry" = ANY("entry"."entry")`
+              : sql``
+          }
+          WHERE "quiz"."userId" = ${userId}
+            AND "quiz"."type" = ANY(${type})
             AND "direction" = ANY(${direction})
             AND ${cond}
             AND ${makeQuiz.parse(q) || sql`TRUE`}
-            AND ${
-              entryCond
-                ? sql`"entry" = ANY(
-              SELECT unnest("entry") FROM "entry" WHERE "type" = "quiz"."type" AND ${entryCond}
-            )`
-                : sql`TRUE`
-            }
+            AND ${entryCond || sql`TRUE`}
           `
         )
 

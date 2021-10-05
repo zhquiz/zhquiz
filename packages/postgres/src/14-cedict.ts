@@ -4,9 +4,10 @@ import https from 'https'
 import os from 'os'
 import path from 'path'
 
+import axios, { AxiosResponse } from 'axios'
 import createConnectionPool, { ConnectionPool, sql } from '@databases/pg'
 import sqlite3 from 'better-sqlite3'
-import { Frequency, Level } from '@patarapolw/zhlevel'
+import { Level } from '@patarapolw/zhlevel'
 
 export async function populate(
   db: ConnectionPool,
@@ -100,7 +101,6 @@ export async function populate(
     console.error(e)
   }
 
-  const f = new Frequency()
   const lv = new Level()
 
   await db.tx(async (db) => {
@@ -119,29 +119,45 @@ export async function populate(
     `
       )
       .all()
-      .map((p) => {
-        const entry: string[] = [
-          p.simplified,
-          ...(JSON.parse(p.alt) as string[]).filter((it) => it)
-        ].filter((a, i, r) => r.indexOf(a) === i)
-
-        const english = (JSON.parse(p.english) as string[][])
-          .flat()
-          .filter((a, i, r) => r.indexOf(a) === i)
-
-        return sql`('vocabulary', ${['cedict']}, ${entry}, ${JSON.parse(
-          p.reading
-        )}, ${english}, ${f.vFreq(p.simplified)}, ${lv.vLevel(
-          p.simplified
-        )}, ${lv.hLevel(p.simplified)})`
-      })
 
     for (let i = 0; i < lots.length; i += batchSize) {
       console.log(i)
+      const sublot: Record<string, typeof lots[0]> = {}
+      lots.slice(i, i + batchSize).map((p) => (sublot[p.simplified] = p))
+
+      const { data: fMap } = await axios.post<
+        any,
+        AxiosResponse<Record<string, number>>
+      >('https://cdn.zhquiz.cc/api/wordfreq?lang=zh', {
+        q: Object.keys(sublot)
+      })
+      for (const [k, f] of Object.entries(fMap)) {
+        sublot[k].frequency = f
+      }
+
       await db.query(sql`
         INSERT INTO "entry" ("type", "tag", "entry", "reading", "translation", "frequency", "level", "hLevel")
-        VALUES ${sql.join(lots.slice(i, i + batchSize), ',')}
+        VALUES ${sql.join(
+          Object.values(sublot).map((p) => {
+            const entry: string[] = [
+              p.simplified,
+              ...(JSON.parse(p.alt) as string[]).filter((it) => it)
+            ].filter((a, i, r) => r.indexOf(a) === i)
+
+            const english = (JSON.parse(p.english) as string[][])
+              .flat()
+              .filter((a, i, r) => r.indexOf(a) === i)
+
+            return sql`('vocabulary', ${['cedict']}, ${entry}, ${JSON.parse(
+              p.reading
+            )}, ${english}, ${p.frequency}, ${lv.vLevel(
+              p.simplified
+            )}, ${lv.hLevel(p.simplified)})`
+          }),
+          ','
+        )}
         ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
+          "frequency"   = EXCLUDED."frequency",
           "reading"     = array_distinct("entry"."reading"||EXCLUDED."reading"),
           "translation" = array_distinct("entry"."translation"||EXCLUDED."translation"),
           "tag"         = array_distinct("entry"."tag"||EXCLUDED."tag")
@@ -150,7 +166,6 @@ export async function populate(
   })
 
   s3.close()
-  f.close()
 }
 
 if (require.main === module) {

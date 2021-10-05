@@ -101,38 +101,30 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         }
 
         let result = await db.query(sql`
-        WITH match_cte AS (
+        SELECT
+          "entry",
+          "alt",
+          "reading",
+          "english"
+        FROM (
           SELECT
             "entry"[1] "entry",
             "entry"[2:]||'{}'::text[] "alt",
             "reading",
             "translation" "english",
-            "hLevel"
+            ("hLevel" > 50)::int "hLevel",
+            (CASE
+              WHEN "frequency" >= 4 THEN 4
+              ELSE "frequency"::int
+            END) "frequency"
           FROM "entry"
           WHERE (
             "userId" = uuid_nil() OR "userId" = ${userId}
           ) AND "type" = 'vocabulary' AND "entry" &@ ${entry}
-          ORDER BY RANDOM()
-        )
-
-        SELECT *
-        FROM (
-          SELECT * FROM (
-            SELECT * FROM match_cte
-            WHERE "hLevel" <= 50
-          ) t2
-          UNION ALL
-          SELECT * FROM (
-            SELECT * FROM match_cte
-            WHERE "hLevel" > 50
-          ) t2
         ) t1
+        ORDER BY "hLevel", "frequency" DESC, RANDOM()
         LIMIT ${limit}
         `)
-
-        if (result[0] && result[0].frequency) {
-          result = result.filter((r) => r.frequency)
-        }
 
         return {
           result,

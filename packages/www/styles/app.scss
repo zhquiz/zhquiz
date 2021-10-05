@@ -1,20 +1,10 @@
-@font-face {
-  font-family: 'Noto Serif TC';
-  font-display: swap;
-  src: url('/fonts/NotoSansCJKtc-Regular.otf') format('opentype');
-}
-
-@font-face {
-  font-family: 'Noto Serif SC';
-  font-display: swap;
-  src: url('/fonts/NotoSansCJKsc-Regular.otf') format('opentype');
-}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC&family=Noto+Serif+TC&display=swap');
 
 @font-face {
   font-family: HanaMin;
   font-display: swap;
-  src: url('/fonts/HanaMinA.ttf') format('truetype'),
-    url('/fonts/HanaMinB.ttf') format('truetype');
+  src: url('https://cdn.zhquiz.cc/f/fonts/HanaMinA.ttf') format('truetype'),
+    url('https://cdn.zhquiz.cc/f/fonts/HanaMinB.ttf') format('truetype');
 }
 
 .font-han {
@@ -104,9 +94,9 @@ span.gray-box {
   text-align: center;
   min-width: 1em;
   height: 1.5em;
-  color: lightgray;
+  color: rgba(211, 211, 211, 0);
   background-color: lightgray;
-  visibility: hidden;
+  border-bottom: 1px solid black;
   margin-bottom: -0.3em;
 }
 

@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "@databases/pg": "^5.1.1",
-    "@patarapolw/zhlevel": "^0.1.5",
+    "@patarapolw/zhlevel": "^0.2.4",
+    "axios": "^0.22.0",
     "better-sqlite3": "^7.4.3",
     "fast-glob": "^3.2.7",
     "js-yaml": "^4.1.0",

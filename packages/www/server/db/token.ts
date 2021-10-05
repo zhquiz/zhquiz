@@ -284,7 +284,9 @@ export const makeTag = new QSplit({
   default: () => null,
   fields: {
     tag: { ':': (v) => sql`${v} = ANY("entry"."tag")` },
-    type: { ':': (v) => sql`"entry"."type" = ${v}` },
+    type: {
+      ':': (v) => sql`"entry"."type" = ${v.replace(/hanzi/gi, 'character')}`,
+    },
   },
 })
 

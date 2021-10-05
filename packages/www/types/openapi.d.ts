@@ -688,14 +688,6 @@ declare namespace Paths {
       }
     }
   }
-  namespace Speak {
-    namespace Parameters {
-      export type Q = string;
-    }
-    export interface QueryParameters {
-      q: Parameters.Q;
-    }
-  }
   namespace Tokenize {
     namespace Parameters {
       export type Q = string;
@@ -1188,14 +1180,6 @@ export interface OperationMethods {
     config?: AxiosRequestConfig  
   ): OperationResponse<Paths.English.Responses.$200>
   /**
-   * speak
-   */
-  'speak'(
-    parameters?: Parameters<Paths.Speak.QueryParameters> | null,
-    data?: any,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<any>
-  /**
    * vocabularySentence
    */
   'vocabularySentence'(
@@ -1667,16 +1651,6 @@ export interface PathsDictionary {
       data?: any,
       config?: AxiosRequestConfig  
     ): OperationResponse<Paths.English.Responses.$200>
-  }
-  ['/api/util/speak']: {
-    /**
-     * speak
-     */
-    'get'(
-      parameters?: Parameters<Paths.Speak.QueryParameters> | null,
-      data?: any,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<any>
   }
   ['/api/vocabulary/sentence']: {
     /**

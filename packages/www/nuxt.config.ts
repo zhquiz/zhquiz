@@ -48,6 +48,11 @@ export default (): NuxtConfig => {
       ],
     },
 
+    loading: {
+      color: '#62C746',
+      height: '5px',
+    },
+
     // Global CSS: https://go.nuxtjs.dev/config-css
     css: ['~/styles/buefy.scss', '~/styles/app.scss'],
 
@@ -112,6 +117,7 @@ export default (): NuxtConfig => {
               'faTrash',
               'faTools',
               'faTh',
+              'faRedoAlt',
             ],
           },
         },
