@@ -4,7 +4,9 @@ ZhQuiz, a Chinese quizzing platform by levels and dictionary
 
 ![Preview GIF](/docs/zhquiz-20211010-1209.gif)
 
-<https://youtu.be/iomE0xiYoqY>
+Alsmo mobile-phone enabled.
+
+![mobile](/docs/zhquiz-mobile.gif)
 
 Currently, the most updated is [Docker with PostgreSQL](/docker-compose.yml), followed by <https://github.com/zhquiz/go-zhquiz>.
 
