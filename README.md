@@ -2,7 +2,7 @@
 
 ZhQuiz, a Chinese quizzing platform by levels and dictionary
 
-![Preview GIF](/docs/zhquiz-2021-10-10 12-09.gif)
+![Preview GIF](/docs/zhquiz-20211010-1209.gif)
 
 <https://youtu.be/iomE0xiYoqY>
 
