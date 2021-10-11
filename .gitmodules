@@ -1,6 +1,6 @@
+[submodule "submodules/npm-zhlevel"]
+	path = submodules/npm-zhlevel
+	url = git@github.com:zhquiz/npm-zhlevel.git
 [submodule "submodules/resource"]
 	path = submodules/resource
 	url = git@github.com:zhquiz/resource.git
-[submodule "submodules/resource-thai"]
-	path = submodules/resource-thai
-	url = git@github.com:zhquiz/resource-thai.git
