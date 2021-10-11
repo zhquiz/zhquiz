@@ -8,7 +8,7 @@ Alsmo mobile-phone enabled.
 
 ![mobile](/docs/zhquiz-mobile.gif)
 
-Currently, the most updated is [Docker with PostgreSQL](/docker-compose.yml), followed by <https://github.com/zhquiz/go-zhquiz>.
+Currently, the most updated is [Docker with PostgreSQL](/docker-compose.yml), followed by <https://github.com/zhquiz/desktop>.
 
 ## Features
 

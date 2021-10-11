@@ -1,17 +1,11 @@
 {
   "folders": [
     {
-      "path": "packages/postgres"
-    },
-    {
-      "path": "packages/zhlevel"
+      "name": "_root",
+      "path": "."
     },
     {
       "path": "packages/www"
-    },
-    {
-      "name": "_root",
-      "path": "."
     }
   ],
   "settings": {
