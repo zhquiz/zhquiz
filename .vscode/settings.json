@@ -1,5 +1,5 @@
 {
-  "whitespacepp.backColorTAB": "",
+  "editor.tabSize": 2,
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true

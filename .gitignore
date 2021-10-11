@@ -192,5 +192,4 @@ $RECYCLE.BIN/
 /*.db
 /dist/
 /public/
-/submodules/
 /pgdata/

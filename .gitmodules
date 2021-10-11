@@ -1,0 +1,6 @@
+[submodule "submodules/resource"]
+	path = submodules/resource
+	url = git@github.com:zhquiz/resource.git
+[submodule "submodules/resource-thai"]
+	path = submodules/resource-thai
+	url = git@github.com:zhquiz/resource-thai.git
