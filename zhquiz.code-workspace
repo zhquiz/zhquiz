@@ -6,12 +6,29 @@
     },
     {
       "path": "packages/www"
-    }
+    },
+    // TODO:
+    // {
+    //   "path": "submodules/server"
+    // },
+    // {
+    //   "path": "submodules/www"
+    // },
+    {
+      "path": "submodules/postgres"
+    },
+    {
+      "path": "submodules/resource"
+    },
+    {
+      "path": "submodules/npm-zhlevel"
+    },
   ],
   "settings": {
     "files.associations": {
       "*.sql": "sql",
-      "Dockerfile.*": "dockerfile"
+      "Dockerfile.*": "dockerfile",
+      ".meta": "json"
     },
     "sort-imports.on-save": true
   }

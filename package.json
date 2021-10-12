@@ -1,0 +1,23 @@
+{
+  "name": "zhquiz",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "repository": "git@github.com:zhquiz/zhquiz.git",
+  "author": "Pacharapol Withayasakpunt <polv@polv.cc>",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "meta init",
+    "meta:add": "meta project import",
+    "build:db": "cd submodules/postgres docker-compose build",
+    "start:db": "cd submodules/postgres && docker-compose up",
+    "dev": "concurrently 'yarn start:db' 'cd packages/www && yarn dev'",
+    "build": "docker-compose build",
+    "start": "docker-compose up"
+  },
+  "devDependencies": {
+    "concurrently": "^6.3.0",
+    "meta": "^2.2.25",
+    "prettier": "^2.4.1"
+  }
+}
