@@ -2,7 +2,7 @@
 
 ZhQuiz, a Chinese quizzing platform by levels and dictionary
 
-![Preview GIF](/docs/zhquiz-20211010-1209.gif)
+![web](/docs/zhquiz-web.gif)
 
 Alsmo mobile-phone enabled.
 
@@ -20,7 +20,7 @@ Currently, the most updated is [Docker with PostgreSQL](/docker-compose.yml), fo
 
 ## Desktop app
 
-See <https://github.com/zhquiz/go-zhquiz/releases>.
+See <https://github.com/zhquiz/desktop/releases>.
 
 By default, it will use Google TTS. But if offline, or Google TTS were to fail, then
 
