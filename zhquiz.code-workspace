@@ -4,10 +4,10 @@
       "name": "_root",
       "path": "."
     },
+    // TODO: remove packages/www; and split to submodules
     {
       "path": "packages/www"
     },
-    // TODO:
     // {
     //   "path": "submodules/server"
     // },
