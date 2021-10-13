@@ -44,9 +44,9 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         }
 
         const [r] = await db.query(sql`
-        SELECT "entry", "reading" "pinyin", "translation" "english", "description", "tag", "type"
+        SELECT "entry", "reading" "pinyin", "english", "description", "tag", "type"
         FROM "entry"
-        WHERE "userId" = ${userId} AND "id" = ${id} AND "translation"[1] IS NOT NULL
+        WHERE "userId" = ${userId} AND "id" = ${id} AND "english"[1] IS NOT NULL
         `)
 
         if (!r) {
@@ -115,7 +115,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           const id = shortUUID.uuid()
 
           await db.query(sql`
-          INSERT INTO "entry" ("entry", "reading", "translation", "description", "tag", "type", "userId", "id")
+          INSERT INTO "entry" ("entry", "reading", "english", "description", "tag", "type", "userId", "id")
           VALUES (${entry}, ${reading}, ${english}, ${description}, ${tag}, ${type}, ${userId}, ${id})
           `)
 
@@ -189,7 +189,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
           SET
             "entry" = ${entry},
             "reading" = ${reading},
-            "translation" = ${english},
+            "english" = ${english},
             "description" = ${description},
             "tag" = ${tag},
             "type" = ${type}
@@ -441,8 +441,8 @@ const extraRouter: FastifyPluginAsync = async (f) => {
         entry: { ':': (v) => sql`"entry" &@ ${v}` },
         pinyin: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
         reading: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
-        english: { ':': (v) => sql`"translation" &@ ${v}` },
-        translation: { ':': (v) => sql`"translation" &@ ${v}` },
+        english: { ':': (v) => sql`"english" &@ ${v}` },
+        translation: { ':': (v) => sql`"english" &@ ${v}` },
         type: {
           ':': (v) => sql`"type" = ${v.replace(/hanzi/gi, 'character')}`,
         },
@@ -483,7 +483,7 @@ const extraRouter: FastifyPluginAsync = async (f) => {
             "id",
             "entry"
             "reading",
-            "translation" "english",
+            "english",
             "type",
             "tag"
           FROM "entry" e1

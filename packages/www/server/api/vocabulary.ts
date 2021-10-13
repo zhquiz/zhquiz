@@ -49,7 +49,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         (
           SELECT
             "entry"[1] "entry",
-            "translation"[1] "english",
+            "english"[1] "english",
             (CASE
               WHEN "hLevel" <= 50 AND length("entry"[1]) <= 20 THEN 1
               WHEN "hLevel" <= 50 AND length("entry"[1]) > 20 THEN 2
@@ -174,7 +174,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
             "entry"[1] "entry",
             "entry"[2:]||'{}'::text[] "alt",
             "reading",
-            "translation" "english",
+            "english" "english",
             ("hLevel" > 50)::int "hLevel",
             (CASE
               WHEN "frequency" >= 3 THEN 3
@@ -214,8 +214,8 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         entry: { ':': (v) => sql`"entry" &@ ${v}` },
         pinyin: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
         reading: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
-        english: { ':': (v) => sql`"translation" &@ ${v}` },
-        translation: { ':': (v) => sql`"translation" &@ ${v}` },
+        english: { ':': (v) => sql`"english" &@ ${v}` },
+        translation: { ':': (v) => sql`"english" &@ ${v}` },
       },
     })
 
@@ -338,7 +338,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
         u['level.max'] = u['level.max'] || 10
 
         let [r] = await db.query(sql`
-        SELECT "entry"[1] "result", floor("level") "level", "translation" "english"
+        SELECT "entry"[1] "result", floor("level") "level", "english"
         FROM "entry"
         WHERE
           "type" = 'vocabulary'
@@ -354,7 +354,7 @@ const vocabularyRouter: FastifyPluginAsync = async (f) => {
 
         if (!r) {
           ;[r] = await db.query(sql`
-          SELECT "entry"[1] "result", floor("level") "level", "translation" "english"
+          SELECT "entry"[1] "result", floor("level") "level", "english"
           FROM "entry"
           WHERE
             "type" = 'vocabulay'
@@ -411,7 +411,7 @@ export async function lookupVocabulary(
     "entry"[1] "entry",
     "entry"[2:]||'{}'::text[] "alt",
     "reading",
-    "translation" "english",
+    "english",
     "tag",
     "level"
   FROM "entry"

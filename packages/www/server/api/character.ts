@@ -111,7 +111,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
             "entry"[1] "entry",
             "entry"[2:]||'{}'::text[] "alt",
             "reading",
-            "translation" "english",
+            "english",
             ("hLevel" > 50)::int "hLevel",
             (CASE
               WHEN "frequency" >= 4 THEN 4
@@ -178,7 +178,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         (
           SELECT
             "entry"[1] "entry",
-            "translation"[1] "english",
+            "english"[1] "english",
             (CASE
               WHEN "hLevel" <= 50 AND length("entry"[1]) <= 20 THEN 1
               WHEN "hLevel" <= 50 AND length("entry"[1]) > 20 THEN 2
@@ -316,8 +316,8 @@ const characterRouter: FastifyPluginAsync = async (f) => {
       fields: {
         pinyin: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
         reading: { ':': (v) => sql`normalize_pinyin("reading") &@ ${v}` },
-        english: { ':': (v) => sql`"translation" &@ ${v}` },
-        translation: { ':': (v) => sql`"translation" &@ ${v}` },
+        english: { ':': (v) => sql`"english" &@ ${v}` },
+        translation: { ':': (v) => sql`"english" &@ ${v}` },
       },
     })
 
@@ -440,7 +440,7 @@ const characterRouter: FastifyPluginAsync = async (f) => {
         u['level.max'] = u['level.max'] || 10
 
         const [r] = await db.query(sql`
-        SELECT "entry"[1] "result", floor("level") "level", "translation" "english"
+        SELECT "entry"[1] "result", floor("level") "level", "english"
         FROM "entry"
         WHERE (
           "userId" = uuid_nil() OR "userId" = ${userId}
@@ -485,7 +485,7 @@ export async function lookupCharacter(
   }
 
   const [r] = await db.query(sql`
-  SELECT "entry"[1] "entry", "reading", "translation" "english", "tag", floor("level") "level"
+  SELECT "entry"[1] "entry", "reading", "english", "tag", floor("level") "level"
   FROM "entry"
   WHERE (
     "userId" = uuid_nil() OR "userId" = ${userId}

@@ -1,9 +1,9 @@
 import sql from '@databases/sql'
+import { Level } from '@patarapolw/zhlevel'
 import axios, { AxiosResponse } from 'axios'
 import cheerio from 'cheerio'
 import { FastifyPluginAsync } from 'fastify'
 import S from 'jsonschema-definer'
-import { Level } from '@patarapolw/zhlevel'
 
 import { QSplit, makeQuiz, makeTag } from '../db/token'
 import { db } from '../shared'
@@ -108,8 +108,8 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
       },
       fields: {
         entry: { ':': (v) => sql`"entry" &@ ${v}` },
-        english: { ':': (v) => sql`"translation" &@ ${v}` },
-        translation: { ':': (v) => sql`"translation" &@ ${v}` },
+        english: { ':': (v) => sql`"english" &@ ${v}` },
+        translation: { ':': (v) => sql`"english" &@ ${v}` },
       },
     })
 
@@ -234,7 +234,7 @@ const sentenceRouter: FastifyPluginAsync = async (f) => {
         let [r] = await db.query(sql`
         SELECT "result", "english", "level"
         FROM (
-          SELECT "entry"[1] "result", "translation"[1] "english", floor("level") "level",
+          SELECT "entry"[1] "result", "english"[1] "english", floor("level") "level",
             ("hLevel" > 50)::int "hLevel"
           FROM "entry"
           WHERE
@@ -287,7 +287,7 @@ export async function lookupSentence(
 
   const [r] = await db.query(sql`
   SELECT
-    "entry"[1] "entry", "reading", "translation" "english", "tag"
+    "entry"[1] "entry", "reading", "english", "tag"
   FROM "entry"
   WHERE (
     "userId" = uuid_nil() OR "userId" = ${userId}
@@ -389,7 +389,7 @@ export async function lookupJukuu(q: string): Promise<
       }
 
       await db.query(sql`
-      INSERT INTO "entry" ("type", "entry", "reading", "translation", "tag", "frequency", "level", "hLevel")
+      INSERT INTO "entry" ("type", "entry", "reading", "english", "tag", "frequency", "level", "hLevel")
         VALUES ${sql.join(
           out.map(
             (r) =>
@@ -400,7 +400,7 @@ export async function lookupJukuu(q: string): Promise<
           ','
         )}
         ON CONFLICT (("entry"[1]), "type", "userId") DO UPDATE SET
-          "translation" = array_distinct("entry"."translation"||EXCLUDED."translation"),
+          "english" = array_distinct("entry"."english"||EXCLUDED."english"),
           "tag" = array_distinct("entry"."tag"||EXCLUDED."tag")
       `)
     }

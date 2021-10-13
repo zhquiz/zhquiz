@@ -7,7 +7,7 @@
   "author": "Pacharapol Withayasakpunt <polv@polv.cc>",
   "license": "MIT",
   "scripts": {
-    "submodules:public": "bash -c 'cd submodules; ms=('postgres' 'resource'); for m in ${ms[@]}; do rm $m; git clone https://github.com/zhquiz/$m.git; done'",
+    "init:public": "bash -c 'cd submodules; ms=('postgres' 'resource'); for m in ${ms[@]}; do rm $m; git clone https://github.com/zhquiz/$m.git; done'",
     "build:db": "cd submodules/postgres docker-compose build",
     "start:db": "cd submodules/postgres && docker-compose up",
     "dev": "concurrently 'yarn start:db' 'cd packages/www && yarn dev'",
