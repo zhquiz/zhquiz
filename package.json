@@ -7,8 +7,7 @@
   "author": "Pacharapol Withayasakpunt <polv@polv.cc>",
   "license": "MIT",
   "scripts": {
-    "postinstall": "meta init",
-    "meta:add": "meta project import",
+    "submodules:public": "bash -c 'cd submodules; ms=('postgres' 'resource'); for m in ${ms[@]}; do rm $m; git clone https://github.com/zhquiz/$m.git; done'",
     "build:db": "cd submodules/postgres docker-compose build",
     "start:db": "cd submodules/postgres && docker-compose up",
     "dev": "concurrently 'yarn start:db' 'cd packages/www && yarn dev'",
@@ -17,7 +16,6 @@
   },
   "devDependencies": {
     "concurrently": "^6.3.0",
-    "meta": "^2.2.25",
     "prettier": "^2.4.1"
   }
 }

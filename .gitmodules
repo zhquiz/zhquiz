@@ -1,9 +1,12 @@
-[submodule "submodules/npm-zhlevel"]
-	path = submodules/npm-zhlevel
-	url = git@github.com:zhquiz/npm-zhlevel.git
 [submodule "submodules/resource"]
 	path = submodules/resource
 	url = git@github.com:zhquiz/resource.git
 [submodule "submodules/postgres"]
 	path = submodules/postgres
 	url = git@github.com:zhquiz/postgres.git
+[submodule "submodules/npm-zhlevel"]
+	path = meta/npm-zhlevel
+	url = git@github.com:zhquiz/npm-zhlevel.git
+[submodule "submodules/cdn"]
+	path = submodules/cdn
+	url = git@github.com:zhquiz/cdn.git

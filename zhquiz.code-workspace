@@ -21,6 +21,9 @@
       "path": "submodules/resource"
     },
     {
+      "path": "submodules/cdn"
+    },
+    {
       "path": "submodules/npm-zhlevel"
     },
   ],
