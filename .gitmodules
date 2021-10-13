@@ -5,7 +5,7 @@
 	path = submodules/postgres
 	url = git@github.com:zhquiz/postgres.git
 [submodule "submodules/npm-zhlevel"]
-	path = meta/npm-zhlevel
+	path = submodules/npm-zhlevel
 	url = git@github.com:zhquiz/npm-zhlevel.git
 [submodule "submodules/cdn"]
 	path = submodules/cdn
